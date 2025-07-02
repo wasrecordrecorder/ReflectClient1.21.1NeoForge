@@ -1,0 +1,19 @@
+package com.dsp.main.Functions.Misc;
+
+import com.dsp.main.ClickGui.Settings.CheckBox;
+import com.dsp.main.ClickGui.Settings.Input;
+import com.dsp.main.ClickGui.Settings.Mode;
+import com.dsp.main.ClickGui.Settings.Slider;
+import com.dsp.main.Module;
+
+public class Test extends Module {
+    private static CheckBox dwa = new CheckBox("Test",false);
+    private static Slider we = new Slider("Test Sld", 0, 10, 1, 1);
+    private static Mode ld = new Mode("Mode Test", "dwa");
+    private static Input ldw = new Input("dwal", "213");
+
+    public Test() {
+        super("Test", 0, Category.MISC, "description");
+        addSettings(dwa,we,ld,ldw);
+    }
+}

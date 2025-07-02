@@ -1,0 +1,14 @@
+{
+  "providers": [
+    {
+      "type": "bitmap",
+      "file": "dsp:font/umbrella.ttf",
+      "ascent": 8,
+      "height": 10,
+      "chars": [
+        "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789",
+        ".,;:!?()[]{}"
+      ]
+    }
+  ]
+}

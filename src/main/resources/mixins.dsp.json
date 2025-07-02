@@ -1,0 +1,14 @@
+{
+  "required": true,
+  "package": "com.dsp.main.Mixin",
+  "compatibilityLevel": "JAVA_17",
+  "refmap": "mixins.dsp.refmap.json",
+  "mixins": [
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  },
+  "client": [
+    "MinecraftMixin"
+  ]
+}
