@@ -13,7 +13,7 @@ public class MinecraftMixin {
     @Inject(method = "createTitle", at = @At("RETURN"), cancellable = true)
     private void onTitleCreating(CallbackInfoReturnable<String> cir) {
         if (!isDetect) {
-            cir.setReturnValue("Different colored Emeralds!");
+            cir.setReturnValue("Reflect Client 3.3 - Release");
         }
     }
 }

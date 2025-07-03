@@ -29,8 +29,6 @@ public class Frame {
     }
 
     private boolean expanded = true;
-    private boolean dragging;
-    private float dragStartX, dragStartY;
     private float animationProgress;
     private long animationStartTime;
     private int scrollOffset = 0;
@@ -63,11 +61,6 @@ public class Frame {
 
         if (expanded) {
             renderButtons(guiGraphics, mouseX, mouseY, partialTicks, progress);
-        }
-
-        if (dragging) {
-            x = (int) (mouseX - dragStartX);
-            y = (int) (mouseY - dragStartY);
         }
     }
 
@@ -130,21 +123,10 @@ public class Frame {
                 }
             }
         }
-        if (isHovered(mx, my)) {
-            if (btn == 1) {
-                expanded = !expanded;
-                animationStartTime = System.currentTimeMillis();
-            } else if (btn == 0) {
-                dragging = true;
-                dragStartX = (float) (mx - x);
-                dragStartY = (float) (my - y);
-            }
-        }
     }
 
 
     public void mouseReleased(double mouseX, double mouseY, int button) {
-        dragging = false;
         buttons.forEach(b -> b.mouseReleased(mouseX, mouseY, button));
     }
 

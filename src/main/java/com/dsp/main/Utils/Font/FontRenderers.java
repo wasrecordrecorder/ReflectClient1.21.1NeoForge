@@ -1,12 +1,9 @@
 package com.dsp.main.Utils.Font;
 
 
-import org.jetbrains.annotations.NotNull;
-
 import java.awt.*;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.Objects;
 
 public class FontRenderers {
     public static FontRenderer umbrellatext14;
@@ -18,7 +15,7 @@ public class FontRenderers {
     public static FontRenderer umbrellatext22;
     public void init() {
         try {
-            InputStream is = getClass().getResourceAsStream("/assets/dsp/font/umbrella.ttf");
+            InputStream is = getClass().getResourceAsStream("/assets/dsp/textures/font/umbrella.ttf");
             if (is == null) {
                 throw new IOException("Не удалось найти файл шрифта: /assets/dsp/font/umbrella.ttf");
             }

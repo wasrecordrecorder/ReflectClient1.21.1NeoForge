@@ -2,8 +2,8 @@ package com.dsp.main.Functions.Movement;
 
 import com.dsp.main.ClickGui.Settings.Mode;
 import com.dsp.main.Module;
-import net.minecraftforge.event.TickEvent;
-import net.minecraftforge.eventbus.api.SubscribeEvent;
+import net.neoforged.bus.api.SubscribeEvent;
+import net.neoforged.neoforge.client.event.ClientTickEvent;
 
 import static com.dsp.main.Api.mc;
 
@@ -14,8 +14,7 @@ public class AutoSprint extends Module {
         addSetting(SprintType);
     }
     @SubscribeEvent
-    public void onTick(TickEvent event) {
-        System.out.println(SprintType.getMode());
+    public void onTick(ClientTickEvent.Pre event) {
         if (!(mc.player == null) && mc.player.getFoodData().getFoodLevel() > 6 && SprintType.isMode("Legit")) {
             mc.options.keySprint.setDown(true);
         } else if (!(mc.player == null) && mc.player.getFoodData().getFoodLevel() > 6 && mc.player.xxa > 0 && !mc.player.isSprinting()) {

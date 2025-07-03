@@ -1,9 +1,12 @@
 package com.dsp.main.Utils.Font;
 
+import com.mojang.authlib.minecraft.client.MinecraftClient;
 import com.mojang.blaze3d.platform.NativeImage;
 import com.mojang.blaze3d.systems.RenderSystem;
+import com.mojang.blaze3d.vertex.PoseStack;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.texture.DynamicTexture;
 import net.minecraft.resources.ResourceLocation;
 
@@ -11,6 +14,8 @@ import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.InputStream;
 import net.minecraft.client.renderer.texture.TextureManager;
+import org.apache.logging.log4j.core.pattern.TextRenderer;
+import org.joml.Matrix4f;
 
 public class CustomFontRenderer {
     private Font customFont;
@@ -22,7 +27,7 @@ public class CustomFontRenderer {
     }
     private void loadFont() {
         try {
-            InputStream is = getClass().getResourceAsStream("/assets/dsp/font/umbrella.ttf");
+            InputStream is = getClass().getResourceAsStream("/assets/dsp/textures/font/umbrella.ttf");
             if (is == null) {
                 throw new RuntimeException("Не удалось найти файл шрифта в ресурсах!");
             }

@@ -6,16 +6,17 @@ import com.dsp.main.Functions.Movement.AutoSprint;
 import com.dsp.main.Utils.Render.DrawHelper;
 import com.mojang.blaze3d.vertex.PoseStack;
 import net.minecraft.client.Minecraft;
-import net.minecraftforge.client.event.InputEvent;
-import net.minecraftforge.client.event.RenderLevelStageEvent;
-import net.minecraftforge.client.event.RenderLivingEvent;
-import net.minecraftforge.client.event.ScreenEvent;
-import net.minecraftforge.eventbus.api.SubscribeEvent;
+import net.neoforged.bus.api.SubscribeEvent;
+import net.neoforged.neoforge.client.event.InputEvent;
+import net.neoforged.neoforge.client.event.RenderGuiEvent;
+import net.neoforged.neoforge.client.event.ScreenEvent;
 import org.lwjgl.glfw.GLFW;
 
 import java.awt.*;
 import java.util.Objects;
 import java.util.concurrent.CopyOnWriteArrayList;
+
+import static com.dsp.main.Utils.Minecraft.UserSession.UserSessionUtil.setNameSession;
 
 public class Api {
     public static Minecraft mc = Minecraft.getInstance();
@@ -37,7 +38,7 @@ public class Api {
         return false;
     }
     @SubscribeEvent
-    public void OnTick(RenderLevelStageEvent event) {
+    public void OnTick(RenderGuiEvent.Post event) {
         if (mc.player != null) {
             DrawHelper.rectangle(new PoseStack(), mc.getWindow().getGuiScaledWidth() /2, mc.getWindow().getGuiScaledHeight() /2, 85f, 20, 3, new Color(30,30,30,100).getRGB());
         }
@@ -61,6 +62,7 @@ public class Api {
     @SubscribeEvent
     public void onInitGui(ScreenEvent.Init.Pre e) {
         if (e.getScreen() instanceof net.minecraft.client.gui.screens.TitleScreen) {
+            setNameSession("XDawlXOption");
             //mc.setScreen(new MainMenuScreen());
         }
     }

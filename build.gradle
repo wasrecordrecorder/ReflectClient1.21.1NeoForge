@@ -2,7 +2,6 @@ plugins {
     id 'java-library'
     id 'maven-publish'
     id 'net.neoforged.gradle.userdev' version '7.0.189'
-    id 'org.spongepowered.mixin' version '0.7.+'
 }
 
 tasks.named('wrapper', Wrapper).configure {
@@ -60,12 +59,6 @@ configurations {
 
 dependencies {
     implementation "net.neoforged:neoforge:${neo_version}"
-    annotationProcessor 'org.spongepowered:mixin:0.8.5:processor'
-    implementation 'org.spongepowered:mixin:0.8.5'
-}
-mixin {
-    add sourceSets.main, 'mixins.dsp.refmap.json'
-    config 'mixins.dsp.json'
 }
 tasks.withType(ProcessResources).configureEach {
     var replaceProperties = [
