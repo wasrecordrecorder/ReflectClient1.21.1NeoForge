@@ -1,4 +1,4 @@
-package com.dsp.main.ClickGui.Settings;
+package com.dsp.main.UI.ClickGui.Settings;
 
 public class CheckBox extends Setting {
     private boolean enabled;

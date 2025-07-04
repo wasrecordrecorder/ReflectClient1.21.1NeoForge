@@ -1,4 +1,4 @@
-package com.dsp.main.ClickGui.Settings;
+package com.dsp.main.UI.ClickGui.Settings;
 
 public class Input extends Setting {
     private String value;

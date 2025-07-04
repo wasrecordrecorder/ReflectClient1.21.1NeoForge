@@ -1,8 +1,8 @@
-package com.dsp.main.ClickGui;
+package com.dsp.main.UI.ClickGui;
 
-import com.dsp.main.ClickGui.Components.*;
-import com.dsp.main.ClickGui.Components.Component;
-import com.dsp.main.ClickGui.Settings.*;
+import com.dsp.main.UI.ClickGui.Components.*;
+import com.dsp.main.UI.ClickGui.Components.Component;
+import com.dsp.main.UI.ClickGui.Settings.*;
 import com.dsp.main.Module;
 import com.dsp.main.Utils.Font.FontRenderers;
 import com.dsp.main.Utils.Render.DrawHelper;

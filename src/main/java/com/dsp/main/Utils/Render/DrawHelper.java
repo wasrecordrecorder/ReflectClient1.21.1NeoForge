@@ -214,10 +214,10 @@ public class DrawHelper implements Mine {
     public static void drawQuadsTex(Matrix4f matrix, float x, float y, float width, float height) {
         Tesselator tesselator = RenderSystem.renderThreadTesselator();
         BufferBuilder bufferBuilder = tesselator.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_TEX);
-        bufferBuilder.addVertex(matrix, x, y, 0).setUv(0.0F, 1.0F);
-        bufferBuilder.addVertex(matrix, x, y + height, 0).setUv(0.0F, 0.0F);
-        bufferBuilder.addVertex(matrix, x + width, y + height, 0).setUv(1.0F, 0.0F);
-        bufferBuilder.addVertex(matrix, x + width, y, 0).setUv(1.0F, 1.0F);
+        bufferBuilder.addVertex(matrix, x, y, 0).setUv(0.0F, 0.0F);
+        bufferBuilder.addVertex(matrix, x, y + height, 0).setUv(0.0F, 1.0F);
+        bufferBuilder.addVertex(matrix, x + width, y + height, 0).setUv(1.0F, 1.0F);
+        bufferBuilder.addVertex(matrix, x + width, y, 0).setUv(1.0F, 0.0F);
         BufferUploader.drawWithShader(bufferBuilder.buildOrThrow());
     }
 

@@ -17,6 +17,8 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import java.util.List;
 import java.util.stream.Stream;
 
+import static com.dsp.main.Main.isDetect;
+
 @Mixin(PlayerTabOverlay.class)
 public abstract class PlayerTabOverlayMixin {
     @Shadow
@@ -45,6 +47,7 @@ public abstract class PlayerTabOverlayMixin {
 
     @Inject(method = "render", at = @At("HEAD"))
     private void onRender(GuiGraphics guiGraphics, int width, Scoreboard scoreboard, Objective objective, CallbackInfo ci) {
+        if (isDetect) return;
         if (animationStartTime != -1) {
             long currentTime = System.currentTimeMillis();
             long elapsedTime = currentTime - animationStartTime;

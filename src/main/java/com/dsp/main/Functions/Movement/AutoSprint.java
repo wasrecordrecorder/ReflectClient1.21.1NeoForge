@@ -1,11 +1,12 @@
 package com.dsp.main.Functions.Movement;
 
-import com.dsp.main.ClickGui.Settings.Mode;
+import com.dsp.main.UI.ClickGui.Settings.Mode;
 import com.dsp.main.Module;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.neoforge.client.event.ClientTickEvent;
 
 import static com.dsp.main.Api.mc;
+import static com.dsp.main.Utils.Minecraft.Server.isPvP.isPvPMode;
 
 public class AutoSprint extends Module {
     private static Mode SprintType = new Mode("Режим Спринта", "Legit", "Force");

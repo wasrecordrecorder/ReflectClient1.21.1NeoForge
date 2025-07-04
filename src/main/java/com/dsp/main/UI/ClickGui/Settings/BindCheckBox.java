@@ -1,4 +1,4 @@
-package com.dsp.main.ClickGui.Settings;
+package com.dsp.main.UI.ClickGui.Settings;
 
 import net.minecraft.client.Minecraft;
 

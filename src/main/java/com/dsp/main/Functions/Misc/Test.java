@@ -1,9 +1,9 @@
 package com.dsp.main.Functions.Misc;
 
-import com.dsp.main.ClickGui.Settings.CheckBox;
-import com.dsp.main.ClickGui.Settings.Input;
-import com.dsp.main.ClickGui.Settings.Mode;
-import com.dsp.main.ClickGui.Settings.Slider;
+import com.dsp.main.UI.ClickGui.Settings.CheckBox;
+import com.dsp.main.UI.ClickGui.Settings.Input;
+import com.dsp.main.UI.ClickGui.Settings.Mode;
+import com.dsp.main.UI.ClickGui.Settings.Slider;
 import com.dsp.main.Module;
 
 public class Test extends Module {

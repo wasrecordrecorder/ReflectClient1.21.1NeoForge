@@ -1,4 +1,4 @@
-package com.dsp.main.ClickGui.Settings;
+package com.dsp.main.UI.ClickGui.Settings;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;

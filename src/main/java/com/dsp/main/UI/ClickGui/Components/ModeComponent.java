@@ -1,8 +1,8 @@
-package com.dsp.main.ClickGui.Components;
+package com.dsp.main.UI.ClickGui.Components;
 
-import com.dsp.main.ClickGui.Button;
-import com.dsp.main.ClickGui.Settings.Mode;
-import com.dsp.main.ClickGui.Settings.Setting;
+import com.dsp.main.UI.ClickGui.Button;
+import com.dsp.main.UI.ClickGui.Settings.Mode;
+import com.dsp.main.UI.ClickGui.Settings.Setting;
 import com.dsp.main.Utils.Font.FontRenderers;
 import com.dsp.main.Utils.Render.DrawHelper;
 import com.mojang.blaze3d.vertex.PoseStack;

@@ -9,9 +9,12 @@
     "defaultRequire": 1
   },
   "client": [
-    "InventoryScreenMixin",
+    "BossHealthOverlayAccessor",
+    "ScoreboardMixin",
+    "GuiHotbarMixin",
     "LivingEntityMixin",
     "MinecraftMixin",
+    "MultiPlayerGameModeMixin",
     "PlayerTabOverlayMixin"
   ]
 }

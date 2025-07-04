@@ -1,6 +1,6 @@
 package com.dsp.main;
 
-import com.dsp.main.ClickGui.Settings.Setting;
+import com.dsp.main.UI.ClickGui.Settings.Setting;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
