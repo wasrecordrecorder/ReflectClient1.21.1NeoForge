@@ -1,12 +1,16 @@
 package com.dsp.main.UI.MainMenu;
 
 import com.dsp.main.Utils.AltConfig;
+import com.dsp.main.Utils.Font.builders.Builder;
+import com.dsp.main.Utils.Font.builders.states.QuadColorState;
+import com.dsp.main.Utils.Font.builders.states.QuadRadiusState;
+import com.dsp.main.Utils.Font.builders.states.SizeState;
+import com.dsp.main.Utils.Font.renderers.impl.BuiltBorder;
+import com.dsp.main.Utils.Font.renderers.impl.BuiltText;
 import com.dsp.main.Utils.Minecraft.UserSession.UserSessionUtil;
 import com.dsp.main.Utils.Render.DrawHelper;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
-import net.minecraft.client.gui.components.EditBox;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.screens.multiplayer.JoinMultiplayerScreen;
 import net.minecraft.client.gui.screens.options.OptionsScreen;
@@ -15,12 +19,16 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import com.mojang.blaze3d.systems.RenderSystem;
 import net.neoforged.neoforge.client.gui.ModListScreen;
+import org.joml.Matrix4f;
 
 import java.awt.Color;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
+import static com.dsp.main.Main.BIKO_FONT;
+import static com.dsp.main.Main.ICONS;
 
 public class MainMenuScreen extends Screen {
     private static final float MAX_HEIGHT = 200.0F;
@@ -52,9 +60,8 @@ public class MainMenuScreen extends Screen {
     private float targetHeight = 20.0F;
     private float scroll = 0.0F;
     private float scrollTarget = 0.0F;
-    private EditBox inputField;
+    private CustomInputField inputField;
     private boolean typing = false;
-    private String altName = "";
     private int hoveredIndex = -1;
     private double lastMouseX = 0.0;
     private double lastMouseY = 0.0;
@@ -111,7 +118,14 @@ public class MainMenuScreen extends Screen {
             guiGraphics.pose().scale(scale, scale, 1.0F);
             guiGraphics.pose().translate(-(x + width / 2), -(y + height / 2), 0);
             RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, opacity);
-            DrawHelper.drawTexture(BUTTON_TEXTURE, guiGraphics.pose().last().pose(), x, y, width, height);
+            BuiltBorder border = Builder.border()
+                    .size(new SizeState(width, height))
+                    .color(new QuadColorState(Color.DARK_GRAY, Color.GRAY, Color.DARK_GRAY, Color.GRAY))
+                    .radius(new QuadRadiusState(2f, 2f, 2f, 2f))
+                    .thickness(0.03f)
+                    .smoothness(1f, 1f)
+                    .build();
+            border.render(guiGraphics.pose().last().pose(), x, y);
             RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
             int textColor = new Color(
                     (int)lerp(161, 255, hoverProgress),
@@ -119,8 +133,20 @@ public class MainMenuScreen extends Screen {
                     (int)lerp(177, 255, hoverProgress),
                     (int)(255 * opacity)
             ).getRGB();
-            guiGraphics.drawCenteredString(Minecraft.getInstance().font, text, (int)(x + width / 2), (int)(y + height / 2 - 4), textColor);
 
+            BuiltText lab1 = Builder.text()
+                    .font(BIKO_FONT.get())
+                    .text(text)
+                    .color(textColor)
+                    .size(10f)
+                    .thickness(0.05f)
+                    .build();
+            float textWidth = BIKO_FONT.get().getWidth(text, 10f);
+            float textHeight = BIKO_FONT.get().getMetrics().lineHeight() * 10f;
+            float textX = x + (width - textWidth) / 2;
+            float textY = y + (height - textHeight) / 2;
+
+            lab1.render(guiGraphics.pose().last().pose(), textX, textY, 0);
             guiGraphics.pose().popPose();
         }
 
@@ -137,8 +163,7 @@ public class MainMenuScreen extends Screen {
 
     @Override
     protected void init() {
-        Font font = Minecraft.getInstance().font;
-        this.inputField = new EditBox(font, 0, 0, 110, 15, Component.literal("Nickname"));
+        this.inputField = new CustomInputField(0, 0, 110, 15, Component.literal("Nickname"));
         this.inputField.setMaxLength(16);
         this.inputField.setValue("");
         AltConfig.loadAlts(alts);
@@ -220,15 +245,14 @@ public class MainMenuScreen extends Screen {
 
     public void handleKeyPressed(int keyCode, int scanCode, int modifiers) {
         if (typing) {
-            if (keyCode == 259 && !altName.isEmpty()) {
-                altName = altName.substring(0, altName.length() - 1);
-            } else if (keyCode == 257 && altName.length() >= 3 && !alts.stream().anyMatch(a -> a.getUsername().equals(altName))) {
-                Account newAccount = new Account(altName, false);
+            if (keyCode == 259 && !inputField.getValue().isEmpty()) { // Backspace
+                inputField.keyPressed(keyCode, scanCode, modifiers);
+            } else if (keyCode == 257 && inputField.getValue().length() >= 3 && !alts.stream().anyMatch(a -> a.getUsername().equals(inputField.getValue()))) { // Enter
+                Account newAccount = new Account(inputField.getValue(), false);
                 alts.add(newAccount);
                 accountOpacities.put(newAccount.getUsername(), 0.0F);
-                UserSessionUtil.setNameSession(altName);
+                UserSessionUtil.setNameSession(inputField.getValue());
                 AltConfig.saveAlts(alts);
-                altName = "";
                 inputField.setValue("");
                 typing = false;
             }
@@ -238,10 +262,7 @@ public class MainMenuScreen extends Screen {
 
     public void handleCharTyped(char codePoint, int modifiers) {
         if (typing) {
-            if (Minecraft.getInstance().font.width(altName + codePoint) < WIDTH - 50) {
-                altName += codePoint;
-                inputField.charTyped(codePoint, modifiers);
-            }
+            inputField.charTyped(codePoint, modifiers);
         }
     }
 
@@ -268,10 +289,43 @@ public class MainMenuScreen extends Screen {
         DrawHelper.rectangle(guiGraphics.pose(), x - 2, y - 2, WIDTH + 4, currentHeight + 4, 6.0F, new Color(0, 0, 10, 80).getRGB());
 
         String username = Minecraft.getInstance().getUser().getName();
-        guiGraphics.drawString(Minecraft.getInstance().font, username, (int)(x + 6), (int)(y + 6), Color.WHITE.getRGB());
-        DrawHelper.drawTexture(ICON_TEXTURE, guiGraphics.pose().last().pose(), x - 20, y, 20, 20);
-        DrawHelper.drawTexture(open ? ARROW_UP : ARROW_DOWN, guiGraphics.pose().last().pose(), x + WIDTH - 16, y + 2, 12, 12);
 
+        // Render current username with BuiltText (left-aligned)
+        if (BIKO_FONT.get() != null) {
+            BuiltText usernameText = Builder.text()
+                    .font(BIKO_FONT.get())
+                    .text(username)
+                    .color(new Color(255, 255, 255, 255).getRGB())
+                    .size(10f)
+                    .thickness(0.05f)
+                    .build();
+            float usernameTextWidth = BIKO_FONT.get().getWidth(username, 10f);
+            float usernameTextHeight = BIKO_FONT.get().getMetrics().lineHeight() * 10f;
+            float usernameTextY = y + 6;
+            usernameText.render(guiGraphics.pose().last().pose(), x + 6, usernameTextY, 0);
+        } else {
+            System.err.println("Font is null, skipping username rendering for: " + username);
+        }
+        BuiltText UserIcon = Builder.text()
+                .font(ICONS.get())
+                .text("A")
+                .color(new Color(255, 255, 255, 255).getRGB())
+                .size(17f)
+                .thickness(0.0005f)
+                .build();
+        UserIcon.render(guiGraphics.pose().last().pose(), x - 20, y +2);
+
+
+        //DrawHelper.drawTexture(ICON_TEXTURE, guiGraphics.pose().last().pose(), x - 20, y, 20, 20);
+        //DrawHelper.drawTexture(open ? ARROW_UP : ARROW_DOWN, guiGraphics.pose().last().pose(), x + WIDTH - 16, y + 2, 12, 12);
+        BuiltText ArrowIcon = Builder.text()
+                .font(ICONS.get())
+                .text(open ? "y" : "z")
+                .color(new Color(255, 255, 255, 255).getRGB())
+                .size(15f)
+                .thickness(0.0005f)
+                .build();
+        ArrowIcon.render(guiGraphics.pose().last().pose(), x + WIDTH - 16, y +2);
         if (open) {
             DrawHelper.rectangle(guiGraphics.pose(), x, y + 20, WIDTH, 0.5F, 0.0F, new Color(64, 64, 64, 255).getRGB());
             float contentHeight = alts.size() * ITEM_HEIGHT;
@@ -328,14 +382,48 @@ public class MainMenuScreen extends Screen {
                     int bgColor = isCurrent ? new Color(30, 30, 36, (int)(128 * opacity)).getRGB() : new Color(30, 30, 36, (int)(hoverOpacity * opacity)).getRGB();
                     DrawHelper.rectangle(guiGraphics.pose(), x + 5, visualY, WIDTH - (needsScroll ? SCROLLBAR_WIDTH + 12 : 10), ITEM_HEIGHT - 2, 3.0F, bgColor);
                     RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, opacity);
-                    DrawHelper.drawTexture(account.isFavorite() ? FAVORITED : UNFAVORITED, guiGraphics.pose().last().pose(),
-                            x + 7, visualY + 3, 10, 10);
+
+                    //DrawHelper.drawTexture(account.isFavorite() ? FAVORITED : UNFAVORITED, guiGraphics.pose().last().pose(),
+                    //        x + 7, visualY + 3, 10, 10);
+
+                    BuiltText FavoriteState = Builder.text()
+                            .font(ICONS.get())
+                            .text(account.isFavorite() ? "Y" : "Z")
+                            .color(account.isFavorite() ? new Color(255, 235, 0, 255).getRGB() : new Color(255, 255, 255, 255).getRGB())
+                            .size(11f)
+                            .thickness(0.0005f)
+                            .build();
+                    FavoriteState.render(guiGraphics.pose().last().pose(), x + 5, visualY + 3);
+
                     RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
                     int textColor = new Color(255, 255, 255, (int)(255 * opacity)).getRGB();
-                    guiGraphics.drawString(Minecraft.getInstance().font, account.getUsername(), (int)(x + 18), (int)(visualY + 4), textColor);
+                    if (BIKO_FONT.get() != null) {
+                        BuiltText accountText = Builder.text()
+                                .font(BIKO_FONT.get())
+                                .text(accountUsername)
+                                .color(textColor)
+                                .size(10f)
+                                .thickness(0.05f)
+                                .build();
+                        float accountTextWidth = BIKO_FONT.get().getWidth(accountUsername, 10f);
+                        float accountTextHeight = BIKO_FONT.get().getMetrics().lineHeight() * 10f;
+                        float accountTextY = visualY + 4;
+                        accountText.render(guiGraphics.pose().last().pose(), x + 18, accountTextY, 0);
+                    } else {
+                        System.err.println("Font is null, skipping account username rendering for: " + accountUsername);
+                    }
                     if (isHovered && !isCurrent && !account.isFavorite()) {
                         RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, opacity);
                         DrawHelper.drawTexture(CROSS_TEXTURE, guiGraphics.pose().last().pose(), x + WIDTH - (needsScroll ? SCROLLBAR_WIDTH + 22 : 20), visualY + 3, 10, 10);
+                        BuiltText DrawCross = Builder.text()
+                                .font(ICONS.get())
+                                .text("E")
+                                .color(new Color(255, 255, 255, 255).getRGB())
+                                .size(11f)
+                                .thickness(0.0005f)
+                                .build();
+                        DrawCross.render(guiGraphics.pose().last().pose(), x + WIDTH - (needsScroll ? SCROLLBAR_WIDTH + 22 : 20), visualY + 3);
+
                         RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
                     }
                 }
@@ -357,11 +445,34 @@ public class MainMenuScreen extends Screen {
                         int bgColor = new Color(30, 30, 36, (int)(64 * opacity)).getRGB();
                         DrawHelper.rectangle(guiGraphics.pose(), x + 5, visualY, WIDTH - (needsScroll ? SCROLLBAR_WIDTH + 12 : 10), ITEM_HEIGHT - 2, 3.0F, bgColor);
                         RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, opacity);
-                        DrawHelper.drawTexture(UNFAVORITED, guiGraphics.pose().last().pose(),
-                                x + 7, visualY + 3, 10, 10);
+
+                        BuiltText DrawUnFavorited = Builder.text()
+                                .font(ICONS.get())
+                                .text("Z")
+                                .color(new Color(255, 255, 255, 255).getRGB())
+                                .size(11f)
+                                .thickness(0.0005f)
+                                .build();
+                        DrawUnFavorited.render(guiGraphics.pose().last().pose(), x + 7, visualY + 3);
+
+                        //DrawHelper.drawTexture(UNFAVORITED, guiGraphics.pose().last().pose(),
+                                //        x + 7, visualY + 3, 10, 10);
+
                         RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
                         int textColor = new Color(255, 255, 255, (int)(255 * opacity)).getRGB();
-                        guiGraphics.drawString(Minecraft.getInstance().font, deletingUsername, (int)(x + 18), (int)(visualY + 4), textColor);
+                        if (BIKO_FONT.get() != null) {
+                            BuiltText deletingText = Builder.text()
+                                    .font(BIKO_FONT.get())
+                                    .text(deletingUsername)
+                                    .color(textColor)
+                                    .size(10f)
+                                    .thickness(0.05f)
+                                    .build();
+                            float deletingTextY = visualY + 4;
+                            deletingText.render(guiGraphics.pose().last().pose(), x + 18, deletingTextY, 0);
+                        } else {
+                            System.err.println("Font is null, skipping deleting username rendering for: " + deletingUsername);
+                        }
                     }
                 }
             }
@@ -375,19 +486,11 @@ public class MainMenuScreen extends Screen {
             float inputY = y + currentHeight - 2 * ITEM_HEIGHT;
             float randomButtonY = y + currentHeight - ITEM_HEIGHT;
 
-            inputField.setX((int)(x + 5));
-            inputField.setY((int)inputY);
-            inputField.setWidth((int)(WIDTH - 30));
-            inputField.setHeight(15);
-            DrawHelper.rectangle(guiGraphics.pose(), x + 5, inputY, WIDTH - 10, ITEM_HEIGHT - 2, 3.0F,
-                    new Color(30, 30, 36, (int)(64 * currentOpenProgress)).getRGB());
-            String displayText = typing ? altName + (System.currentTimeMillis() % 1000 > 500 ? "_" : "") :
-                    (altName.isEmpty() ? "Enter nickname" : altName);
-            int textAlpha = (int)(255 * inputOpacity * currentOpenProgress);
-            guiGraphics.drawString(Minecraft.getInstance().font, displayText, (int)(x + 10), (int)(inputY + 4),
-                    new Color(255, 255, 255, textAlpha).getRGB());
-            inputField.render(guiGraphics, mouseX, mouseY, partialTick);
-            if (altName.length() >= 3 && !alts.stream().anyMatch(a -> a.getUsername().equals(altName))) {
+            inputField.setPosition(x + 5, inputY);
+            inputField.setSize(WIDTH - 30, ITEM_HEIGHT - 2);
+            inputField.render(guiGraphics, mouseX, mouseY, partialTick, currentOpenProgress);
+
+            if (inputField.getValue().length() >= 3 && !alts.stream().anyMatch(a -> a.getUsername().equals(inputField.getValue()))) {
                 RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, currentOpenProgress);
                 DrawHelper.drawTexture(ENTER, guiGraphics.pose().last().pose(), x + WIDTH - 18, inputY + 3, 10, 10);
                 RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
@@ -398,11 +501,32 @@ public class MainMenuScreen extends Screen {
             DrawHelper.rectangle(guiGraphics.pose(), x + 5, randomButtonY, WIDTH - 10, ITEM_HEIGHT - 2, 3.0F,
                     new Color(30, 30, 36, (int)(randomOpacity * currentOpenProgress)).getRGB());
             RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, currentOpenProgress);
-            DrawHelper.drawTexture(RANDOM, guiGraphics.pose().last().pose(), x + WIDTH - 18, randomButtonY + 3, 10, 10);
+            BuiltText RandomButtonIcon = Builder.text()
+                    .font(ICONS.get())
+                    .text("G")
+                    .color(new Color(255, 255, 255, 255).getRGB())
+                    .size(13f)
+                    .thickness(0.0005f)
+                    .build();
+            RandomButtonIcon.render(guiGraphics.pose().last().pose(), x + WIDTH - 20, randomButtonY + 1);
+            //DrawHelper.drawTexture(RANDOM, guiGraphics.pose().last().pose(), x + WIDTH - 18, randomButtonY + 3, 10, 10);
             RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
             int randomTextAlpha = (int)(255 * currentOpenProgress);
-            guiGraphics.drawString(Minecraft.getInstance().font, "Random", (int)(x + 10), (int)(randomButtonY + 4),
-                    new Color(255, 255, 255, randomTextAlpha).getRGB());
+            if (BIKO_FONT.get() != null) {
+                BuiltText randomText = Builder.text()
+                        .font(BIKO_FONT.get())
+                        .text("Random")
+                        .color(new Color(255, 255, 255, randomTextAlpha).getRGB())
+                        .size(10f)
+                        .thickness(0.05f)
+                        .build();
+                float randomTextWidth = BIKO_FONT.get().getWidth("Random", 10f);
+                float randomTextHeight = BIKO_FONT.get().getMetrics().lineHeight() * 10f;
+                float randomTextY = randomButtonY + 4;
+                randomText.render(guiGraphics.pose().last().pose(), x + 10, randomTextY, 0);
+            } else {
+                System.err.println("Font is null, skipping random text rendering");
+            }
 
             if (needsScroll) {
                 float scrollbarHeight = Math.max(20, scrollableHeight * (scrollableHeight / contentHeight));
@@ -419,16 +543,17 @@ public class MainMenuScreen extends Screen {
         float randomButtonY = y + currentHeight - ITEM_HEIGHT;
         boolean needsScroll = alts.size() * ITEM_HEIGHT > (MAX_HEIGHT - 20 - 2 * ITEM_HEIGHT);
 
-        if (open && isMouseOver(mouseX, mouseY, x + 5, inputY, WIDTH - 10, ITEM_HEIGHT)) {
+        if (open && isMouseOver(mouseX, mouseY, x + 5, inputY, WIDTH - 30, ITEM_HEIGHT - 2)) {
             typing = !typing;
-            inputField.mouseClicked(mouseX, mouseY, button);
-            return true;
+            inputField.setFocused(typing);
+            return inputField.mouseClicked(mouseX, mouseY, button);
         }
 
         if (isMouseOver(mouseX, mouseY, x, y, WIDTH, 20)) {
             open = !open;
             if (!open) {
                 typing = false;
+                inputField.setFocused(false);
             }
             return true;
         }
@@ -460,13 +585,13 @@ public class MainMenuScreen extends Screen {
                 }
             }
 
-            if (isMouseOver(mouseX, mouseY, x + WIDTH - 18, inputY + 3, 10, 10) && altName.length() >= 3 && !alts.stream().anyMatch(a -> a.getUsername().equals(altName))) {
-                alts.add(new Account(altName, false));
-                UserSessionUtil.setNameSession(altName);
+            if (isMouseOver(mouseX, mouseY, x + WIDTH - 18, inputY + 3, 10, 10) && inputField.getValue().length() >= 3 && !alts.stream().anyMatch(a -> a.getUsername().equals(inputField.getValue()))) {
+                alts.add(new Account(inputField.getValue(), false));
+                UserSessionUtil.setNameSession(inputField.getValue());
                 AltConfig.saveAlts(alts);
-                altName = "";
                 inputField.setValue("");
                 typing = false;
+                inputField.setFocused(false);
                 return true;
             }
 
@@ -485,6 +610,7 @@ public class MainMenuScreen extends Screen {
 
         if (!isMouseOver(mouseX, mouseY, x, y, WIDTH, currentHeight)) {
             typing = false;
+            inputField.setFocused(false);
         }
 
         return false;

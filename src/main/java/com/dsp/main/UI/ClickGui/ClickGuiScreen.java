@@ -1,7 +1,7 @@
 package com.dsp.main.UI.ClickGui;
 
 import com.dsp.main.Module;
-import net.minecraft.client.Minecraft;
+import com.dsp.main.Utils.Render.DrawHelper;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
@@ -13,28 +13,33 @@ import java.util.List;
 import static com.dsp.main.Api.mc;
 
 public class ClickGuiScreen extends Screen {
-    public static List<Frame> categoryFrames = new ArrayList<>();
-    private float animationProgress = 0;
-    private final float animationDuration = 300;
+    private static final List<Frame> categoryFrames = new ArrayList<>();
+    private final float animationDuration = 300; // Длительность анимации в мс
     private long animationStartTime;
 
     public ClickGuiScreen() {
         super(Component.literal("ClickGUI"));
         categoryFrames.clear();
-        int screenWidth = Minecraft.getInstance().getWindow().getGuiScaledWidth();
+        int screenWidth = mc.getWindow().getGuiScaledWidth();
+        int screenHeight = mc.getWindow().getGuiScaledHeight();
         int frameWidth = 130;
-        int frameHeight = 16;
-        int gap = 20;
+        int frameHeight = 18;
+        int gap = 18;
 
         int count = Module.Category.values().length;
         int totalWidth = count * frameWidth + (count - 1) * gap;
-        int startX = (screenWidth - totalWidth) - 50;
-        int startY = 30;
+        int startX = (screenWidth - totalWidth) / 2;
+
+        int headerHeight = frameHeight;
+        int footerHeight = frameHeight / 2;
+        int maxVisibleHeight = (int)(screenHeight * 0.8);
+        int totalFrameHeight = headerHeight + maxVisibleHeight + footerHeight;
+        int startY = (screenHeight - totalFrameHeight) / 2;
 
         for (int i = 0; i < count; i++) {
             Module.Category category = Module.Category.values()[i];
             int x = startX + i * (frameWidth + gap);
-            categoryFrames.add(new Frame(x, startY, frameWidth, frameHeight, category));
+            categoryFrames.add(new Frame(x, startY, frameHeight, category, i));
         }
     }
 
@@ -45,27 +50,28 @@ public class ClickGuiScreen extends Screen {
     }
 
     @Override
-    public void render(@NotNull GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTicks) {
-        this.renderBlurredBackground(partialTicks);
+    public void tick() {
         long elapsed = System.currentTimeMillis() - animationStartTime;
-        animationProgress = Math.min(elapsed / animationDuration, 1.0f);
-        float easedProgress = (float) (1 - Math.pow(1 - animationProgress, 3));
-
-        for (Frame frame : categoryFrames) {
-            frame.render(guiGraphics, mouseX, mouseY, partialTicks, easedProgress);
+        for (int i = 0; i < categoryFrames.size(); i++) {
+            categoryFrames.get(i).updatePosition(elapsed);
         }
-        super.render(guiGraphics, mouseX, mouseY, partialTicks);
-        renderBackground(guiGraphics,mouseX,mouseY,partialTicks);
     }
+
     @Override
     public void renderBackground(GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTick) {
-
-        //super.renderBackground(guiGraphics, mouseX,mouseY,partialTick);
+        return;
     }
 
     @Override
-    public void onClose() {
-        super.onClose();
+    public void render(@NotNull GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTicks) {
+        this.renderBlurredBackground(partialTicks);
+        int shadowColor = 0x80000000;
+        DrawHelper.rectangle(guiGraphics.pose(), 0, 0, mc.getWindow().getGuiScaledWidth(), mc.getWindow().getGuiScaledHeight(), 0, shadowColor);
+
+        for (Frame frame : categoryFrames) {
+            frame.render(guiGraphics, mouseX, mouseY, partialTicks);
+        }
+        super.render(guiGraphics, mouseX, mouseY, partialTicks);
     }
 
     @Override
@@ -97,9 +103,9 @@ public class ClickGuiScreen extends Screen {
         for (Frame frame : categoryFrames) {
             frame.keyPressed(keyCode);
         }
-        if (keyCode == 344) {
+        if (keyCode == 344) { // Код клавиши RSHIFT
             this.onClose();
-            Minecraft.getInstance().setScreen(null);
+            mc.setScreen(null);
             return true;
         }
         return super.keyPressed(keyCode, scanCode, modifiers);

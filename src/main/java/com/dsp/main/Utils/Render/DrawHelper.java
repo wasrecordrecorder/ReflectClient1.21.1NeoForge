@@ -140,7 +140,7 @@ public class DrawHelper implements Mine {
         RenderSystem.disableBlend();
     }
 
-    public void drawSemiRoundRect(PoseStack matrices, float x, float y, float width, float height, float rounding1, float rounding2,float rounding3,float rounding4, int color) {
+    public static void drawSemiRoundRect(PoseStack matrices, float x, float y, float width, float height, float rounding1, float rounding2,float rounding3,float rounding4, int color) {
         RenderSystem.enableBlend();
         RenderSystem.defaultBlendFunc();
         RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
@@ -322,7 +322,61 @@ public class DrawHelper implements Mine {
                                      final float height) {
         return mouseX >= x && mouseX <= x + width && mouseY >= y && mouseY <= y + height;
     }
+    public static void rectangleOutline(PoseStack matrices, float x, float y, float width, float height, float lineWidth, int color) {
+        RenderSystem.enableBlend();
+        RenderSystem.defaultBlendFunc();
+        RenderSystem.setShader(GameRenderer::getPositionColorShader);
+        RenderSystem.lineWidth(lineWidth);
 
+        Matrix4f matrix = matrices.last().pose();
+        BufferBuilder bufferBuilder = Tesselator.getInstance().begin(VertexFormat.Mode.LINES, DefaultVertexFormat.POSITION_COLOR);
+
+        float r = ColorUtil.getRed(color) / 255f;
+        float g = ColorUtil.getGreen(color) / 255f;
+        float b = ColorUtil.getBlue(color) / 255f;
+        float a = ColorUtil.getAlpha(color) / 255f;
+
+        // Определяем четыре угла прямоугольника
+        bufferBuilder.addVertex(matrix, x, y, 0).setColor(r, g, b, a);
+        bufferBuilder.addVertex(matrix, x + width, y, 0).setColor(r, g, b, a);
+        bufferBuilder.addVertex(matrix, x + width, y + height, 0).setColor(r, g, b, a);
+        bufferBuilder.addVertex(matrix, x, y + height, 0).setColor(r, g, b, a);
+
+        BufferUploader.drawWithShader(bufferBuilder.buildOrThrow());
+        RenderSystem.disableBlend();
+    }
+
+    /** Рисует заполненный круг */
+    public static void drawCircle(PoseStack matrices, float centerX, float centerY, float radius, int color) {
+        int segments = 32; // Количество сегментов для аппроксимации круга
+        float angleStep = (float) (2 * Math.PI / segments);
+
+        RenderSystem.enableBlend();
+        RenderSystem.defaultBlendFunc();
+        RenderSystem.setShader(GameRenderer::getPositionColorShader);
+
+        Matrix4f matrix = matrices.last().pose();
+        BufferBuilder bufferBuilder = Tesselator.getInstance().begin(VertexFormat.Mode.TRIANGLE_FAN, DefaultVertexFormat.POSITION_COLOR);
+
+        float r = ColorUtil.getRed(color) / 255f;
+        float g = ColorUtil.getGreen(color) / 255f;
+        float b = ColorUtil.getBlue(color) / 255f;
+        float a = ColorUtil.getAlpha(color) / 255f;
+
+        // Центр круга
+        bufferBuilder.addVertex(matrix, centerX, centerY, 0).setColor(r, g, b, a);
+
+        // Вершины по окружности
+        for (int i = 0; i <= segments; i++) {
+            float angle = i * angleStep;
+            float x = centerX + radius * (float) Math.cos(angle);
+            float y = centerY + radius * (float) Math.sin(angle);
+            bufferBuilder.addVertex(matrix, x, y, 0).setColor(r, g, b, a);
+        }
+
+        BufferUploader.drawWithShader(bufferBuilder.buildOrThrow());
+        RenderSystem.disableBlend();
+    }
 
 
 }

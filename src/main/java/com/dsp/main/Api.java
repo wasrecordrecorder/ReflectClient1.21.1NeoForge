@@ -1,26 +1,20 @@
 package com.dsp.main;
 
 import com.dsp.main.UI.ClickGui.ClickGuiScreen;
-import com.dsp.main.Functions.Misc.Test;
+import com.dsp.main.Functions.Movement.Test;
 import com.dsp.main.Functions.Movement.AutoSprint;
 import com.dsp.main.UI.MainMenu.MainMenuScreen;
 import com.dsp.main.Managers.Hooks.InventoryScreenHook;
-import com.dsp.main.Utils.Render.DrawHelper;
 import com.mojang.blaze3d.vertex.PoseStack;
 import net.minecraft.client.Minecraft;
 import net.neoforged.bus.api.SubscribeEvent;
-import net.neoforged.neoforge.client.event.InputEvent;
-import net.neoforged.neoforge.client.event.MovementInputUpdateEvent;
-import net.neoforged.neoforge.client.event.RenderGuiEvent;
-import net.neoforged.neoforge.client.event.ScreenEvent;
+import net.neoforged.neoforge.client.event.*;
 import org.lwjgl.glfw.GLFW;
 
-import java.awt.*;
 import java.util.Objects;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 import static com.dsp.main.Main.isDetect;
-import static com.dsp.main.Utils.Minecraft.UserSession.UserSessionUtil.setNameSession;
 
 public class Api {
     public static Minecraft mc = Minecraft.getInstance();

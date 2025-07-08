@@ -118,10 +118,10 @@ public abstract class Module {
 
     public enum Category {
         COMBAT,
-        MISC,
         MOVEMENT,
         RENDER,
         PLAYER,
+        MISC
     }
 
     public static void disableAllModules() {
