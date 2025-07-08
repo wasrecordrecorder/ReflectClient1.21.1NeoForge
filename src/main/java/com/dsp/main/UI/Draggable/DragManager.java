@@ -4,48 +4,51 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import net.minecraft.client.Minecraft;
 
-import java.io.File;
-import java.io.IOException;
+import java.io.*;
 import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.HashMap;
 
 public class DragManager {
-    public static HashMap<String, Dragging> draggables = new HashMap<>();
+    public static HashMap<String, DraggableElement> draggables = new HashMap<>();
 
-    private static final File DRAG_DATA = new File(Minecraft.getInstance().gameDirectory, "dsp/ex.json");
-    private static final Gson GSON = new GsonBuilder().setPrettyPrinting().excludeFieldsWithoutExposeAnnotation().setPrettyPrinting().create();
+    private static final Path CONFIG_DIR = Paths.get(System.getenv("APPDATA"), "Some");
+    private static final Path DRAG_DATA = CONFIG_DIR.resolve("draggables.json");
+    private static final Gson GSON = new GsonBuilder()
+            .setPrettyPrinting()
+            .excludeFieldsWithoutExposeAnnotation()
+            .create();
 
     public static void save() {
-        if (!DRAG_DATA.exists()) {
-            DRAG_DATA.getParentFile().mkdirs();
-        }
         try {
-            Files.writeString(DRAG_DATA.toPath(), GSON.toJson(draggables.values()));
+            Files.createDirectories(CONFIG_DIR);
+            Files.writeString(DRAG_DATA, GSON.toJson(draggables.values()));
         } catch (IOException ex) {
             ex.printStackTrace();
         }
     }
 
     public static void init() {
-        if (!DRAG_DATA.exists()) {
-            DRAG_DATA.getParentFile().mkdirs();
+        if (!Files.exists(DRAG_DATA)) {
             return;
         }
-        Dragging[] draggings;
         try {
-            draggings = GSON.fromJson(Files.readString(DRAG_DATA.toPath()), Dragging[].class);
+            DraggableElement[] elements = GSON.fromJson(Files.readString(DRAG_DATA), DraggableElement[].class);
+            for (DraggableElement element : elements) {
+                if (element == null) continue;
+                DraggableElement currentElement = draggables.get(element.getName());
+                if (currentElement != null) {
+                    currentElement.setX(element.getX());
+                    currentElement.setY(element.getY());
+                }
+            }
         } catch (IOException ex) {
             ex.printStackTrace();
-            return;
-        }
-        for (Dragging dragging : draggings) {
-            if (dragging == null) return;
-            Dragging currentDrag = draggables.get(dragging.getName());
-            if (currentDrag == null) continue;
-            currentDrag.setX(dragging.getX());
-            currentDrag.setY(dragging.getY());
-            draggables.put(dragging.getName(), currentDrag);
         }
     }
 
+    public static void addDraggable(DraggableElement element) {
+        draggables.put(element.getName(), element);
+    }
 }

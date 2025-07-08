@@ -24,11 +24,13 @@ import java.util.List;
 
 import static com.dsp.main.Api.mc;
 import static com.dsp.main.Main.BIKO_FONT;
+import static com.dsp.main.Main.ICONS;
 
 public class Button {
     private static final float ANIMATION_SPEED = 0.2f;
     private static final int PADDING = 3;
     private static final float ROUNDING = 4.0f;
+    private static final int COMPONENT_PADDING = 2; // Padding above and below components
 
     private final Module module;
     private int x;
@@ -53,15 +55,17 @@ public class Button {
     private void initComponents() {
         for (Setting setting : module.getSettings()) {
             if (setting instanceof CheckBox)
-                components.add(new CheckBoxComponent(setting, this));
+                components.add(new CheckBoxComponent((CheckBox) setting, this));
             else if (setting instanceof BindCheckBox)
                 components.add(new BindCheckBoxComponent(setting, this));
             else if (setting instanceof Mode)
-                components.add(new ModeComponent(setting, this));
+                components.add(new ModeComponent((Mode) setting, this));
             else if (setting instanceof Slider)
-                components.add(new SliderComponent(setting, this, ((Slider) setting).getDefaultvalue()));
+                components.add(new SliderComponent((Slider) setting, this, (float) ((Slider) setting).getDefaultvalue()));
             else if (setting instanceof Input)
                 components.add(new InputComponent(setting, this));
+            else if (setting instanceof MultiCheckBox)
+                components.add(new MultiCheckBoxComponent((MultiCheckBox) setting, this));
         }
     }
 
@@ -84,8 +88,8 @@ public class Button {
 
         QuadColorState borderColorState;
         if (module.isEnabled()) {
-            Color neonWhite1 = ColorHelper.twoColorEffect(Color.WHITE,new Color(104, 141, 175, 220), 255);
-            Color neonWhite2 = ColorHelper.twoColorEffect(new Color(104, 141, 175, 220),Color.WHITE, 255);
+            Color neonWhite1 = ColorHelper.twoColorEffect(Color.WHITE, new Color(104, 141, 175, 220), 255);
+            Color neonWhite2 = ColorHelper.twoColorEffect(new Color(104, 141, 175, 220), Color.WHITE, 255);
             borderColorState = new QuadColorState(neonWhite1, neonWhite2, neonWhite1, neonWhite2);
         } else {
             borderColorState = new QuadColorState(Color.DARK_GRAY, new Color(r, g, b, a), Color.DARK_GRAY, new Color(r, g, b, a));
@@ -98,13 +102,11 @@ public class Button {
                 .smoothness(0.5f, 0.5f)
                 .build();
         border.render(new Matrix4f(), x, y);
-
-        // Text color: brighter on hover, white-based
         int textColor;
         if (isHovered(mouseX, mouseY)) {
             textColor = new Color(230, 230, 230, (int) (255 * 0.7)).getRGB();
         } else if (module.isEnabled()) {
-            textColor = new Color(255, 255, 255,255).getRGB();
+            textColor = new Color(255, 255, 255, 255).getRGB();
         } else {
             textColor = new Color(200, 200, 200, (int) (255 * 0.7)).getRGB();
         }
@@ -121,43 +123,42 @@ public class Button {
                 .build();
         text.render(new Matrix4f(), textX, textY);
 
-        if (!module.getSettings().isEmpty()) {
-            String indicator = extended ? "−" : "+";
-            int indicatorX = (int) (x + width - BIKO_FONT.get().getWidth(indicator, 9f) - PADDING);
+        if (!module.getSettings().isEmpty() && module.isEnabled()) {
             BuiltText text1 = Builder.text()
-                    .font(BIKO_FONT.get())
-                    .text(indicator)
+                    .font(ICONS.get())
+                    .text("+")
                     .color(textColor)
                     .size(9f)
                     .thickness(0.05f)
                     .build();
-            //text1.render(new Matrix4f(), indicatorX, textY);
-
+            text1.render(new Matrix4f(), x + width - 15, textY);
         }
 
-        // Отрисовка настроек с анимацией
         if (animationProgress > 0.01f) {
-            int totalComponentHeight = (int) components.stream()
+            // Calculate total height including padding between components
+            float totalComponentHeight = components.stream()
                     .filter(c -> c.getSetting().isVisible())
-                    .count() * height;
-            int animatedHeight = (int) (totalComponentHeight * animationProgress);
-            int offsetY = y + height;
+                    .map(Component::getHeight)
+                    .reduce(0f, Float::sum);
+            int visibleComponents = (int) components.stream().filter(c -> c.getSetting().isVisible()).count();
+            totalComponentHeight += (visibleComponents > 0 ? (visibleComponents - 1) * 2 * COMPONENT_PADDING : 0);
+            float animatedHeight = totalComponentHeight * animationProgress;
+            float offsetY = y + height;
 
-            graphics.enableScissor(x, y + height, x + width, y + height + animatedHeight);
+            graphics.enableScissor(x, y + height, x + width, (int) (y + height + animatedHeight + 2 * COMPONENT_PADDING));
 
             for (Component comp : components) {
                 if (comp.getSetting().isVisible()) {
                     comp.setX(x + PADDING);
                     comp.setY(offsetY);
                     comp.draw(graphics, mouseX, mouseY);
-                    offsetY += height;
+                    offsetY += comp.getHeight() + 2 * COMPONENT_PADDING;
                 }
             }
 
             graphics.disableScissor();
         }
 
-        // Всплывающая подсказка с описанием
         if (isHovered(mouseX, mouseY) && !module.getDescription().isEmpty()) {
             String desc = module.getDescription();
             float descWidth = mc.font.width(desc);
@@ -217,10 +218,14 @@ public class Button {
         this.width = w;
     }
 
-    public int getHeightWithComponents() {
-        return (int) (height + (animationProgress * components.stream()
+    public float getHeightWithComponents() {
+        float componentHeight = components.stream()
                 .filter(c -> c.getSetting().isVisible())
-                .count() * height));
+                .map(Component::getHeight)
+                .reduce(0f, Float::sum);
+        int visibleComponents = (int) components.stream().filter(c -> c.getSetting().isVisible()).count();
+        componentHeight += (visibleComponents > 0 ? (visibleComponents - 1) * 2 * COMPONENT_PADDING : 0);
+        return height + (animationProgress * componentHeight);
     }
 
     public int getX() {

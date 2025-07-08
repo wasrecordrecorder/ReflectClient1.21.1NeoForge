@@ -3,13 +3,22 @@ package com.dsp.main.UI.ClickGui.Components;
 import com.dsp.main.UI.ClickGui.Button;
 import com.dsp.main.UI.ClickGui.Settings.Input;
 import com.dsp.main.UI.ClickGui.Settings.Setting;
+import com.dsp.main.Utils.Font.builders.Builder;
+import com.dsp.main.Utils.Font.builders.states.QuadColorState;
+import com.dsp.main.Utils.Font.builders.states.QuadRadiusState;
+import com.dsp.main.Utils.Font.builders.states.SizeState;
+import com.dsp.main.Utils.Font.renderers.impl.BuiltBorder;
+import com.dsp.main.Utils.Font.renderers.impl.BuiltText;
+import com.dsp.main.Utils.Render.Blur.DrawShader;
 import com.dsp.main.Utils.Render.DrawHelper;
 import net.minecraft.client.gui.GuiGraphics;
+import org.joml.Matrix4f;
 import org.lwjgl.glfw.GLFW;
 
 import java.awt.*;
 
 import static com.dsp.main.Api.mc;
+import static com.dsp.main.Main.BIKO_FONT;
 
 public class InputComponent extends Component {
     private StringBuilder text;
@@ -25,19 +34,39 @@ public class InputComponent extends Component {
     @Override
     public void draw(GuiGraphics graphics, int mouseX, int mouseY) {
         int compX = (int) this.x;
-        int compY = (int) this.y;
-        int width = parent.getWidth();
-        int height = parent.getHeight();
+        int compY = (int) this.y + 3;
+        int width = parent.getWidth() - 12;
+        int height = parent.getHeight() - 2;
 
         this.text = new StringBuilder(textSetting.getValue());
 
-        Color borderColor = isHovered(mouseX, mouseY) ? new Color(0x575551) : new Color(20, 30, 50);
-        DrawHelper.rectangle(graphics.pose(), compX, compY, width, height, 2, borderColor.hashCode());
+        Color borderColor = new Color(20, 30, 50);
+        DrawShader.drawRoundBlur(graphics.pose(), compX +4, compY, width, height, 3, borderColor.hashCode());
+        BuiltBorder border = Builder.border()
+                .size(new SizeState(width, height))
+                .color(new QuadColorState(Color.DARK_GRAY, Color.GRAY, Color.DARK_GRAY, Color.GRAY))
+                .radius(new QuadRadiusState(2f, 2f, 2f, 2f))
+                .thickness(0.01f)
+                .smoothness(0.8f, 0.8f)
+                .build();
+        border.render(new Matrix4f(), compX +4, compY);
+
 
         String displayText = text.length() > 0 ? text.toString() : textSetting.getName();
         int colorDisp = text.length() > 0 ? Color.WHITE.getRGB() : Color.GRAY.getRGB();
         int textY = compY + (height - mc.font.lineHeight) / 2;
-        graphics.drawString(mc.font, displayText, compX + 5, textY, colorDisp);
+
+        BuiltText text = Builder.text()
+                .font(BIKO_FONT.get())
+                .text(displayText)
+                .color(colorDisp)
+                .size(7f)
+                .thickness(0.05f)
+                .build();
+        float textWidth = BIKO_FONT.get().getWidth(displayText, 7f);
+        float textX = compX + 1 + (width - textWidth) / 2f;
+        text.render(new Matrix4f(), textX, textY + 2);
+
 
         super.draw(graphics, mouseX, mouseY);
     }
@@ -52,6 +81,11 @@ public class InputComponent extends Component {
     public boolean isHovered(double mouseX, double mouseY) {
         return mouseX > x && mouseX < x + parent.getWidth()
                 && mouseY > y && mouseY < y + parent.getHeight();
+    }
+    @Override
+    public float getHeight() {
+        float textHeight = BIKO_FONT.get().getMetrics().lineHeight() * 10.0f + 4; // Text field height + border
+        return textHeight + 4; // 2 padding top + 2 padding bottom
     }
 
     public void keyPressed(int keyCode) {

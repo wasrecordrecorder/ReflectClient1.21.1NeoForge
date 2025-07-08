@@ -14,7 +14,6 @@ import static com.dsp.main.Api.mc;
 
 public class ClickGuiScreen extends Screen {
     private static final List<Frame> categoryFrames = new ArrayList<>();
-    private final float animationDuration = 300; // Длительность анимации в мс
     private long animationStartTime;
 
     public ClickGuiScreen() {
@@ -103,7 +102,7 @@ public class ClickGuiScreen extends Screen {
         for (Frame frame : categoryFrames) {
             frame.keyPressed(keyCode);
         }
-        if (keyCode == 344) { // Код клавиши RSHIFT
+        if (keyCode == 344) {
             this.onClose();
             mc.setScreen(null);
             return true;

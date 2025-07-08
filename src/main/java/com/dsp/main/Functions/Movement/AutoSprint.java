@@ -9,7 +9,7 @@ import static com.dsp.main.Api.mc;
 import static com.dsp.main.Utils.Minecraft.Server.isPvP.isPvPMode;
 
 public class AutoSprint extends Module {
-    private static Mode SprintType = new Mode("Режим Спринта", "Legit", "Force");
+    private static Mode SprintType = new Mode("Sprint Mode", "Legit", "Force");
     public AutoSprint() {
         super("Auto Sprint", 0, Category.MOVEMENT, "Make you automatically running");
         addSetting(SprintType);
@@ -18,7 +18,7 @@ public class AutoSprint extends Module {
     public void onTick(ClientTickEvent.Pre event) {
         if (!(mc.player == null) && mc.player.getFoodData().getFoodLevel() > 6 && SprintType.isMode("Legit")) {
             mc.options.keySprint.setDown(true);
-        } else if (!(mc.player == null) && mc.player.getFoodData().getFoodLevel() > 6 && mc.player.xxa > 0 && !mc.player.isSprinting()) {
+        } else if (!(mc.player == null) && mc.player.getFoodData().getFoodLevel() > 6 && mc.player.zza > 0 && !mc.player.isSprinting()) {
             mc.player.setSprinting(true);
         }
     }

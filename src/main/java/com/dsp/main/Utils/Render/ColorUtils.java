@@ -69,8 +69,6 @@ public class ColorUtils implements Mine {
         return getColor(bright, bright, bright, 255);
     }
 
-
-    //    gradient with more than two colors
     public static int gradient(int speed, int index, int... colors) {
         int angle = (int) ((System.currentTimeMillis() / speed + index) % 360);
         angle = (angle > 180 ? 360 - angle : angle) + 180;

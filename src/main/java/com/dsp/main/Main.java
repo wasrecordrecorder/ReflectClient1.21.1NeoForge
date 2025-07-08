@@ -1,6 +1,8 @@
 package com.dsp.main;
 
 import com.dsp.main.Managers.ChatManager.ChatManager;
+import com.dsp.main.UI.Draggable.DragElements.WaterMark;
+import com.dsp.main.UI.Draggable.DragManager;
 import com.dsp.main.UI.Themes.ThemesUtil;
 import com.dsp.main.Utils.Font.msdf.MsdfFont;
 import net.neoforged.bus.EventBus;
@@ -17,9 +19,12 @@ public class Main {
     public static final String MODID = "dsp";
     public static Supplier<MsdfFont> BIKO_FONT = Suppliers.memoize(() -> MsdfFont.builder().atlas("biko").data("biko").build());
     public static Supplier<MsdfFont> ICONS = Suppliers.memoize(() -> MsdfFont.builder().atlas("atlas").data("atlas").build());
+    public static Supplier<MsdfFont> RUSANDENG = Suppliers.memoize(() -> MsdfFont.builder().atlas("rusandeng").data("rusandeng").build());
     public Main() {
         Api.Initialize();
         ThemeApi.init();
+        DragManager.init();
+        DragManager.addDraggable(new WaterMark("FPSCounter", 200, 200, 60, 20));
         EVENT_BUS.register(new Api());
         EVENT_BUS.register((new ChatManager()));
     }

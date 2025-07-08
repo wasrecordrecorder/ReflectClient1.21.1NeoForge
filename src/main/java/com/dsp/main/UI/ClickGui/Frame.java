@@ -4,7 +4,6 @@ import com.dsp.main.Module;
 import com.dsp.main.Utils.Font.builders.Builder;
 import com.dsp.main.Utils.Font.renderers.impl.BuiltText;
 import com.dsp.main.Utils.Render.Blur.DrawShader;
-import com.dsp.main.Utils.Render.DrawHelper;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import com.mojang.blaze3d.vertex.PoseStack;
@@ -21,6 +20,10 @@ public class Frame {
     private static final int PADDING = 1;
     private static final float ROUNDING = 10.0f;
     private static final int BUTTON_PADDING = 4;
+    private static final float SCROLLBAR_WIDTH = 2.0f;
+    private static final float SCROLLBAR_ROUNDING = 3.0f;
+    private static final float SCROLLBAR_ANIMATION_SPEED = 0.2f;
+    private static final long SCROLLBAR_FADE_DELAY = 1500; // 1.5 seconds in milliseconds
 
     private final List<Button> buttons = new ArrayList<>();
     private final Module.Category category;
@@ -39,6 +42,9 @@ public class Frame {
     private final int index;
 
     private int scrollOffset = 0;
+    private float scrollBarOpacity = 0.0f;
+    private long lastScrollTime = 0;
+    private boolean isScrolling = false;
 
     public Frame(int x, int y, int height, Module.Category category, int index) {
         this.finalX = x;
@@ -65,8 +71,8 @@ public class Frame {
     }
 
     public void updatePosition(long globalElapsed) {
-        float delay = index * 100; // Задержка 100 мс для каждого следующего фрейма
-        float animationDuration = 300; // Оставляем ту же скорость
+        float delay = index * 100;
+        float animationDuration = 300;
 
         float t = Math.max(0, Math.min(1, (globalElapsed - delay) / animationDuration));
         float easedProgress = t * t * t * (t * (6 * t - 15) + 10);
@@ -80,11 +86,11 @@ public class Frame {
         currentY = (int) (startY + (finalY - startY) * easedProgress);
     }
 
-
     public void render(GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTicks) {
         renderFrameBackground(guiGraphics);
         renderTitle(guiGraphics);
         renderButtons(guiGraphics, mouseX, mouseY, partialTicks);
+        renderScrollBar(guiGraphics, partialTicks);
     }
 
     private void renderFrameBackground(GuiGraphics guiGraphics) {
@@ -92,7 +98,6 @@ public class Frame {
         ps.pushPose();
         int frameHeight = headerHeight + maxVisibleHeight + footerHeight;
         DrawShader.drawRoundBlur(ps, currentX - 2, currentY, width + 4, frameHeight + 4, ROUNDING, new Color(5, 15, 25).hashCode(), 90, 0.6f);
-        //DrawHelper.drawSemiRoundRect(ps, currentX - 2, currentY - 1.3f, width + 4, 25, 0, ROUNDING, 0, ROUNDING, new Color(8, 13, 23, 120).hashCode());
         ps.popPose();
     }
 
@@ -111,7 +116,6 @@ public class Frame {
                 .build();
         text.render(new Matrix4f(), textX, textY);
 
-
         String iconChar;
         switch (category) {
             case COMBAT -> iconChar = "a";
@@ -119,7 +123,7 @@ public class Frame {
             case MOVEMENT -> iconChar = "K";
             case RENDER -> iconChar = "c";
             case PLAYER -> iconChar = "B";
-            default -> iconChar = "?";
+            default -> iconChar = "";
         }
         BuiltText icon = Builder.text()
                 .font(ICONS.get())
@@ -133,7 +137,7 @@ public class Frame {
     }
 
     private void renderButtons(GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTicks) {
-        int totalContentHeight = buttons.stream().mapToInt(b -> b.getHeightWithComponents() + BUTTON_PADDING).sum() - BUTTON_PADDING;
+        int totalContentHeight = buttons.stream().mapToInt(b -> (int) (b.getHeightWithComponents() + BUTTON_PADDING)).sum() - BUTTON_PADDING;
         int visibleContentHeight = Math.min(totalContentHeight, maxVisibleHeight - 5);
 
         int contentTop = currentY + headerHeight + 10;
@@ -154,6 +158,42 @@ public class Frame {
         guiGraphics.disableScissor();
     }
 
+    private void renderScrollBar(GuiGraphics guiGraphics, float partialTicks) {
+        int totalContentHeight = buttons.stream().mapToInt(b -> (int) (b.getHeightWithComponents() + BUTTON_PADDING)).sum() - BUTTON_PADDING;
+        int visibleContentHeight = Math.min(totalContentHeight, maxVisibleHeight - 5);
+
+        if (totalContentHeight <= visibleContentHeight) {
+            scrollBarOpacity = lerp(scrollBarOpacity, 0.0f, SCROLLBAR_ANIMATION_SPEED * partialTicks);
+            return;
+        }
+        long currentTime = System.currentTimeMillis();
+        if (isScrolling && currentTime - lastScrollTime > SCROLLBAR_FADE_DELAY) {
+            scrollBarOpacity = lerp(scrollBarOpacity, 0.0f, SCROLLBAR_ANIMATION_SPEED * partialTicks);
+        } else {
+            scrollBarOpacity = lerp(scrollBarOpacity, 1.0f, SCROLLBAR_ANIMATION_SPEED * partialTicks);
+        }
+
+        if (scrollBarOpacity <= 0.01f) return; // Don't render if fully transparent
+
+        // Calculate scrollbar dimensions
+        float scrollBarHeight = ((float) visibleContentHeight / totalContentHeight) * visibleContentHeight;
+        float maxScrollOffset = totalContentHeight - visibleContentHeight;
+        float scrollBarY = currentY + headerHeight + 10 + (scrollOffset / (float) maxScrollOffset) * (visibleContentHeight - scrollBarHeight);
+
+        // Render scrollbar
+        DrawShader.drawRoundBlur(
+                guiGraphics.pose(),
+                currentX + width + 3, // 2px padding from right edge
+                scrollBarY,
+                SCROLLBAR_WIDTH,
+                scrollBarHeight,
+                SCROLLBAR_ROUNDING,
+                new Color(128, 132, 150, (int)(scrollBarOpacity * 150)).hashCode(),
+                90,
+                0.7f
+        );
+    }
+
     public void mouseClicked(double mx, double my, int btn) {
         for (Button b : buttons) {
             if (b.mouseClicked(mx, my, btn)) {
@@ -162,17 +202,25 @@ public class Frame {
         }
     }
 
-    public void mouseReleased(double mouseX,double mouseY, int button) {
+    public void mouseReleased(double mouseX, double mouseY, int button) {
         buttons.forEach(b -> b.mouseReleased(mouseX, mouseY, button));
     }
 
     public void mouseScrolled(double mouseX, double mouseY, double delta) {
         if (isHovered(mouseX, mouseY)) {
-            int totalContentHeight = buttons.stream().mapToInt(b -> b.getHeightWithComponents() + BUTTON_PADDING).sum() - BUTTON_PADDING;
+            int totalContentHeight = buttons.stream().mapToInt(b -> (int) (b.getHeightWithComponents() + BUTTON_PADDING)).sum() - BUTTON_PADDING;
             int visibleContentHeight = Math.min(totalContentHeight, maxVisibleHeight);
             int maxScrollOffset = Math.max(0, totalContentHeight - visibleContentHeight);
             scrollOffset += delta > 0 ? -20 : 20;
             scrollOffset = Math.max(0, Math.min(scrollOffset, maxScrollOffset));
+            isScrolling = true;
+            lastScrollTime = System.currentTimeMillis();
+        }
+    }
+
+    public void mouseMoved(double mouseX, double mouseY) {
+        if (isScrolling && !isHovered(mouseX, mouseY)) {
+            isScrolling = false;
         }
     }
 
@@ -181,10 +229,14 @@ public class Frame {
     }
 
     private boolean isHovered(double mouseX, double mouseY) {
-        int totalContentHeight = buttons.stream().mapToInt(b -> b.getHeightWithComponents() + BUTTON_PADDING).sum() - BUTTON_PADDING;
+        int totalContentHeight = buttons.stream().mapToInt(b -> (int) (b.getHeightWithComponents() + BUTTON_PADDING)).sum() - BUTTON_PADDING;
         int visibleContentHeight = Math.min(totalContentHeight, maxVisibleHeight);
         int frameHeight = headerHeight + visibleContentHeight + footerHeight;
         return mouseX >= currentX && mouseX <= currentX + width && mouseY >= currentY && mouseY <= currentY + frameHeight;
+    }
+
+    private float lerp(float start, float end, float t) {
+        return start + t * (end - start);
     }
 
     public int getX() { return currentX; }

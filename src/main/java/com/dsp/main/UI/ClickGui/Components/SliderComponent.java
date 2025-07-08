@@ -1,101 +1,109 @@
 package com.dsp.main.UI.ClickGui.Components;
 
 import com.dsp.main.UI.ClickGui.Button;
-import com.dsp.main.UI.ClickGui.Settings.Setting;
 import com.dsp.main.UI.ClickGui.Settings.Slider;
-import com.dsp.main.Utils.Render.DrawHelper;
+import com.dsp.main.Utils.Font.builders.Builder;
+import com.dsp.main.Utils.Font.renderers.impl.BuiltText;
+import com.dsp.main.Utils.Render.Blur.DrawShader;
+import com.mojang.blaze3d.vertex.PoseStack;
 import net.minecraft.client.gui.GuiGraphics;
+import org.joml.Matrix4f;
 
-import java.awt.*;
+import java.awt.Color;
 
-import static com.dsp.main.Api.mc;
+import static com.dsp.main.Main.BIKO_FONT;
 
 public class SliderComponent extends Component {
-    private boolean sliding;
-    private final Slider numberSetting;
-    private double renderWidth;
+    private static final float ROUNDING = 0.6f;
+    private static final float ANIMATION_SPEED = 0.1f;
+    private boolean dragging = false;
+    private float animationProgress = 0.0f;
+    private final Slider sliderSetting;
 
-    public SliderComponent(Setting setting, Button parent, double defaultValue) {
+    public SliderComponent(Slider setting, Button parent, float defaultValue) {
         super(setting, parent);
-        this.numberSetting = (Slider) setting;
-        this.numberSetting.setValue(defaultValue);
-        this.renderWidth = 0;
+        this.sliderSetting = setting;
+        this.animationProgress = (float) ((defaultValue - setting.getMin()) / (setting.getMax() - setting.getMin()));
+    }
+    @Override
+    public float getHeight() {
+        float textHeight = BIKO_FONT.get().getMetrics().lineHeight() * 7f;
+        float sliderHeight = 6;
+        return textHeight + sliderHeight;
     }
 
     @Override
     public void draw(GuiGraphics graphics, int mouseX, int mouseY) {
-        if (!setting.isVisible()) return;
+        if (!isVisible()) return;
 
-        double min = numberSetting.getMin();
-        double max = numberSetting.getMax();
-        double value = numberSetting.getValue();
+        PoseStack poseStack = graphics.pose();
 
-        int compX = (int) this.x;
-        int compY = (int) this.y;
-        int width = parent.getWidth();
-        int height = parent.getHeight();
+        // Draw setting name
+        BuiltText nameText = Builder.text()
+                .font(BIKO_FONT.get())
+                .text(sliderSetting.getName())
+                .color(new Color(160, 163, 175))
+                .size(7f)
+                .thickness(0.05f)
+                .build();
+        nameText.render(new Matrix4f(), (int) x + 5 , (int) y + 3);
 
-        double relativeMouseX = mouseX - compX;
-        double diff = Math.min(width, Math.max(0, relativeMouseX));
+        // Draw value
+        String valueStr = String.format("%.2f", sliderSetting.getValue());
+        float valueWidth = BIKO_FONT.get().getWidth(valueStr, 7f);
+        BuiltText valueText = Builder.text()
+                .font(BIKO_FONT.get())
+                .text(valueStr)
+                .color(new Color(160, 163, 175))
+                .size(7f)
+                .thickness(0.05f)
+                .build();
+        valueText.render(new Matrix4f(), (int) (x + parent.getWidth() - 10 - valueWidth), (int) y + 3);
 
-        double targetWidth = width * (value - min) / (max - min);
-        renderWidth += (targetWidth - renderWidth) * 0.1;
+        // Update animation
+        float targetProgress = (float) ((sliderSetting.getValue() - sliderSetting.getMin()) / (sliderSetting.getMax() - sliderSetting.getMin()));
+        animationProgress = lerp(animationProgress, targetProgress, ANIMATION_SPEED);
 
-        // Draw background
-        Color backgroundColor = new Color(20, 30, 50);
-        DrawHelper.rectangle(graphics.pose(), compX, compY, width, height, 4, backgroundColor.hashCode());
+        // Draw slider background
+        float sliderWidth = (float) (parent.getWidth() - 15);
+        DrawShader.drawRoundBlur(poseStack, (float) x + 5, (float) y + 11, sliderWidth, 2, ROUNDING, new Color(28, 28, 31).hashCode(), 90, 0.7f);
 
-        // Draw slider elements
-        int lineY = compY + 12;
-        DrawHelper.rectangle(graphics.pose(), compX + 6, lineY, width - 12, 4, 2, new Color(60, 60, 60).hashCode());
-        int fillWidth = (int) Math.max(4, renderWidth - 12);
-        DrawHelper.rectangle(graphics.pose(), compX + 6, lineY, fillWidth, 4, 2, new Color(69, 239, 0).hashCode());
+        // Draw filled portion
+        float fillWidth = sliderWidth * animationProgress;
+        DrawShader.drawRoundBlur(poseStack, (float) x + 5, (float) y + 11, fillWidth, 2, ROUNDING, new Color(128, 132, 150).hashCode(), 90, 0.7f);
 
-        int knobX = compX + 6 + fillWidth - 6;
-        int knobY = lineY - 3;
-        int knobSize = 12;
-        DrawHelper.rectangle(graphics.pose(), knobX, knobY, knobSize, knobSize, 8, new Color(88, 88, 88).hashCode());
-        DrawHelper.rectangle(graphics.pose(), knobX + 3, knobY + 3, knobSize - 6, knobSize - 6, 8, new Color(69, 239, 0).hashCode());
-        if (sliding) {
-            if (diff == 0) {
-                numberSetting.setValue(min);
-            } else {
-                double newValue = ((diff / width) * (max - min) + min);
-                numberSetting.setValue(Math.round(newValue * 100.0) / 100.0);
-            }
+
+        // Handle dragging
+        if (dragging) {
+            float progress = (float) Math.max(0, Math.min(1, (mouseX - x - 5) / sliderWidth));
+            float newValue = (float) (sliderSetting.getMin() + progress * (sliderSetting.getMax() - sliderSetting.getMin()));
+            sliderSetting.setValue((float) (Math.round(newValue / sliderSetting.getInc()) * sliderSetting.getInc()));
         }
-
-        // Draw text with default Minecraft font
-        graphics.drawString(mc.font, numberSetting.getName() + ": ", compX + 5, compY + 2, Color.WHITE.getRGB());
-        String valueText = String.format("%.2f", numberSetting.getValue());
-        int valueWidth = mc.font.width(valueText);
-        graphics.drawString(mc.font, valueText, compX + width - valueWidth - 5, compY + 2, Color.WHITE.getRGB());
-
-        super.draw(graphics, mouseX, mouseY);
     }
 
     @Override
     public void mouseClicked(int mouseX, int mouseY, int button) {
-        if (isHovered(mouseX, mouseY) && button == 0) {
-            sliding = true;
+        if (!isVisible() || button != 0) return;
+
+        // Check if mouse is over the slider bar
+        if (mouseX >= x + 5 && mouseX <= x + parent.getWidth() - 5 && mouseY >= y + 10 && mouseY <= y + 13) {
+            dragging = true;
         }
-        super.mouseClicked(mouseX, mouseY, button);
-    }
-
-    @Override
-    public boolean isHovered(double mouseX, double mouseY) {
-        int compX = (int) this.x;
-        int compY = (int) this.y;
-        int width = parent.getWidth();
-        int height = parent.getHeight();
-
-        return mouseX > compX && mouseX < compX + width
-                && mouseY > compY && mouseY < compY + height;
     }
 
     @Override
     public void mouseReleased(double mouseX, double mouseY, int button) {
-        sliding = false;
-        super.mouseReleased(mouseX, mouseY, button);
+        dragging = false;
+    }
+
+    @Override
+    public boolean isHovered(double mouseX, double mouseY) {
+        if (!isVisible()) return false;
+
+        return mouseX >= x + 5 && mouseX <= x + parent.getWidth() - 5 && mouseY >= y + 10 && mouseY <= y + 13;
+    }
+
+    private float lerp(float start, float end, float t) {
+        return start + t * (end - start);
     }
 }

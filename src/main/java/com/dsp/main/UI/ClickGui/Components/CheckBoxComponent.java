@@ -2,68 +2,102 @@ package com.dsp.main.UI.ClickGui.Components;
 
 import com.dsp.main.UI.ClickGui.Button;
 import com.dsp.main.UI.ClickGui.Settings.CheckBox;
-import com.dsp.main.UI.ClickGui.Settings.Setting;
-import com.dsp.main.Utils.Render.DrawHelper;
+import com.dsp.main.Utils.Font.builders.Builder;
+import com.dsp.main.Utils.Font.renderers.impl.BuiltText;
+import com.dsp.main.Utils.Render.Blur.DrawShader;
+import com.mojang.blaze3d.vertex.PoseStack;
 import net.minecraft.client.gui.GuiGraphics;
+import org.joml.Matrix4f;
 
-import java.awt.*;
+import java.awt.Color;
 
 import static com.dsp.main.Api.mc;
+import static com.dsp.main.Main.BIKO_FONT;
+import static com.dsp.main.Main.ICONS;
 
 public class CheckBoxComponent extends Component {
-    private final CheckBox booleanSetting;
-    private float hoverAnimation = 0;
-    private float toggleAnimation = 0;
+    private static final float ANIMATION_SPEED = 0.2f;
+    private static final float ROUNDING = 3.0f;
+    private float animationProgress = 0.0f;
+    private final CheckBox checkBoxSetting;
 
-    public CheckBoxComponent(Setting setting, Button parent) {
+    public CheckBoxComponent(CheckBox setting, Button parent) {
         super(setting, parent);
-        this.booleanSetting = (CheckBox) setting;
+        this.checkBoxSetting = setting;
+        this.animationProgress = setting.isEnabled() ? 1.0f : 0.0f;
     }
-
-    @ Override
-    public void draw(GuiGraphics graphics, int mouseX, int mouseY) {
-        int compX = (int) this.x;
-        int compY = (int) this.y;
-        int width = parent.getWidth();
-        int height = parent.getHeight();
-
-        boolean isHovered = isHovered(mouseX, mouseY);
-        hoverAnimation += isHovered ? (1 - hoverAnimation) * 0.1f : (0 - hoverAnimation) * 0.1f;
-        if (booleanSetting.isEnabled()) {
-            toggleAnimation += (1 - toggleAnimation) * 0.08f;
-        } else {
-            toggleAnimation += (0 - toggleAnimation) * 0.08f;
-        }
-
-        int hoverColorShift = (int) (hoverAnimation * 50);
-        Color backgroundColor = new Color(20 + hoverColorShift, 30 + hoverColorShift, 50 + hoverColorShift);
-        DrawHelper.rectangle(graphics.pose(), compX, compY, width, height, 4, backgroundColor.hashCode());
-
-        int boxSize = 10;
-        int boxX = compX + 5;
-        int boxY = compY + (height - boxSize) / 2;
-
-        int currentBoxSize = (int) (boxSize * toggleAnimation);
-        int offsetX = (boxSize - currentBoxSize) / 2;
-        int offsetY = (boxSize - currentBoxSize) / 2;
-
-        DrawHelper.rectangle(graphics.pose(), boxX, boxY, boxSize + 1, boxSize + 1, 2, new Color(88, 88, 88).hashCode());
-        if (toggleAnimation > 0) {
-            DrawHelper.rectangle(graphics.pose(), boxX + offsetX, boxY + offsetY, currentBoxSize, currentBoxSize, 2, new Color(69, 239, 0).hashCode());
-        }
-
-        int textX = boxX + boxSize + 5;
-        int textY = compY + (height - mc.font.lineHeight) / 2;
-        graphics.drawString(mc.font, booleanSetting.getName(), textX, textY, Color.WHITE.getRGB());
-
-        super.draw(graphics, mouseX, mouseY);
+    @Override
+    public float getHeight() {
+        float textHeight = BIKO_FONT.get().getMetrics().lineHeight() * 8.5f + 2;
+        float iconHeight = BIKO_FONT.get().getMetrics().lineHeight() * 10.5f + 2;
+        return Math.max(textHeight, iconHeight) + 4;
     }
 
     @Override
-    public void mouseClicked(int mx, int my, int mb) {
-        if (isHovered(mx, my)) {
-            booleanSetting.toggle();
+    public void draw(GuiGraphics graphics, int mouseX, int mouseY) {
+        if (!isVisible()) return;
+
+        PoseStack poseStack = graphics.pose();
+        float targetProgress = checkBoxSetting.isEnabled() ? 1.0f : 0.0f;
+        animationProgress = lerp(animationProgress, targetProgress, ANIMATION_SPEED);
+        float boxWidth = BIKO_FONT.get().getWidth(checkBoxSetting.getName(), 8.5f) + 5;
+        float boxHeight = mc.font.lineHeight + 1;
+        DrawShader.drawRoundBlur(poseStack, (float) (x + 4), (float) (y + 3), boxWidth, boxHeight, ROUNDING, new Color(29, 29, 31).hashCode(), 90, 0.7f);
+        BuiltText nameText = Builder.text()
+                .font(BIKO_FONT.get())
+                .text(checkBoxSetting.getName())
+                .color(new Color(160, 163, 175))
+                .size(8.5f)
+                .thickness(0.05f)
+                .build();
+        nameText.render(new Matrix4f(), (int) x + 5, (int) y + 4);
+
+
+        BuiltText KnobRender = Builder.text()
+                .font(ICONS.get())
+                .text(checkBoxSetting.isEnabled() ? "R" : "S")
+                .color(new Color(160, 163, 175))
+                .size(10.5f)
+                .thickness(0.05f)
+                .build();
+        KnobRender.render(new Matrix4f(), (float) ((parent.getX() + parent.getWidth()) - 19), (int) y + 4);
+    }
+
+    @Override
+    public void mouseClicked(int mouseX, int mouseY, int button) {
+        if (!isVisible() || button != 0) return;
+
+        float boxWidth = 15;
+        float boxHeight = 7;
+        float boxX = (float) (x + parent.getWidth() - boxWidth - 7);
+        float boxY = (float) (y + parent.getHeight() / 2.0 - boxHeight / 2.0);
+
+        if (mouseX >= boxX && mouseX <= boxX + boxWidth && mouseY >= boxY && mouseY <= boxY + boxHeight) {
+            checkBoxSetting.toggle();
         }
-        super.mouseClicked(mx, my, mb);
+    }
+
+    @Override
+    public boolean isHovered(double mouseX, double mouseY) {
+        if (!isVisible()) return false;
+
+        float boxWidth = 15;
+        float boxHeight = 7;
+        float boxX = (float) (x + parent.getWidth() - boxWidth - 7);
+        float boxY = (float) (y + parent.getHeight() / 2.0 - boxHeight / 2.0);
+
+        return mouseX >= boxX && mouseX <= boxX + boxWidth && mouseY >= boxY && mouseY <= boxY + boxHeight;
+    }
+
+    private float lerp(float start, float end, float t) {
+        return start + t * (end - start);
+    }
+
+    private int interpolateColor(Color start, Color end, float fraction) {
+        int r = (int) (start.getRed() + (end.getRed() - start.getRed()) * fraction);
+        int g = (int) (start.getGreen() + (end.getGreen() - start.getGreen()) * fraction);
+        int b = (int) (start.getBlue() + (end.getBlue() - start.getBlue()) * fraction);
+        int a = (int) (start.getAlpha() + (end.getAlpha() - start.getAlpha()) * fraction);
+        return (a << 24) | (r << 16) | (g << 8) | b;
     }
 }

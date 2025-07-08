@@ -5,7 +5,7 @@ import java.util.function.BooleanSupplier;
 import java.util.function.IntSupplier;
 
 public class Setting {
-    private final String name;
+    String name;
 
     public static IntSupplier heightSupplier  = () -> 16;
     private BooleanSupplier visibleSupplier = () -> true;

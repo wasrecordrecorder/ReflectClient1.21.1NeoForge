@@ -12,9 +12,8 @@ public class AltConfig {
     private static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();
 
     public static void loadAlts(List<Account> alts) {
-        alts.clear(); // Clear the list to prevent duplicates from previous loads
+        alts.clear();
         if (!FILE.exists()) {
-            // Create new file with default "dev" account
             try {
                 FILE.getParentFile().mkdirs();
                 FILE.createNewFile();
@@ -44,7 +43,6 @@ public class AltConfig {
             }
 
             if (jsonContent.length() == 0) {
-                // Handle empty file
                 JsonObject json = new JsonObject();
                 JsonArray altsArray = new JsonArray();
                 JsonObject defaultAccount = new JsonObject();
@@ -74,7 +72,6 @@ public class AltConfig {
                                 }
                             }
                         } else if (element.isJsonPrimitive() && element.getAsJsonPrimitive().isString()) {
-                            // Backward compatibility for old format
                             String username = element.getAsString();
                             if (!alts.stream().anyMatch(a -> a.getUsername().equals(username))) {
                                 alts.add(new Account(username, false));

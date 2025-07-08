@@ -11,6 +11,7 @@ import net.neoforged.neoforge.event.ServerChatEvent;
 
 import static com.dsp.main.Main.isDetect;
 import static com.dsp.main.Api.mc;
+import static com.dsp.main.Managers.ConfigSystem.CfgManager.*;
 import static com.dsp.main.Managers.FrndSys.FriendManager.*;
 import static com.dsp.main.Utils.Minecraft.UserSession.UserSessionUtil.setNameSession;
 
@@ -86,40 +87,40 @@ public class ChatManager {
             String[] split = msg.split(" ");
             if (split.length >= 3) {
                 String configName = split[2];
-                //saveModules(configName);
-                //ChatUtil.sendMessage("Конфиг '" + configName + "' успешно сохранен. Используйте '.cfg load " + configName + "' для загрузки конфигурации.");
+                saveCfg(configName);
+                ChatUtil.sendMessage("Конфиг '" + configName + "' успешно сохранен. Используйте '.cfg load " + configName + "' для загрузки конфигурации.");
                 event.setCanceled(true);
             }
         } else if (msg.startsWith(".cfg load ")) {
             String[] split = msg.split(" ");
             if (split.length >= 3) {
                 String configName = split[2];
-                //loadModules(configName);
-                //ChatUtil.sendMessage("Конфиг '" + configName + "' успешно загружен.");
+                loadCfg(configName);
+                ChatUtil.sendMessage("Конфиг '" + configName + "' успешно загружен.");
                 event.setCanceled(true);
             }
         } else if (msg.startsWith(".cfg del ") || msg.startsWith(".cfg rem ") || msg.startsWith(".cfg remove ") || msg.startsWith(".cfg delete ")) {
             String[] split = msg.split(" ");
             if (split.length >= 3) {
                 String configName = split[2];
-                //deleteModules(configName);
+                //deleteCfg(configName);
                 event.setCanceled(true);
             }
         } else if (msg.startsWith(".cfg dir")) {
             try {
-                //Runtime.getRuntime().exec("explorer \"" + folderPath.replace("/", "\\") + "\"");
-                //ChatUtil.sendMessage("Папка с конфигурациями открыта.");
+                //Runtime.getRuntime().exec("explorer \"" + CONFIG_DIR.replace("/", "\\") + "\"");
+                ChatUtil.sendMessage("Папка с конфигурациями открыта.");
             } catch (Exception ex) {
-                //ChatUtil.sendMessage("Не удалось открыть папку с конфигурациями: " + ex.getMessage());
+                ChatUtil.sendMessage("Не удалось открыть папку с конфигурациями: " + ex.getMessage());
             }
             event.setCanceled(true);
         } else if (msg.startsWith(".cfg list")) {
             //String[] configs = getConfigs();
-            //if (configs.length > 0) {
-            //    ChatUtil.sendMessage("Доступные конфиги: " + String.join(", ", configs));
-            //} else {
-            //    ChatUtil.sendMessage("Конфигураций не найдено.");
-            //}
+//            if (configs.length > 0) {
+//                ChatUtil.sendMessage("Доступные конфиги: " + String.join(", ", configs));
+//            } else {
+//                ChatUtil.sendMessage("Конфигураций не найдено.");
+//            }
             event.setCanceled(true);
     } else if (msg.equals(CmdPrefix + "помощь") || msg.equals(CmdPrefix + "help")) {
             ChatUtil.sendMessage("Доступные команды:");

@@ -2,7 +2,6 @@ package com.dsp.main.UI.ClickGui.Components;
 
 import com.dsp.main.UI.ClickGui.Button;
 import com.dsp.main.UI.ClickGui.Settings.Setting;
-import com.mojang.blaze3d.vertex.PoseStack;
 import net.minecraft.client.gui.GuiGraphics;
 
 public abstract class Component {
@@ -40,9 +39,10 @@ public abstract class Component {
         return y;
     }
 
+    public abstract float getHeight();
+
     public void draw(GuiGraphics graphics, int mouseX, int mouseY) {
         if (!setting.isVisible()) return;
-        // Переопределять в наследниках
     }
 
     public void mouseClicked(int mouseX, int mouseY, int button) {
@@ -56,6 +56,6 @@ public abstract class Component {
     public boolean isHovered(double mouseX, double mouseY) {
         if (!setting.isVisible()) return false;
         return mouseX > x && mouseX < x + parent.getWidth()
-                && mouseY > y && mouseY < y + parent.getHeight();
+                && mouseY > y && mouseY < y + getHeight();
     }
 }
