@@ -88,7 +88,7 @@ public abstract class Module {
             if (Api.isEnabled("ClientSounds")) {
 //                if (mc.player != null) {
 //                    if (togglSound.isMode("1")) {
-//                        mc.player.playSound(SoundsUtil.Disable, volume.getValueFloat() + 10, pitch.getValueFloat());
+//                       mc.player.playSound(SoundsUtil.Disable, volume.getValueFloat() + 10, pitch.getValueFloat());
 //                    } else {
 //                        mc.player.playSound(SoundsUtil.Off, volume.getValueFloat() + 10, pitch.getValueFloat());
 //                    }
