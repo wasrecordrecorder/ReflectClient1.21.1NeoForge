@@ -10,43 +10,45 @@ public abstract class DraggableElement {
     protected float xPos;
     @Expose
     protected float yPos;
-    protected float width;
-    protected float height;
     @Expose
     protected String name;
     protected boolean dragging;
     protected float startX, startY;
+    @Expose
+    protected boolean canBeDragged;
 
-    public DraggableElement(String name, float initialX, float initialY, float width, float height) {
+    public DraggableElement(String name, float initialX, float initialY, boolean canBeDragged) {
         this.name = name;
         this.xPos = initialX;
         this.yPos = initialY;
-        this.width = width;
-        this.height = height;
+        this.canBeDragged = canBeDragged;
     }
 
     public float getX() { return xPos; }
     public float getY() { return yPos; }
-    public float getWidth() { return width; }
-    public float getHeight() { return height; }
     public String getName() { return name; }
+    public boolean canBeDragged() { return canBeDragged; }
 
     public void setX(float x) { this.xPos = x; }
     public void setY(float y) { this.yPos = y; }
+    public void setCanBeDragged(boolean canBeDragged) { this.canBeDragged = canBeDragged; }
+
+    public abstract float getWidth();
+    public abstract float getHeight();
 
     public void onDraw(int mouseX, int mouseY, Window window) {
-        if (dragging && isChatOpen()) {
+        if (dragging && canBeDragged && isChatOpen()) {
             xPos = mouseX - startX;
             yPos = mouseY - startY;
-            float maxX = window.getGuiScaledWidth() - width;
-            float maxY = window.getGuiScaledHeight() - height;
+            float maxX = window.getGuiScaledWidth() - getWidth();
+            float maxY = window.getGuiScaledHeight() - getHeight();
             xPos = Math.max(0, Math.min(xPos, maxX));
             yPos = Math.max(0, Math.min(yPos, maxY));
         }
     }
 
     public void onClick(double mouseX, double mouseY, int button) {
-        if (button == 0 && isInside(mouseX, mouseY) && isChatOpen()) {
+        if (button == 0 && isInside(mouseX, mouseY) && canBeDragged && isChatOpen()) {
             dragging = true;
             startX = (float) (mouseX - xPos);
             startY = (float) (mouseY - yPos);
@@ -60,11 +62,11 @@ public abstract class DraggableElement {
     }
 
     private boolean isInside(double mouseX, double mouseY) {
-        return mouseX >= xPos && mouseX <= xPos + width &&
-                mouseY >= yPos && mouseY <= yPos + height;
+        return mouseX >= xPos && mouseX <= xPos + getWidth() &&
+                mouseY >= yPos && mouseY <= yPos + getHeight();
     }
 
-    private boolean isChatOpen() {
+    protected boolean isChatOpen() {
         Minecraft mc = Minecraft.getInstance();
         return mc.screen != null && mc.screen.getClass().getName().contains("ChatScreen");
     }

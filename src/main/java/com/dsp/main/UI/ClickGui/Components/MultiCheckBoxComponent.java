@@ -102,9 +102,9 @@ public class MultiCheckBoxComponent extends Component {
                     float optHeight = BIKO_FONT.get().getMetrics().lineHeight() * TEXT_SIZE + 1;
                     boolean isEnabled = option.isEnabled();
 
-                    DrawShader.drawRoundBlur(poseStack, optX - 1, optY, optWidth, optHeight, ROUNDING, new Color(38, 39, 48, 150).hashCode(), 90, 0.7f);
+                    DrawHelper.rectangle(poseStack, optX - 1, optY, optWidth, optHeight, ROUNDING, new Color(40, 42, 50, 190).hashCode());
                     if (isEnabled) {
-                        DrawShader.drawRoundBlur(poseStack, optX - 1, optY, optWidth, optHeight, ROUNDING, new Color(86, 111, 138, 150).hashCode(), 90, 0.7f);
+                        DrawHelper.rectangle(poseStack, optX - 1, optY, optWidth, optHeight, ROUNDING, new Color(86, 111, 138, 150).hashCode());
                     }
 
                     BuiltText optionText = Builder.text()

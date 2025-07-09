@@ -38,4 +38,12 @@ public class MultiCheckBox extends Setting {
         }
         return false;
     }
+    public boolean hasAnyEnabled() {
+        for (CheckBox option : options) {
+            if (option.isEnabled()) {
+                return true;
+            }
+        }
+        return false;
+    }
 }

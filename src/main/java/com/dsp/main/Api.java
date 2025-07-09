@@ -1,5 +1,11 @@
 package com.dsp.main;
 
+import com.dsp.main.Functions.Combat.TriggerBot;
+import com.dsp.main.Functions.Misc.AutoLeave;
+import com.dsp.main.Functions.Misc.UnHook;
+import com.dsp.main.Functions.Player.ClickActions;
+import com.dsp.main.Functions.Render.HudElement;
+import com.dsp.main.Functions.Render.NoRender;
 import com.dsp.main.Managers.ConfigSystem.CfgManager;
 import com.dsp.main.UI.ClickGui.ClickGuiScreen;
 import com.dsp.main.Functions.Movement.Test;
@@ -28,7 +34,8 @@ public class Api {
     private double mouseX;
     private double mouseY;
     public static Minecraft mc = Minecraft.getInstance();
-    public static CopyOnWriteArrayList<Module> modules = new CopyOnWriteArrayList<>();
+    public static CopyOnWriteArrayList<Module> Functions = new CopyOnWriteArrayList<>();
+    private boolean isCfgLoaded = false;
 
     private static final Timer autoSaveTimer = new Timer(true);
 
@@ -44,13 +51,18 @@ public class Api {
     }
 
     public static void Initialize() {
-        CfgManager.loadCfg("autoload");
-        modules.add(new AutoSprint());
-        modules.add(new Test());
+        Functions.add(new AutoSprint());
+        Functions.add(new Test());
+        Functions.add(new HudElement());
+        Functions.add(new NoRender());
+        Functions.add(new AutoLeave());
+        Functions.add(new TriggerBot());
+        Functions.add(new ClickActions());
+        Functions.add(new UnHook());
     }
 
     public static boolean isEnabled(String name) {
-        for (Module m : modules) {
+        for (Module m : Functions) {
             if (m.isEnabled()) {
                 if (Objects.equals(m.name, name)) {
                     return true;
@@ -64,13 +76,13 @@ public class Api {
     public void onKeyInput(InputEvent.Key e) {
         if (!(mc.level == null) && !(mc.player == null) && !isDetect) {
             if (e.getAction() == 1 && mc.screen == null) {
-                for (Module m : modules) {
+                for (Module m : Functions) {
                     if (m.getKeyCode() == e.getKey()) {
                         m.toggle();
                     }
                 }
             }
-            for (Module module : modules) {
+            for (Module module : Functions) {
                 if (!module.isEnabled()) continue;
                 for (Setting setting : module.getSettings()) {
                     if (setting instanceof BindCheckBox) {
@@ -117,6 +129,11 @@ public class Api {
     @SubscribeEvent
     public void onInitGui(ScreenEvent.Init.Pre e) {
         if (e.getScreen() instanceof net.minecraft.client.gui.screens.TitleScreen && !isDetect) {
+            if (!isCfgLoaded) {
+                CfgManager.loadCfg("autoload");
+                isCfgLoaded = true;
+            }
+
             mc.setScreen(new MainMenuScreen());
         } if (e.getScreen() instanceof  net.minecraft.client.gui.screens.inventory.InventoryScreen && !isDetect && mc.player != null) {
             mc.setScreen(new InventoryScreenHook(mc.player));

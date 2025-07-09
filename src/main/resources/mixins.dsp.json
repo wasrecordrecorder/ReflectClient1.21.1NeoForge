@@ -10,11 +10,14 @@
   },
   "client": [
     "BossHealthOverlayAccessor",
-    "ScoreboardMixin",
+    "BossHealthOverlayMixin",
     "GuiHotbarMixin",
+    "LevelRendererMixin",
     "LivingEntityMixin",
     "MinecraftMixin",
     "MultiPlayerGameModeMixin",
-    "PlayerTabOverlayMixin"
+    "PlayerTabOverlayMixin",
+    "ScoreboardMixin",
+    "ScreenEffectRendererMixin"
   ]
 }

@@ -18,9 +18,7 @@ import java.util.Map;
 public class CfgManager {
     private static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();
     private static final Path CONFIG_DIR = Paths.get(System.getenv("APPDATA"), "Some", "canfigutatia");
-    private static final List<Module> modules = Api.modules;
-
-    // Инициализация: создание директории, если не существует
+    private static final List<Module> modules = Api.Functions;
     static {
         try {
             Files.createDirectories(CONFIG_DIR);
@@ -29,7 +27,6 @@ public class CfgManager {
         }
     }
 
-    // Сохранение конфига
     public static void saveCfg(String name) {
         CfgStorage storage = new CfgStorage();
         for (Module module : modules) {
@@ -41,35 +38,38 @@ public class CfgManager {
                 CfgStorage.SettingConfig settingConfig = new CfgStorage.SettingConfig();
                 settingConfig.name = setting.getName();
 
-                if (setting instanceof Mode) {
-                    Mode mode = (Mode) setting;
-                    settingConfig.type = "Mode";
-                    settingConfig.value = mode.getMode();
-                } else if (setting instanceof Slider) {
-                    Slider slider = (Slider) setting;
-                    settingConfig.type = "Slider";
-                    settingConfig.value = slider.getValue();
-                } else if (setting instanceof Input) {
-                    Input input = (Input) setting;
-                    settingConfig.type = "Input";
-                    settingConfig.value = input.getValue();
-                } else if (setting instanceof MultiCheckBox) {
-                    MultiCheckBox multiCheckBox = (MultiCheckBox) setting;
-                    settingConfig.type = "MultiCheckBox";
-                    List<Map<String, Boolean>> options = new ArrayList<>();
-                    for (CheckBox option : multiCheckBox.getOptions()) {
-                        Map<String, Boolean> optionMap = Map.of(option.getName(), option.isEnabled());
-                        options.add(optionMap);
+                switch (setting) {
+                    case Mode mode -> {
+                        settingConfig.type = "Mode";
+                        settingConfig.value = mode.getMode();
                     }
-                    settingConfig.value = options;
-                } else if (setting instanceof BindCheckBox) {
-                    BindCheckBox bindCheckBox = (BindCheckBox) setting;
-                    settingConfig.type = "BindCheckBox";
-                    settingConfig.value = bindCheckBox.getBindKey();
-                } else if (setting instanceof CheckBox) {
-                    CheckBox checkBox = (CheckBox) setting;
-                    settingConfig.type = "CheckBox";
-                    settingConfig.value = checkBox.isEnabled();
+                    case Slider slider -> {
+                        settingConfig.type = "Slider";
+                        settingConfig.value = slider.getValue();
+                    }
+                    case Input input -> {
+                        settingConfig.type = "Input";
+                        settingConfig.value = input.getValue();
+                    }
+                    case MultiCheckBox multiCheckBox -> {
+                        settingConfig.type = "MultiCheckBox";
+                        List<Map<String, Boolean>> options = new ArrayList<>();
+                        for (CheckBox option : multiCheckBox.getOptions()) {
+                            Map<String, Boolean> optionMap = Map.of(option.getName(), option.isEnabled());
+                            options.add(optionMap);
+                        }
+                        settingConfig.value = options;
+                    }
+                    case BindCheckBox bindCheckBox -> {
+                        settingConfig.type = "BindCheckBox";
+                        settingConfig.value = bindCheckBox.getBindKey();
+                    }
+                    case CheckBox checkBox -> {
+                        settingConfig.type = "CheckBox";
+                        settingConfig.value = checkBox.isEnabled();
+                    }
+                    default -> {
+                    }
                 }
 
                 moduleConfig.settings.add(settingConfig);
@@ -77,7 +77,7 @@ public class CfgManager {
 
             storage.modules.add(moduleConfig);
         }
-        Path configPath = CONFIG_DIR.resolve(name + ".json");
+        Path configPath = CONFIG_DIR.resolve(name + ".rfcl");
         try (Writer writer = new FileWriter(configPath.toFile())) {
             GSON.toJson(storage, writer);
         } catch (IOException e) {
@@ -86,7 +86,7 @@ public class CfgManager {
         DragManager.save();
     }
     public static void loadCfg(String name) {
-        Path configPath = CONFIG_DIR.resolve(name + ".json");
+        Path configPath = CONFIG_DIR.resolve(name + ".rfcl");
         if (!Files.exists(configPath)) {
             System.out.println("Config file not found: " + configPath);
             return;

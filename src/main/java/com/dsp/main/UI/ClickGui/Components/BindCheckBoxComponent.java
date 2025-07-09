@@ -92,17 +92,14 @@ public class BindCheckBoxComponent extends Component {
 
     @Override
     public void mouseClicked(int mx, int my, int mb) {
-        if (!setting.isVisible()) return;
-
-        if (isHovered(mx, my)) {
-            if (mb == 2) {
+        if(isHovered(mx, my)) {
+            if(mb == 2 && !binding) {
                 binding = true;
                 return;
             }
         }
-
-        if (binding && mb != 0) {
-            bindSetting.setBindKey(GLFW.GLFW_MOUSE_BUTTON_1 + mb);
+        if (binding && !(mb == 0)) {
+            bindSetting.setBindKey(mb);
             binding = false;
         }
     }

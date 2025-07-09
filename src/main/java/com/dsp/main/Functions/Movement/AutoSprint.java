@@ -16,6 +16,7 @@ public class AutoSprint extends Module {
     }
     @SubscribeEvent
     public void onTick(ClientTickEvent.Pre event) {
+        if (!this.isEnabled()) return;
         if (!(mc.player == null) && mc.player.getFoodData().getFoodLevel() > 6 && SprintType.isMode("Legit")) {
             mc.options.keySprint.setDown(true);
         } else if (!(mc.player == null) && mc.player.getFoodData().getFoodLevel() > 6 && mc.player.zza > 0 && !mc.player.isSprinting()) {

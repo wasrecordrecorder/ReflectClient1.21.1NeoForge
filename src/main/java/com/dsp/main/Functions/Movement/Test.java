@@ -26,12 +26,12 @@ public class Test extends Module {
         options.add(new CheckBox("Players", false));
         options.add(new CheckBox("Moderators", false));
         MultiCheckBox multiCheckBox = new MultiCheckBox("Movement Options", options);
-        addSettings(dwa,we,ld,ldw, multiCheckBox);
-        addSetting(new BindCheckBox(
-                "Disorientation",
-                0,
-                this::test
-        ).setVisible(() -> true));
+        addSettings(multiCheckBox, dwa,ld,ldw, we);
+        //addSetting(new BindCheckBox(
+        //        "Disorientation",
+        //        0,
+        //        this::test
+        //).setVisible(() -> true));
     }
     @SubscribeEvent
     public void onClientTick(ClientTickEvent.Pre event) {

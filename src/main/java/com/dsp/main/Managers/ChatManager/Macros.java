@@ -95,17 +95,7 @@ public class Macros {
             String keyName = getKeyName(event.getKey()).toUpperCase();
             if (macros.containsKey(keyName)) {
                 String macroText = macros.get(keyName);
-                FriendlyByteBuf buf = new FriendlyByteBuf(Unpooled.buffer());
-                buf.writeVarInt(0);
-                mc.player.connection.send(
-                        new ServerboundChatPacket(
-                                macroText,
-                                Instant.now(),
-                                0L,
-                                null,
-                                new LastSeenMessages.Update(buf)
-                        )
-                );
+                mc.player.connection.sendChat(macroText);
             }
         }
     }

@@ -97,9 +97,9 @@ public class ModeComponent extends Component {
                     boolean isOptionHovered = mouseX >= optX && mouseX <= optX + optWidth && mouseY >= optY && mouseY <= optY + optHeight;
                     boolean isSelected = modeOption.equals(modeSetting.getMode());
 
-                    DrawShader.drawRoundBlur(poseStack, optX - 1, optY, optWidth, optHeight, ROUNDING, new Color(38, 39, 48, 150).hashCode(), 90, 0.7f);
+                    DrawHelper.rectangle(poseStack, optX - 1, optY, optWidth, optHeight, ROUNDING, new Color(38, 39, 48, 150).hashCode());
                     if (isSelected || isOptionHovered) {
-                        DrawShader.drawRoundBlur(poseStack, optX -1, optY, optWidth, optHeight, ROUNDING, new Color(86, 111, 138, 150).hashCode(), 90, 0.7f);
+                        DrawHelper.rectangle(poseStack, optX -1, optY, optWidth, optHeight, ROUNDING, new Color(86, 111, 138, 150).hashCode());
                     }
 
                     // Текст режима

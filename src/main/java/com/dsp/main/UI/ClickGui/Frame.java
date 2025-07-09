@@ -179,11 +179,9 @@ public class Frame {
         float scrollBarHeight = ((float) visibleContentHeight / totalContentHeight) * visibleContentHeight;
         float maxScrollOffset = totalContentHeight - visibleContentHeight;
         float scrollBarY = currentY + headerHeight + 10 + (scrollOffset / (float) maxScrollOffset) * (visibleContentHeight - scrollBarHeight);
-
-        // Render scrollbar
         DrawShader.drawRoundBlur(
                 guiGraphics.pose(),
-                currentX + width + 3, // 2px padding from right edge
+                currentX + width + 3,
                 scrollBarY,
                 SCROLLBAR_WIDTH,
                 scrollBarHeight,

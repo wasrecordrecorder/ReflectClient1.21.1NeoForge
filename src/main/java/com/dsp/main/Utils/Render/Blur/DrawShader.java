@@ -24,15 +24,6 @@ public class DrawShader implements Mine {
         endRender();
     }
 
-    public static void drawSemiRoundBlur(PoseStack poseStack, float x, float y, float width, float height, float topLeftRadius, float topRightRadius, float bottomRightRadius, float bottomLeftRadius, int color) {
-        setupRender();
-        BLUR_SHADER.setParameters(x, y, width, height, topLeftRadius, topRightRadius, bottomRightRadius, bottomLeftRadius, color, 20.0f, 0.55f);
-        BLUR_SHADER.bind();
-        Shader.drawQuadsTex(poseStack.last().pose(), x, y, width, height);
-        BLUR_SHADER.unbind();
-        endRender();
-    }
-
     public static void setupRender() {
         RenderSystem.enableBlend();
         RenderSystem.defaultBlendFunc();

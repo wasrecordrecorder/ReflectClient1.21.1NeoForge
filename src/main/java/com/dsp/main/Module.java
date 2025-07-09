@@ -5,7 +5,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import static com.dsp.main.Api.mc;
-import static com.dsp.main.Api.modules;
+import static com.dsp.main.Api.Functions;
 import static com.dsp.main.Main.EVENT_BUS;
 import static com.dsp.main.Main.isDetect;
 
@@ -126,7 +126,7 @@ public abstract class Module {
 
     public static void disableAllModules() {
 //        NotificationManager.show(new Notification(NotificationType.WARNING,  "Режим проверки активирован!", 2));
-        for (Module module : modules) {
+        for (Module module : Functions) {
             if (module.isEnabled()) {
                 module.setToggled(false);
             }
@@ -134,7 +134,7 @@ public abstract class Module {
     }
     public static List<Module> getModulesByCategory(Category category) {
         List<Module> list = new ArrayList<>();
-        for (Module m : modules) {
+        for (Module m : Functions) {
             if (m.getCategory() == category) {
                 list.add(m);
             }

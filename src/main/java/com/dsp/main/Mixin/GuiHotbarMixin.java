@@ -12,6 +12,7 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
+import static com.dsp.main.Functions.Render.NoRender.NoRenderElements;
 import static com.dsp.main.Main.isDetect;
 
 @Mixin(Gui.class)
@@ -84,6 +85,13 @@ public class GuiHotbarMixin {
             at = @At("HEAD"))
     private void animateFoodLevel(GuiGraphics guiGraphics, CallbackInfo ci) {
         applyAnimation(guiGraphics, DeltaTracker.ZERO);
+    }
+    @Inject(method = "renderScoreboardSidebar",
+            at = @At("HEAD"), cancellable = true)
+    private void renderScoreBoard(GuiGraphics guiGraphics, DeltaTracker deltaTracker, CallbackInfo ci) {
+        if (!isDetect && NoRenderElements.isOptionEnabled("Scoreboard")) {
+            ci.cancel();
+        }
     }
 
     @Inject(method = "renderFoodLevel(Lnet/minecraft/client/gui/GuiGraphics;)V",

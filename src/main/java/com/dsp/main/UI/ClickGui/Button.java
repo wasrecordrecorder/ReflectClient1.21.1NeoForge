@@ -92,7 +92,9 @@ public class Button {
             Color neonWhite2 = ColorHelper.twoColorEffect(new Color(104, 141, 175, 220), Color.WHITE, 255);
             borderColorState = new QuadColorState(neonWhite1, neonWhite2, neonWhite1, neonWhite2);
         } else {
-            borderColorState = new QuadColorState(Color.DARK_GRAY, new Color(r, g, b, a), Color.DARK_GRAY, new Color(r, g, b, a));
+            Color neonWhite1 = ColorHelper.twoColorEffect(Color.DARK_GRAY, new Color(r, g, b, a), 255);
+            Color neonWhite2 = ColorHelper.twoColorEffect(new Color(r, g, b, a), Color.DARK_GRAY, 255);
+            borderColorState = new QuadColorState(neonWhite1, neonWhite2, neonWhite1, neonWhite2);
         }
         BuiltBorder border = Builder.border()
                 .size(new SizeState(width, height))
@@ -111,7 +113,7 @@ public class Button {
             textColor = new Color(200, 200, 200, (int) (255 * 0.7)).getRGB();
         }
 
-        String label = binding ? "> Нажми клавишу <" : module.getName();
+        String label = binding ? "> Press Key <" : module.getName();
         int textX = x + PADDING;
         int textY = y + (height - mc.font.lineHeight + 1) / 2;
         BuiltText text = Builder.text()
