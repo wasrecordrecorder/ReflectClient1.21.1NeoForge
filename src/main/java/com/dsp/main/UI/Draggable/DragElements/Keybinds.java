@@ -138,7 +138,7 @@ public class Keybinds extends DraggableElement {
                                 .size(ICON_SIZE)
                                 .thickness(0.05f)
                                 .build();
-                        movementIcon.render(new Matrix4f(), xPos + 1, currentY - 2.3f);
+                        movementIcon.render(new Matrix4f(), xPos + 1, currentY - 1.6f);
                         break;
                     case "render":
                         BuiltText renderIcon = Builder.text()

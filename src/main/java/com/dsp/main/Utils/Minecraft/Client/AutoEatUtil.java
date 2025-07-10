@@ -35,8 +35,6 @@ public class AutoEatUtil {
             return;
         }
         if (mc.player.getCooldowns().isOnCooldown(itemToUse)) {
-            // Assuming 'send' is a custom chat utility; update if needed
-            // send.sendMessage("Этот предмет сейчас в кд!");
             return;
         }
         eating = false;
@@ -75,7 +73,7 @@ public class AutoEatUtil {
             player.getInventory().selected = eatSlot;
         } else {
             eatSlot = foundSlot;
-            mc.gameMode.handleInventoryMouseClick(0, foundSlot, 0, net.minecraft.world.inventory.ClickType.PICKUP, player);
+            mc.gameMode.handlePickItem(foundSlot);
         }
         player.swing(InteractionHand.MAIN_HAND);
         mc.options.keyUse.setDown(true);
@@ -99,7 +97,7 @@ public class AutoEatUtil {
         mc.options.keyUse.setDown(false);
         if (shiftBp.isEnabled()) mc.options.keyShift.setDown(false);
         if (foundSlot > 8) {
-            mc.gameMode.handleInventoryMouseClick(0, foundSlot, 0, net.minecraft.world.inventory.ClickType.PICKUP, mc.player);
+            mc.gameMode.handlePickItem(foundSlot);
         }
 
         if (mc.player != null) {

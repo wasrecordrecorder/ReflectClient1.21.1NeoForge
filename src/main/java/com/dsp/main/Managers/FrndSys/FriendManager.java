@@ -25,7 +25,6 @@ public class FriendManager {
     public static void addFriend(String nickname) {
         if (!isFriend(nickname)) {
             friendStorage.addFriend(nickname);
-            ChatUtil.sendMessage(nickname + " добавлен в друзья.");
         } else {
             ChatUtil.sendMessage(nickname + " уже в друзьях.");
         }
@@ -33,7 +32,6 @@ public class FriendManager {
     public static void removeFriend(String nickname) {
         if (isFriend(nickname)) {
             friendStorage.removeFriend(nickname);
-            ChatUtil.sendMessage(nickname + " удален из друзей.");
         } else {
             ChatUtil.sendMessage(nickname + " не найден в списке друзей.");
         }

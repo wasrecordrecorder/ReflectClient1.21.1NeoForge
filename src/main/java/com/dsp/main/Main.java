@@ -1,10 +1,7 @@
 package com.dsp.main;
 
 import com.dsp.main.Managers.ChatManager.ChatManager;
-import com.dsp.main.UI.Draggable.DragElements.Keybinds;
-import com.dsp.main.UI.Draggable.DragElements.PlayerInfo;
-import com.dsp.main.UI.Draggable.DragElements.Potions;
-import com.dsp.main.UI.Draggable.DragElements.WaterMark;
+import com.dsp.main.UI.Draggable.DragElements.*;
 import com.dsp.main.UI.Draggable.DragManager;
 import com.dsp.main.UI.Themes.ThemesUtil;
 import com.dsp.main.Utils.Font.msdf.MsdfFont;
@@ -28,11 +25,12 @@ public class Main {
         // Client Init
         Api.Initialize();
         ThemeApi.init();
-        DragManager.init();
         DragManager.addDraggable(new WaterMark("Watermark", 5, 5, false));
         DragManager.addDraggable(new PlayerInfo("PlayerInfo", 5, -1, false));
         DragManager.addDraggable(new Keybinds("Keybinds", 100, 100, true));
         DragManager.addDraggable(new Potions("Potions", 100, 100, true));
+        DragManager.addDraggable(new Cooldowns("Cooldowns", 100, 100, true));
+        DragManager.init();
 
         // Utils event Bus
         EVENT_BUS.register(new Api());

@@ -22,9 +22,12 @@ public class PlayerInfo extends DraggableElement {
     private static final int TEXT_HEIGHT = 10;
     private static final int PADDING = 5;
     private static final int GAP = 2;
+    private static final float ANIMATION_SPEED = 0.3f; // Controls animation smoothness (0.0 to 1.0)
+    private float currentYPos;
 
     public PlayerInfo(String name, float initialX, float initialY, boolean canBeDragged) {
         super(name, initialX, initialY, canBeDragged);
+        this.currentYPos = initialY;
     }
 
     @Override
@@ -49,9 +52,14 @@ public class PlayerInfo extends DraggableElement {
             float coordsWidth = BIKO_FONT.get().getWidth(coords, TEXT_HEIGHT) + 5;
             float speedWidth = BIKO_FONT.get().getWidth(speed, TEXT_HEIGHT) + 5;
             float screenHeight = Minecraft.getInstance().getWindow().getGuiScaledHeight();
-            float yPos = screenHeight - getHeight() - PADDING;
-            DrawHelper.rectangle(new PoseStack(), xPos, yPos + BASE_HEIGHT + GAP, coordsWidth + 15, BASE_HEIGHT, 6, new Color(23, 29, 35, 200).getRGB());
-            DrawHelper.rectangle(new PoseStack(), xPos, yPos, speedWidth + 13, BASE_HEIGHT, 6, new Color(23, 29, 35, 200).getRGB());
+            float baseYPos = screenHeight - getHeight() - PADDING;
+            float targetYPos = baseYPos;
+            if (Minecraft.getInstance().gui.getChat().isChatFocused()) {
+                targetYPos -= 12;
+            }
+            currentYPos = currentYPos + (targetYPos - currentYPos) * ANIMATION_SPEED;
+            DrawHelper.rectangle(new PoseStack(), xPos, currentYPos + BASE_HEIGHT + GAP, coordsWidth + 15, BASE_HEIGHT, 6, new Color(23, 29, 35, 200).getRGB());
+            DrawHelper.rectangle(new PoseStack(), xPos, currentYPos, speedWidth + 13, BASE_HEIGHT, 6, new Color(23, 29, 35, 200).getRGB());
 
             BuiltText CoordsIcon = Builder.text()
                     .font(ICONS.get())
@@ -60,7 +68,8 @@ public class PlayerInfo extends DraggableElement {
                     .size(12f)
                     .thickness(0.05f)
                     .build();
-            CoordsIcon.render(new Matrix4f(), xPos, yPos + BASE_HEIGHT + GAP + 2.5);
+            CoordsIcon.render(new Matrix4f(), xPos, currentYPos + BASE_HEIGHT + GAP + 2.5f);
+
             BuiltText BpsIcon = Builder.text()
                     .font(ICONS.get())
                     .text("O")
@@ -68,7 +77,7 @@ public class PlayerInfo extends DraggableElement {
                     .size(12f)
                     .thickness(0.05f)
                     .build();
-            BpsIcon.render(new Matrix4f(), xPos, yPos- 0.5 + (BASE_HEIGHT - TEXT_HEIGHT) / 2);
+            BpsIcon.render(new Matrix4f(), xPos, currentYPos - 0.5f + (BASE_HEIGHT - TEXT_HEIGHT) / 2);
 
             BuiltText coordsText = Builder.text()
                     .font(BIKO_FONT.get())
@@ -77,7 +86,7 @@ public class PlayerInfo extends DraggableElement {
                     .size((float) TEXT_HEIGHT)
                     .thickness(0.05f)
                     .build();
-            coordsText.render(new Matrix4f(), xPos + 15, yPos + BASE_HEIGHT + 1 + GAP + (BASE_HEIGHT - TEXT_HEIGHT) / 2);
+            coordsText.render(new Matrix4f(), xPos + 15, currentYPos + BASE_HEIGHT + 1 + GAP + (BASE_HEIGHT - TEXT_HEIGHT) / 2);
 
             BuiltText speedText = Builder.text()
                     .font(BIKO_FONT.get())
@@ -86,7 +95,7 @@ public class PlayerInfo extends DraggableElement {
                     .size((float) TEXT_HEIGHT)
                     .thickness(0.05f)
                     .build();
-            speedText.render(new Matrix4f(), xPos + 15, yPos + 1 + (BASE_HEIGHT - TEXT_HEIGHT) / 2);
+            speedText.render(new Matrix4f(), xPos + 15, currentYPos + 1 + (BASE_HEIGHT - TEXT_HEIGHT) / 2);
         }
     }
 

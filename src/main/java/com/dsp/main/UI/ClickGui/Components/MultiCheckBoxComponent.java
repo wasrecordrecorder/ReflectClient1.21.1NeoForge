@@ -247,7 +247,7 @@ public class MultiCheckBoxComponent extends Component {
         float modeHeight = BIKO_FONT.get().getMetrics().lineHeight() * TEXT_SIZE + 2 + PADDING * 2 + ELEMENT_PADDING;
         if (isOpen) {
             float dropdownHeight = 10 + heightPadding + 4 + ELEMENT_PADDING;
-            return modeHeight + dropdownHeight + 2;
+            return modeHeight + dropdownHeight - 3;
         }
         return modeHeight;
     }

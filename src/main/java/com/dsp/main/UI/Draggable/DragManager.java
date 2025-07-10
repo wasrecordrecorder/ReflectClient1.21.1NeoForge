@@ -1,9 +1,6 @@
 package com.dsp.main.UI.Draggable;
 
-import com.dsp.main.UI.Draggable.DragElements.Keybinds;
-import com.dsp.main.UI.Draggable.DragElements.PlayerInfo;
-import com.dsp.main.UI.Draggable.DragElements.Potions;
-import com.dsp.main.UI.Draggable.DragElements.WaterMark;
+import com.dsp.main.UI.Draggable.DragElements.*;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.TypeAdapter;
@@ -52,9 +49,13 @@ public class DragManager {
                 if (element == null) continue;
                 DraggableElement currentElement = draggables.get(element.getName());
                 if (currentElement != null) {
+                    // Update existing element
                     currentElement.setX(element.getX());
                     currentElement.setY(element.getY());
                     currentElement.setCanBeDragged(element.canBeDragged());
+                } else {
+                    // Add new element if not already registered
+                    draggables.put(element.getName(), element);
                 }
             }
         } catch (IOException ex) {
@@ -106,17 +107,15 @@ public class DragManager {
                 }
             }
             in.endObject();
-
-            if ("WaterMark".equals(type)) {
-                return new WaterMark(name, xPos, yPos, canBeDragged);
-            } else if ("PlayerInfo".equals(type)) {
-                return new PlayerInfo(name, xPos, yPos, canBeDragged);
-            } else if ("Keybinds".equals(type)) {
-                return new Keybinds(name, xPos, yPos, canBeDragged);
-            } else if ("Potions".equals(type)) {
-                return new Potions(name, xPos, yPos, canBeDragged);
-            }
-            return null;
+            if (type == null) return null;
+            return switch (type) {
+                case "WaterMark" -> new WaterMark(name, xPos, yPos, canBeDragged);
+                case "PlayerInfo" -> new PlayerInfo(name, xPos, yPos, canBeDragged);
+                case "Keybinds" -> new Keybinds(name, xPos, yPos, canBeDragged);
+                case "Potions" -> new Potions(name, xPos, yPos, canBeDragged);
+                case "Cooldowns" -> new Cooldowns(name, xPos, yPos, canBeDragged);
+                default -> null;
+            };
         }
     }
 }

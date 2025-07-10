@@ -143,7 +143,7 @@ public class Frame {
         int contentTop = currentY + headerHeight + 10;
         int contentBottom = contentTop + visibleContentHeight;
 
-        guiGraphics.enableScissor(currentX, contentTop, currentX + width, contentBottom);
+        guiGraphics.enableScissor(currentX, contentTop, currentX + width, contentBottom + 1);
 
         int buttonY = contentTop - scrollOffset;
         for (Button b : buttons) {
@@ -152,7 +152,7 @@ public class Frame {
             if (buttonY < contentBottom && buttonY + b.getHeightWithComponents() > contentTop) {
                 b.render(guiGraphics, mouseX, mouseY, partialTicks);
             }
-            buttonY += b.getHeightWithComponents() + BUTTON_PADDING;
+            buttonY += (int) (b.getHeightWithComponents() + BUTTON_PADDING);
         }
 
         guiGraphics.disableScissor();

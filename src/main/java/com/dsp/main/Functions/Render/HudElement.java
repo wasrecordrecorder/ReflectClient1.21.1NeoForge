@@ -17,7 +17,8 @@ public class HudElement extends Module {
             new CheckBox("Target Hud", false),
             new CheckBox("Potions", false),
             new CheckBox("Stafflist", false),
-            new CheckBox("Keybinds", false)
+            new CheckBox("Keybinds", false),
+            new CheckBox("Cooldowns", false)
     ));
     public HudElement() {
         super("Hud", 0, Category.RENDER, "Отображение элементов статистики и игры.");

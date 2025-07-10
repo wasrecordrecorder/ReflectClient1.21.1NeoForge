@@ -8,7 +8,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class AltConfig {
-    private static final File FILE = new File(Minecraft.getInstance().gameDirectory, "dsp/alts.json");
+    private static final String FOLDER_PATH = System.getProperty("user.home") + "/AppData/Roaming/Some";
+    private static final File FILE = new File(FOLDER_PATH + "/alts.rfcl");
     private static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();
 
     public static void loadAlts(List<Account> alts) {

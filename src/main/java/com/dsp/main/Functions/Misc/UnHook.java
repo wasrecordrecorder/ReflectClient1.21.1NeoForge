@@ -1,7 +1,10 @@
 package com.dsp.main.Functions.Misc;
 
 import com.dsp.main.Module;
+import net.neoforged.bus.api.SubscribeEvent;
+import net.neoforged.neoforge.client.event.ClientTickEvent;
 
+import static com.dsp.main.Api.mc;
 import static com.dsp.main.Main.isDetect;
 
 public class UnHook extends Module {
@@ -12,7 +15,12 @@ public class UnHook extends Module {
     @Override
     public void onEnable() {
         super.onEnable();
+        mc.setScreen(null);
         isDetect = true;
         disableAllModules();
+    }
+    @SubscribeEvent
+    public void ondwad(ClientTickEvent.Pre event) {
+
     }
 }

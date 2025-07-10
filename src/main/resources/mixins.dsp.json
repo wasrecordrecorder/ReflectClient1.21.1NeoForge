@@ -11,13 +11,18 @@
   "client": [
     "BossHealthOverlayAccessor",
     "BossHealthOverlayMixin",
+    "ConnectionMixin",
+    "EntityMixin",
+    "GameRendererMixin",
     "GuiHotbarMixin",
     "LevelRendererMixin",
     "LivingEntityMixin",
+    "LocalPlayerMixin",
     "MinecraftMixin",
     "MultiPlayerGameModeMixin",
     "PlayerTabOverlayMixin",
     "ScoreboardMixin",
-    "ScreenEffectRendererMixin"
+    "ScreenEffectRendererMixin",
+    "ServerboundInteractPacketMixin"
   ]
 }

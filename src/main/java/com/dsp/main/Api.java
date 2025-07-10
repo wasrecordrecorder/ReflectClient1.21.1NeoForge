@@ -1,9 +1,12 @@
 package com.dsp.main;
 
 import com.dsp.main.Functions.Combat.TriggerBot;
+import com.dsp.main.Functions.Misc.AntiAttack;
 import com.dsp.main.Functions.Misc.AutoLeave;
 import com.dsp.main.Functions.Misc.UnHook;
 import com.dsp.main.Functions.Player.ClickActions;
+import com.dsp.main.Functions.Player.NoDelay;
+import com.dsp.main.Functions.Player.NoPush;
 import com.dsp.main.Functions.Render.HudElement;
 import com.dsp.main.Functions.Render.NoRender;
 import com.dsp.main.Managers.ConfigSystem.CfgManager;
@@ -24,6 +27,7 @@ import net.neoforged.neoforge.client.event.*;
 import org.lwjgl.glfw.GLFW;
 
 import java.util.Objects;
+import java.util.Set;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.util.concurrent.CopyOnWriteArrayList;
@@ -59,6 +63,9 @@ public class Api {
         Functions.add(new TriggerBot());
         Functions.add(new ClickActions());
         Functions.add(new UnHook());
+        Functions.add(new NoDelay());
+        Functions.add(new AntiAttack());
+        Functions.add(new NoPush());
     }
 
     public static boolean isEnabled(String name) {
@@ -96,6 +103,25 @@ public class Api {
             }
             if (e.getKey() == GLFW.GLFW_KEY_RIGHT_SHIFT && mc.screen == null) {
                 mc.setScreen(new ClickGuiScreen());
+            }
+        }
+    }
+    @SubscribeEvent
+    public void onMouseKey(InputEvent.MouseButton.Pre e) {
+        if (isDetect) return;
+        if (!(mc.level == null) && !(mc.player == null)) {
+            for (Module module : Functions) {
+                if (!module.isEnabled()) continue;
+                for (Setting setting : module.getSettings()) {
+                    if (setting instanceof BindCheckBox) {
+                        BindCheckBox bind = (BindCheckBox) setting;
+                        if (e.getButton() == bind.getBindKey()
+                                && e.getAction() == GLFW.GLFW_PRESS
+                                && e.getButton() != 0) {
+                            bind.execute();
+                        }
+                    }
+                }
             }
         }
     }

@@ -13,12 +13,16 @@ import net.minecraft.world.entity.animal.Animal;
 import net.minecraft.world.entity.monster.Monster;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.phys.EntityHitResult;
+import net.minecraft.world.level.ClipContext;
+import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.HitResult;
+import net.minecraft.world.phys.Vec3;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.neoforge.client.event.ClientTickEvent;
 
 import java.util.Arrays;
+import java.util.Comparator;
+import java.util.List;
 
 import static com.dsp.main.Api.mc;
 import static com.dsp.main.Main.isDetect;
@@ -36,7 +40,8 @@ public class TriggerBot extends Module {
     ));
     public static MultiCheckBox Options = new MultiCheckBox("Options", Arrays.asList(
             new CheckBox("Don't attack if using item", false),
-            new CheckBox("Only Crit", false)
+            new CheckBox("Only Crit", false),
+            new CheckBox("Wall Check", false)
     ));
 
     public TriggerBot() {
@@ -68,50 +73,86 @@ public class TriggerBot extends Module {
         return entity instanceof Monster;
     }
 
+    private boolean hasClearLineOfSight(Player player, Entity target) {
+        Vec3 playerEyePos = player.getEyePosition();
+        Vec3 targetPos = target.position().add(0, target.getBbHeight() / 2, 0);
+        ClipContext context = new ClipContext(
+                playerEyePos,
+                targetPos,
+                ClipContext.Block.COLLIDER,
+                ClipContext.Fluid.NONE,
+                player
+        );
+        return mc.level.clip(context).getType() != HitResult.Type.BLOCK;
+    }
+
+    private boolean isRayIntersectingAABB(Player player, Entity entity, double maxDistance) {
+        Vec3 eyePos = player.getEyePosition();
+        Vec3 lookVec = player.getViewVector(1.0F).scale(maxDistance);
+        Vec3 endPos = eyePos.add(lookVec);
+        AABB entityBox = entity.getBoundingBox();
+        return entityBox.clip(eyePos, endPos).isPresent();
+    }
+
+    private Entity findTarget(Player player) {
+        double maxDistance = attackDistance.getValue() + 0.1;
+        Vec3 eyePos = player.getEyePosition();
+        AABB searchBox = new AABB(eyePos, eyePos).inflate(maxDistance);
+        List<Entity> entities = mc.level.getEntities(player, searchBox, entity -> entity instanceof LivingEntity && entity.isAlive());
+
+        return entities.stream()
+                .filter(entity -> {
+                    boolean shouldTarget = false;
+                    if (Targets.isOptionEnabled("Friends") && FriendManager.isFriend(entity.getName().getString())) {
+                        shouldTarget = true;
+                    }
+                    if (FriendManager.isFriend(entity.getName().getString())) {
+                        return false;
+                    }
+                    if (Targets.isOptionEnabled("Invisible") && isInvisible(entity)) {
+                        shouldTarget = true;
+                    }
+                    if (Targets.isOptionEnabled("No Armor") && hasNoArmor(entity)) {
+                        shouldTarget = true;
+                    }
+                    if (!Targets.isOptionEnabled("No Armor") && hasNoArmor(entity)) {
+                        shouldTarget = false;
+                    }
+                    if (Targets.isOptionEnabled("Animals") && isAnimal(entity)) {
+                        shouldTarget = true;
+                    }
+                    if (Targets.isOptionEnabled("Monsters") && isMonster(entity)) {
+                        shouldTarget = true;
+                    }
+                    if (Targets.isOptionEnabled("Players") && entity instanceof Player) {
+                        shouldTarget = true;
+                    }
+                    if (!Targets.hasAnyEnabled()) {
+                        shouldTarget = false;
+                    }
+                    if (!shouldTarget) {
+                        return false;
+                    }
+                    if (player.distanceTo(entity) > maxDistance) {
+                        return false;
+                    }
+                    // Check if the player's view ray intersects the entity's hitbox
+                    return isRayIntersectingAABB(player, entity, maxDistance);
+                })
+                .min(Comparator.comparingDouble(player::distanceTo))
+                .orElse(null);
+    }
+
     private void performAttack(Player player) {
         Minecraft mc = Minecraft.getInstance();
-        HitResult hitResult = mc.hitResult;
-        if (hitResult == null || hitResult.getType() != HitResult.Type.ENTITY) {
+        Entity target = findTarget(player);
+        if (target == null || !(target instanceof LivingEntity)) {
             return;
         }
-
-        EntityHitResult entityHitResult = (EntityHitResult) hitResult;
-        Entity target = entityHitResult.getEntity();
-        if (!(target instanceof LivingEntity)) {
+        if (Options.isOptionEnabled("Wall Check") && !hasClearLineOfSight(player, target)) {
             return;
         }
-
-        // Проверяем, соответствует ли цель выбранным опциям
-        boolean shouldAttack = false;
-        if (Targets.isOptionEnabled("Friends") && FriendManager.isFriend(target.getName().getString())) {
-            shouldAttack = true;
-        }
-        if (Targets.isOptionEnabled("Invisible") && isInvisible(target)) {
-            shouldAttack = true;
-        }
-        if (Targets.isOptionEnabled("No Armor") && hasNoArmor(target)) {
-            shouldAttack = true;
-        }
-        if (!Targets.isOptionEnabled("No Armor") && hasNoArmor(target)) {
-            shouldAttack = false;
-        }
-        if (Targets.isOptionEnabled("Animals") && isAnimal(target)) {
-            shouldAttack = true;
-        }
-        if (Targets.isOptionEnabled("Monsters") && isMonster(target)) {
-            shouldAttack = true;
-        }
-        if (Targets.isOptionEnabled("Players") && target instanceof Player) {
-            shouldAttack = true;
-        }
-        // По умолчанию: атакуем животных и монстров, но не игроков
-        if (!Targets.hasAnyEnabled()) {
-            shouldAttack = false;
-        }
-
-        // Проверяем дистанцию и опции
-        if (shouldAttack && player.distanceTo(target) <= attackDistance.getValue() + 0.1) {
-            // Проверяем опцию "Only Crit" или откат оружия
+        if (player.distanceTo(target) <= attackDistance.getValue() + 0.1) {
             if (Options.isOptionEnabled("Only Crit") && !isPlayerFalling()) {
                 return;
             }
