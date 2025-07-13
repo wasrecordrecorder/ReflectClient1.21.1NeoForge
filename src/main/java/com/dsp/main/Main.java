@@ -23,13 +23,15 @@ public class Main {
     public static Supplier<MsdfFont> RUS = Suppliers.memoize(() -> MsdfFont.builder().atlas("rus").data("rus").build());
     public Main() {
         // Client Init
-        Api.Initialize();
         ThemeApi.init();
-        DragManager.addDraggable(new WaterMark("Watermark", 5, 5, false));
+        Api.Initialize();
+        DragManager.addDraggable(new WaterMark("WaterMark", 5, 5, false));
         DragManager.addDraggable(new PlayerInfo("PlayerInfo", 5, -1, false));
         DragManager.addDraggable(new Keybinds("Keybinds", 100, 100, true));
-        DragManager.addDraggable(new Potions("Potions", 100, 100, true));
-        DragManager.addDraggable(new Cooldowns("Cooldowns", 100, 100, true));
+        DragManager.addDraggable(new Potions("Potions", 100, 120, true));
+        DragManager.addDraggable(new Cooldowns("Cooldowns", 100, 140, true));
+        DragManager.addDraggable(new TargetHud("TargetHud", 100 ,160, true));
+        DragManager.addDraggable(new StaffList("StaffList", 100 ,180, true));
         DragManager.init();
 
         // Utils event Bus

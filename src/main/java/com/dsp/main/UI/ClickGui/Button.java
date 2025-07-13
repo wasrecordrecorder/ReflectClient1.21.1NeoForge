@@ -4,6 +4,7 @@ import com.dsp.main.UI.ClickGui.Components.*;
 import com.dsp.main.UI.ClickGui.Components.Component;
 import com.dsp.main.UI.ClickGui.Settings.*;
 import com.dsp.main.Module;
+import com.dsp.main.UI.Themes.ThemesUtil;
 import com.dsp.main.Utils.Color.ColorHelper;
 import com.dsp.main.Utils.Font.builders.Builder;
 import com.dsp.main.Utils.Font.builders.states.QuadColorState;
@@ -27,10 +28,10 @@ import static com.dsp.main.Main.BIKO_FONT;
 import static com.dsp.main.Main.ICONS;
 
 public class Button {
-    private static final float ANIMATION_SPEED = 0.2f;
     private static final int PADDING = 3;
     private static final float ROUNDING = 4.0f;
-    private static final int COMPONENT_PADDING = 2; // Padding above and below components
+    private static final int COMPONENT_PADDING = 2;
+    private static final float ANIMATION_DURATION = 200.0f;
 
     private final Module module;
     private int x;
@@ -40,14 +41,18 @@ public class Button {
     private boolean extended;
     private boolean binding;
     private float animationProgress = 0.0f;
+    private long animationStartTime = 0;
+    private boolean lastExtendedState = false;
     private final List<Component> components = new ArrayList<>();
+    private final float scaleFactor;
 
-    public Button(Module module, int x, int y, int width, int height, Frame parent) {
+    public Button(Module module, int x, int y, int width, int height, Frame parent, float scaleFactor) {
         this.module = module;
-        this.x = x;
-        this.y = y;
-        this.width = width;
-        this.height = height;
+        this.x = (int) (x * scaleFactor);
+        this.y = (int) (y * scaleFactor);
+        this.width = (int) (width * scaleFactor);
+        this.height = (int) (height * scaleFactor);
+        this.scaleFactor = scaleFactor;
 
         initComponents();
     }
@@ -55,24 +60,40 @@ public class Button {
     private void initComponents() {
         for (Setting setting : module.getSettings()) {
             if (setting instanceof CheckBox)
-                components.add(new CheckBoxComponent((CheckBox) setting, this));
+                components.add(new CheckBoxComponent((CheckBox) setting, this, scaleFactor));
             else if (setting instanceof BindCheckBox)
-                components.add(new BindCheckBoxComponent(setting, this));
+                components.add(new BindCheckBoxComponent(setting, this, scaleFactor));
             else if (setting instanceof Mode)
-                components.add(new ModeComponent((Mode) setting, this));
+                components.add(new ModeComponent((Mode) setting, this, scaleFactor));
             else if (setting instanceof Slider)
-                components.add(new SliderComponent((Slider) setting, this, (float) ((Slider) setting).getDefaultvalue()));
+                components.add(new SliderComponent((Slider) setting, this, (float) ((Slider) setting).getDefaultvalue(), scaleFactor));
             else if (setting instanceof Input)
-                components.add(new InputComponent(setting, this));
+                components.add(new InputComponent(setting, this, scaleFactor));
             else if (setting instanceof MultiCheckBox)
-                components.add(new MultiCheckBoxComponent((MultiCheckBox) setting, this));
+                components.add(new MultiCheckBoxComponent((MultiCheckBox) setting, this, scaleFactor));
         }
     }
 
     public void render(GuiGraphics graphics, int mouseX, int mouseY, float partialTicks) {
         PoseStack poseStack = graphics.pose();
+        // Обновляем анимацию
+        if (extended != lastExtendedState) {
+            animationStartTime = System.currentTimeMillis();
+            lastExtendedState = extended;
+        }
         float targetProgress = extended ? 1.0f : 0.0f;
-        animationProgress = lerp(animationProgress, targetProgress, ANIMATION_SPEED * partialTicks);
+        if (animationStartTime > 0) {
+            float elapsedTime = System.currentTimeMillis() - animationStartTime;
+            animationProgress = Math.max(0.0f, Math.min(1.0f, elapsedTime / ANIMATION_DURATION));
+            if (extended) {
+                animationProgress = targetProgress * animationProgress;
+            } else {
+                animationProgress = targetProgress + (1.0f - animationProgress) * (1.0f - targetProgress);
+            }
+        } else {
+            animationProgress = targetProgress;
+        }
+
         Color baseBgColor = new Color(18, 30, 60, 200);
         int r = baseBgColor.getRed();
         int g = baseBgColor.getGreen();
@@ -84,13 +105,11 @@ public class Button {
             b = Math.min(255, b + 20);
         }
         int bgColor = (a << 24) | (r << 16) | (g << 8) | b;
-        DrawShader.drawRoundBlur(poseStack, x, y, width, height, ROUNDING, bgColor, 90, 0.7f);
+        DrawShader.drawRoundBlur(poseStack, x, y, width, height, ROUNDING * scaleFactor, bgColor, 90, 0.7f);
 
         QuadColorState borderColorState;
         if (module.isEnabled()) {
-            Color neonWhite1 = ColorHelper.twoColorEffect(Color.WHITE, new Color(104, 141, 175, 220), 255);
-            Color neonWhite2 = ColorHelper.twoColorEffect(new Color(104, 141, 175, 220), Color.WHITE, 255);
-            borderColorState = new QuadColorState(neonWhite1, neonWhite2, neonWhite1, neonWhite2);
+            borderColorState = new QuadColorState(ThemesUtil.getCurrentStyle().getColor(1), ThemesUtil.getCurrentStyle().getColor(2), ThemesUtil.getCurrentStyle().getColor(1), ThemesUtil.getCurrentStyle().getColor(2));
         } else {
             Color neonWhite1 = ColorHelper.twoColorEffect(Color.DARK_GRAY, new Color(r, g, b, a), 255);
             Color neonWhite2 = ColorHelper.twoColorEffect(new Color(r, g, b, a), Color.DARK_GRAY, 255);
@@ -99,9 +118,9 @@ public class Button {
         BuiltBorder border = Builder.border()
                 .size(new SizeState(width, height))
                 .color(borderColorState)
-                .radius(new QuadRadiusState(2f, 2f, 2f, 2f))
+                .radius(new QuadRadiusState(2f * scaleFactor, 2f * scaleFactor, 2f * scaleFactor, 2f * scaleFactor))
                 .thickness(0.01f)
-                .smoothness(0.5f, 0.5f)
+                .smoothness(0.5f, 1f)
                 .build();
         border.render(new Matrix4f(), x, y);
         int textColor;
@@ -114,47 +133,46 @@ public class Button {
         }
 
         String label = binding ? "> Press Key <" : module.getName();
-        int textX = x + PADDING;
-        int textY = y + (height - mc.font.lineHeight + 1) / 2;
+        int textX = (int) (x + PADDING * scaleFactor);
+        int textY = (int) (y + (height - (BIKO_FONT.get().getMetrics().lineHeight() * 9f) + 1 * scaleFactor) / 2);
         BuiltText text = Builder.text()
                 .font(BIKO_FONT.get())
                 .text(label)
                 .color(textColor)
-                .size(9f)
+                .size(9f * scaleFactor)
                 .thickness(0.05f)
                 .build();
         text.render(new Matrix4f(), textX, textY);
 
-        if (!module.getSettings().isEmpty() && module.isEnabled()) {
+        if (module.isEnabled()) {
             BuiltText text1 = Builder.text()
                     .font(ICONS.get())
                     .text("+")
                     .color(textColor)
-                    .size(9f)
+                    .size(9f * scaleFactor)
                     .thickness(0.05f)
                     .build();
-            text1.render(new Matrix4f(), x + width - 15, textY);
+            text1.render(new Matrix4f(), (int) (x + width - 15 * scaleFactor), textY);
         }
 
         if (animationProgress > 0.01f) {
-            // Calculate total height including padding between components
             float totalComponentHeight = components.stream()
                     .filter(c -> c.getSetting().isVisible())
                     .map(Component::getHeight)
                     .reduce(0f, Float::sum);
             int visibleComponents = (int) components.stream().filter(c -> c.getSetting().isVisible()).count();
-            totalComponentHeight += (visibleComponents > 0 ? (visibleComponents - 1) * 2 * COMPONENT_PADDING : 0);
+            totalComponentHeight += (visibleComponents > 0 ? (visibleComponents - 1) * 2 * COMPONENT_PADDING * scaleFactor : 0);
             float animatedHeight = totalComponentHeight * animationProgress;
             float offsetY = y + height;
 
-            graphics.enableScissor(x, y + height, x + width, (int) (y + height + animatedHeight + 2 * COMPONENT_PADDING));
+            graphics.enableScissor(x, y + height, x + width, (int) (y + height + animatedHeight + 2 * COMPONENT_PADDING * scaleFactor));
 
             for (Component comp : components) {
                 if (comp.getSetting().isVisible()) {
-                    comp.setX(x + PADDING);
+                    comp.setX((int) (x + PADDING * scaleFactor));
                     comp.setY(offsetY);
                     comp.draw(graphics, mouseX, mouseY);
-                    offsetY += comp.getHeight() + 2 * COMPONENT_PADDING;
+                    offsetY += comp.getHeight() + 2 * COMPONENT_PADDING * scaleFactor;
                 }
             }
 
@@ -163,10 +181,10 @@ public class Button {
 
         if (isHovered(mouseX, mouseY) && !module.getDescription().isEmpty()) {
             String desc = module.getDescription();
-            float descWidth = mc.font.width(desc);
-            float tooltipX = x + width + 5;
-            float tooltipY = y + (height - mc.font.lineHeight) / 2f;
-            DrawHelper.rectangle(poseStack, tooltipX - 2, tooltipY - 2, descWidth + 4, mc.font.lineHeight + 4, 2,
+            float descWidth = mc.font.width(desc) * scaleFactor;
+            float tooltipX = x + width + 5 * scaleFactor;
+            float tooltipY = y + (height - mc.font.lineHeight * scaleFactor) / 2f;
+            DrawHelper.rectangle(poseStack, tooltipX - 2 * scaleFactor, tooltipY - 2 * scaleFactor, descWidth + 4 * scaleFactor, mc.font.lineHeight * scaleFactor + 4 * scaleFactor, 2 * scaleFactor,
                     new Color(35, 50, 72, 220).getRGB());
             graphics.drawString(mc.font, desc, (int) tooltipX, (int) tooltipY, Color.WHITE.getRGB(), false);
         }
@@ -212,12 +230,12 @@ public class Button {
     }
 
     public void setPosition(int x, int y) {
-        this.x = x;
-        this.y = y;
+        this.x = (int) (x * scaleFactor);
+        this.y = (int) (y * scaleFactor);
     }
 
     public void setWidth(int w) {
-        this.width = w;
+        this.width = (int) (w * scaleFactor);
     }
 
     public float getHeightWithComponents() {
@@ -226,7 +244,7 @@ public class Button {
                 .map(Component::getHeight)
                 .reduce(0f, Float::sum);
         int visibleComponents = (int) components.stream().filter(c -> c.getSetting().isVisible()).count();
-        componentHeight += (visibleComponents > 0 ? (visibleComponents - 1) * 2 * COMPONENT_PADDING : 0);
+        componentHeight += (visibleComponents > 0 ? (visibleComponents - 1) * 2 * COMPONENT_PADDING * scaleFactor : 0);
         return height + (animationProgress * componentHeight);
     }
 
@@ -246,7 +264,15 @@ public class Button {
         return height;
     }
 
-    private float lerp(float start, float end, float t) {
-        return start + t * (end - start);
+    public boolean isBinding() {
+        return binding;
+    }
+
+    public Module getModule() {
+        return module;
+    }
+
+    public List<Component> getComponents() {
+        return components;
     }
 }

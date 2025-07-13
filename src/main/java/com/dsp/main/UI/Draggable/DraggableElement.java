@@ -28,6 +28,7 @@ public abstract class DraggableElement {
     public float getY() { return yPos; }
     public String getName() { return name; }
     public boolean canBeDragged() { return canBeDragged; }
+    public boolean isDragging() { return dragging; }
 
     public void setX(float x) { this.xPos = x; }
     public void setY(float y) { this.yPos = y; }
@@ -38,12 +39,14 @@ public abstract class DraggableElement {
 
     public void onDraw(int mouseX, int mouseY, Window window) {
         if (dragging && canBeDragged && isChatOpen()) {
-            xPos = mouseX - startX;
-            yPos = mouseY - startY;
+            float rawX = mouseX - startX;
+            float rawY = mouseY - startY;
             float maxX = window.getGuiScaledWidth() - getWidth();
             float maxY = window.getGuiScaledHeight() - getHeight();
-            xPos = Math.max(0, Math.min(xPos, maxX));
-            yPos = Math.max(0, Math.min(yPos, maxY));
+
+            float[] snappedPos = DragManager.snapToGrid(rawX, rawY, getWidth(), getHeight(), maxX, maxY);
+            xPos = Math.max(0, Math.min(snappedPos[0], maxX));
+            yPos = Math.max(0, Math.min(snappedPos[1], maxY));
         }
     }
 

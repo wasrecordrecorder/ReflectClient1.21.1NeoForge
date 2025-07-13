@@ -1,11 +1,15 @@
 package com.dsp.main;
 
 import com.dsp.main.UI.ClickGui.Settings.Setting;
+import com.dsp.main.UI.Notifications.Notification;
+import com.dsp.main.UI.Notifications.NotificationManager;
+
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import static com.dsp.main.Api.mc;
-import static com.dsp.main.Api.Functions;
+
+import static com.dsp.main.Api.*;
+import static com.dsp.main.Functions.Render.Notifications.Option;
 import static com.dsp.main.Main.EVENT_BUS;
 import static com.dsp.main.Main.isDetect;
 
@@ -16,6 +20,7 @@ public abstract class Module {
     public String description;
     public Category category;
     public List<Setting> setingList = new ArrayList<>();
+
 
     public Module(String name, int key, Category category, String description) {
         this.name = name;
@@ -80,7 +85,7 @@ public abstract class Module {
 //                    }
                 }
             }
-            //NotificationManager.show(new Notification(NotificationType.INFO, getName() + " Был включен!", 1));
+            if (Option.isOptionEnabled("Functions Toggle")) notificationManager.send(Notification.Type.INFO, getName() + " was Enabled !");
         } else {
             onDisable();
 
@@ -94,7 +99,7 @@ public abstract class Module {
 //                    }
 //                }
             }
-//            NotificationManager.show(new Notification(NotificationType.ERROR,  getName() + " Был выключен!", 1));
+            if (Option.isOptionEnabled("Functions Toggle")) notificationManager.send(Notification.Type.INFO, getName() + " was Disabled !");
         }
     }
 

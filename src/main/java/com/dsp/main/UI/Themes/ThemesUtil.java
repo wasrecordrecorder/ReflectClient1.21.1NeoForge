@@ -23,10 +23,11 @@ public class ThemesUtil {
                 new Theme("Magic", HexColor.toColor("#5A189A"), HexColor.toColor("#FAA307")),
                 new Theme("Flare", HexColor.toColor("#FF6F61"), HexColor.toColor("#6B5B95")),
                 new Theme("Falling", HexColor.toColor("#FEB47B"), HexColor.toColor("#FF7E5F")),
-                new Theme("Moonlight", HexColor.toColor("#6A85B6"), HexColor.toColor("#B7C0EE"))
+                new Theme("Moonlight", HexColor.toColor("#6A85B6"), HexColor.toColor("#B7C0EE")),
+                new Theme("Light", HexColor.toColor("#FFFFFF"), HexColor.toColor("#587894DC"))
                 )
         );
-        currentTheme = themes.get(1);
+        currentTheme = themes.get(14);
     }
 
 

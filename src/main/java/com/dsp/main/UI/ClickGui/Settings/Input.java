@@ -16,7 +16,6 @@ public class Input extends Setting {
         return this.name;
     }
 
-
     public void setValue(String value) {
         this.value = value;
     }

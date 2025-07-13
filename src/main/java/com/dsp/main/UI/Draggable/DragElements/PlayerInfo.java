@@ -2,8 +2,11 @@ package com.dsp.main.UI.Draggable.DragElements;
 
 import com.dsp.main.Api;
 import com.dsp.main.UI.Draggable.DraggableElement;
+import com.dsp.main.UI.Themes.ThemesUtil;
+import com.dsp.main.Utils.Color.ColorHelper;
 import com.dsp.main.Utils.Font.builders.Builder;
 import com.dsp.main.Utils.Font.renderers.impl.BuiltText;
+import com.dsp.main.Utils.Render.ColorUtil;
 import com.dsp.main.Utils.Render.DrawHelper;
 import com.mojang.blaze3d.vertex.PoseStack;
 import net.minecraft.client.Minecraft;
@@ -64,7 +67,7 @@ public class PlayerInfo extends DraggableElement {
             BuiltText CoordsIcon = Builder.text()
                     .font(ICONS.get())
                     .text("M")
-                    .color(IconColor)
+                    .color(ColorHelper.gradient(ThemesUtil.getCurrentStyle().getColor(1), ThemesUtil.getCurrentStyle().getColor(2), 20, 10))
                     .size(12f)
                     .thickness(0.05f)
                     .build();
@@ -73,7 +76,7 @@ public class PlayerInfo extends DraggableElement {
             BuiltText BpsIcon = Builder.text()
                     .font(ICONS.get())
                     .text("O")
-                    .color(IconColor)
+                    .color(ColorHelper.gradient(ThemesUtil.getCurrentStyle().getColor(1), ThemesUtil.getCurrentStyle().getColor(2), 20, 10))
                     .size(12f)
                     .thickness(0.05f)
                     .build();

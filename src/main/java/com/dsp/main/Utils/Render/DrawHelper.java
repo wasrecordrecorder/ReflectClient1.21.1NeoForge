@@ -1,26 +1,26 @@
 package com.dsp.main.Utils.Render;
 
-import com.mojang.blaze3d.platform.GlStateManager;
 import com.mojang.blaze3d.platform.Window;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.*;
 import com.mojang.math.Axis;
-import net.minecraft.client.Camera;
+import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.GameRenderer;
+import net.minecraft.client.renderer.MultiBufferSource;
+import net.minecraft.client.renderer.RenderType;
 import net.minecraft.core.BlockPos;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.Mth;
+import net.minecraft.world.entity.Pose;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
-import org.jetbrains.annotations.NotNull;
-import org.joml.Vector2f;
-import org.joml.Vector3f;
-import org.joml.Vector4f;
+import org.joml.*;
 import org.lwjgl.opengl.GL11;
-import org.joml.Matrix4f;
 
 
 import java.awt.*;
+import java.lang.Math;
 import java.util.Objects;
 
 public class DrawHelper implements Mine {
@@ -243,7 +243,7 @@ public class DrawHelper implements Mine {
         RenderSystem.enableDepthTest();
     }
 
-    public void rectRGB(PoseStack matrices, float x, float y, float width, float height, float rounding, int color, int color2, int color3, int color4) {
+    public static void rectRGB(PoseStack matrices, float x, float y, float width, float height, float rounding, int color, int color2, int color3, int color4) {
         RenderSystem.enableBlend();
         RenderSystem.defaultBlendFunc();
         RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
@@ -345,8 +345,6 @@ public class DrawHelper implements Mine {
         BufferUploader.drawWithShader(bufferBuilder.buildOrThrow());
         RenderSystem.disableBlend();
     }
-
-    /** Рисует заполненный круг */
     public static void drawCircle(PoseStack matrices, float centerX, float centerY, float radius, int color) {
         int segments = 32; // Количество сегментов для аппроксимации круга
         float angleStep = (float) (2 * Math.PI / segments);
@@ -377,6 +375,132 @@ public class DrawHelper implements Mine {
         BufferUploader.drawWithShader(bufferBuilder.buildOrThrow());
         RenderSystem.disableBlend();
     }
+    private static final float LINE_WIDTH = 1.0f;
+    public static void drawBox(PoseStack matrixStack, BlockPos pos, float partialTicks, Color color) {
+        Vec3 playerPos = Minecraft.getInstance().player.getEyePosition(partialTicks);
+        double renderX = pos.getX() - playerPos.x;
+        double renderY = pos.getY() - playerPos.y;
+        double renderZ = pos.getZ() - playerPos.z;
+        if (playerPos.distanceTo(new Vec3(pos.getX(), pos.getY(), pos.getZ())) > 64) return;
 
+        matrixStack.pushPose();
+        RenderSystem.disableDepthTest();
+        RenderSystem.depthMask(false);
+        RenderSystem.lineWidth(LINE_WIDTH);
+        RenderSystem.setShaderColor(color.getRed() / 255.0f, color.getGreen() / 255.0f, color.getBlue() / 255.0f, color.getAlpha() / 255.0f);
 
+        Tesselator tessellator = Tesselator.getInstance();
+        BufferBuilder bufferBuilder = tessellator.begin(VertexFormat.Mode.LINES, DefaultVertexFormat.POSITION_COLOR);
+        drawCubeEdges(bufferBuilder, renderX, renderY, renderZ, color);
+        BufferUploader.drawWithShader(bufferBuilder.buildOrThrow());
+
+        RenderSystem.enableDepthTest();
+        RenderSystem.depthMask(true);
+        matrixStack.popPose();
+    }
+
+    private static void drawCubeEdges(BufferBuilder bufferBuilder, double x, double y, double z, Color color) {
+        double[][] vertices = {
+                {x, y, z}, {x + 1, y, z}, {x + 1, y, z}, {x + 1, y + 1, z},
+                {x + 1, y + 1, z}, {x, y + 1, z}, {x, y + 1, z}, {x, y, z},
+                {x, y, z + 1}, {x + 1, y, z + 1}, {x + 1, y, z + 1}, {x + 1, y + 1, z + 1},
+                {x + 1, y + 1, z + 1}, {x, y + 1, z + 1}, {x, y + 1, z + 1}, {x, y, z + 1},
+                {x, y, z}, {x, y, z + 1}, {x + 1, y, z}, {x + 1, y, z + 1},
+                {x + 1, y + 1, z}, {x + 1, y + 1, z + 1}, {x, y + 1, z}, {x, y + 1, z + 1},
+        };
+        float r = color.getRed() / 255.0f;
+        float g = color.getGreen() / 255.0f;
+        float b = color.getBlue() / 255.0f;
+        float a = color.getAlpha() / 255.0f;
+        for (int i = 0; i < vertices.length; i += 2) {
+            bufferBuilder.addVertex((float) vertices[i][0], (float) vertices[i][1], (float) vertices[i][2]).setColor(r, g, b, a);
+            bufferBuilder.addVertex((float)vertices[i + 1][0], (float)vertices[i + 1][1], (float)vertices[i + 1][2]).setColor(r, g, b, a);
+        }
+    }
+
+    public static void drawBox(double x, double y, double width, double height, double size, int color) {
+        drawRectBuilding(x + size, y, width - size, y + size, color);
+        drawRectBuilding(x, y, x + size, height, color);
+
+        drawRectBuilding(width - size, y, width, height, color);
+        drawRectBuilding(x + size, height - size, width - size, height, color);
+    }
+
+    public static void drawBoxTest(double x, double y, double width, double height, double size, Vector4f colors) {
+        drawMCHorizontalBuilding(x + size, y, width - size, y + size, (int) colors.x(), (int) colors.z());
+        drawMCVerticalBuilding(x, y, x + size, height, (int) colors.z(), (int) colors.x());
+
+        drawMCVerticalBuilding(width - size, y, width, height, (int) colors.x(), (int) colors.z());
+        drawMCHorizontalBuilding(x + size, height - size, width - size, height, (int) colors.z(), (int) colors.x());
+    }
+
+    public static void drawRectBuilding(
+            double left,
+            double top,
+            double right,
+            double bottom,
+            int color) {
+        if (left < right) {
+            double i = left;
+            left = right;
+            right = i;
+        }
+
+        if (top < bottom) {
+            double j = top;
+            top = bottom;
+            bottom = j;
+        }
+
+        float f3 = (float) (color >> 24 & 255) / 255.0F;
+        float f = (float) (color >> 16 & 255) / 255.0F;
+        float f1 = (float) (color >> 8 & 255) / 255.0F;
+        float f2 = (float) (color & 255) / 255.0F;
+
+        Tesselator tessellator = Tesselator.getInstance();
+        BufferBuilder bufferbuilder = tessellator.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_COLOR);
+        bufferbuilder.addVertex((float)left, (float)bottom, 0.0F).setColor(f, f1, f2, f3);
+        bufferbuilder.addVertex((float)right, (float)bottom, 0.0F).setColor(f, f1, f2, f3);
+        bufferbuilder.addVertex((float)right, (float)top, 0.0F).setColor(f, f1, f2, f3);
+        bufferbuilder.addVertex((float)left, (float)top, 0.0F).setColor(f, f1, f2, f3);
+        BufferUploader.drawWithShader(bufferbuilder.buildOrThrow());
+    }
+
+    public static void drawMCHorizontalBuilding(double x, double y, double width, double height, int start, int end) {
+        float f = (float) (start >> 24 & 255) / 255.0F;
+        float f1 = (float) (start >> 16 & 255) / 255.0F;
+        float f2 = (float) (start >> 8 & 255) / 255.0F;
+        float f3 = (float) (start & 255) / 255.0F;
+        float f4 = (float) (end >> 24 & 255) / 255.0F;
+        float f5 = (float) (end >> 16 & 255) / 255.0F;
+        float f6 = (float) (end >> 8 & 255) / 255.0F;
+        float f7 = (float) (end & 255) / 255.0F;
+
+        Tesselator tessellator = Tesselator.getInstance();
+        BufferBuilder bufferbuilder = tessellator.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_COLOR);
+        bufferbuilder.addVertex((float) x, (float) height, 0f).setColor(f1, f2, f3, f);
+        bufferbuilder.addVertex((float) width, (float) height, 0f).setColor(f5, f6, f7, f4);
+        bufferbuilder.addVertex((float) width, (float) y, 0f).setColor(f5, f6, f7, f4);
+        bufferbuilder.addVertex((float) x, (float) y, 0f).setColor(f1, f2, f3, f);
+        BufferUploader.drawWithShader(bufferbuilder.buildOrThrow());
+    }
+
+    public static void drawMCVerticalBuilding(double x, double y, double width, double height, int start, int end) {
+        float f = (float) (start >> 24 & 255) / 255.0F;
+        float f1 = (float) (start >> 16 & 255) / 255.0F;
+        float f2 = (float) (start >> 8 & 255) / 255.0F;
+        float f3 = (float) (start & 255) / 255.0F;
+        float f4 = (float) (end >> 24 & 255) / 255.0F;
+        float f5 = (float) (end >> 16 & 255) / 255.0F;
+        float f6 = (float) (end >> 8 & 255) / 255.0F;
+        float f7 = (float) (end & 255) / 255.0F;
+
+        Tesselator tessellator = Tesselator.getInstance();
+        BufferBuilder bufferbuilder = tessellator.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_COLOR);
+        bufferbuilder.addVertex((float) x, (float) height, 0f).setColor(f1, f2, f3, f);
+        bufferbuilder.addVertex((float) width, (float) height, 0f).setColor(f1, f2, f3, f);
+        bufferbuilder.addVertex((float) width, (float) y, 0f).setColor(f5, f6, f7, f4);
+        bufferbuilder.addVertex((float) x, (float) y, 0f).setColor(f5, f6, f7, f4);
+        BufferUploader.drawWithShader(bufferbuilder.buildOrThrow());
+    }
 }

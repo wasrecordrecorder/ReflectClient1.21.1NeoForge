@@ -29,7 +29,7 @@ public class ChatManager {
         String serverName = serverData.ip.toLowerCase();
         String msg = event.getMessage();
         String[] args = msg.split(" ");
-        if (msg.startsWith(".")) {
+        if (msg.startsWith(".") && !msg.startsWith(".staff")) {
             event.setCanceled(true);
         }
         if (msg.equalsIgnoreCase(".gps off")) {

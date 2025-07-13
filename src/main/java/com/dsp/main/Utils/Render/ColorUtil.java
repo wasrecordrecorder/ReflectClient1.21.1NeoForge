@@ -9,6 +9,15 @@ public class ColorUtil {
     public static int swapAlpha(final int n, final float n2) {
         return ColorUtil.toRGBA(n >> 16 & 0xFF, n >> 8 & 0xFF, n & 0xFF, (int) n2);
     }
+    public static Color getHealthColor(float healthRatio) {
+        healthRatio = Math.max(0.0f, Math.min(1.0f, healthRatio)); // Clamp от 0 до 1
+
+        // Преобразуем healthRatio в цвет от красного (0) к зеленому (1)
+        float red = Math.min(1.0f, 2.0f * (1.0f - healthRatio));
+        float green = Math.min(1.0f, 2.0f * healthRatio);
+
+        return new Color(red, green, 0.0f);
+    }
 
     public static Color swapAlpha(final Color color, final int alpha) {
         return new Color(color.getRed(), color.getGreen(), color.getBlue(), Mth.clamp(alpha, 0, 255));
@@ -20,6 +29,49 @@ public class ColorUtil {
 
     public int swapAlpha2(final int n, final float n2) {
         return ColorUtil.toRGBA(n >> 16 & 0xFF, n >> 8 & 0xFF, n & 0xFF, (int) n2);
+    }
+    public static int rgba(int r, int g, int b, int a) {
+        return a << 24 | r << 16 | g << 8 | b;
+    }
+    public static double interpolate(double current, double old, double scale) {
+        return old + (current - old) * scale;
+    }
+    public static int interpolate(int start, int end, float value) {
+        float[] startColor = rgba(start);
+        float[] endColor = rgba(end);
+
+        return rgba((int) interpolate(startColor[0] * 255, endColor[0] * 255, value),
+                (int) interpolate(startColor[1] * 255, endColor[1] * 255, value),
+                (int) interpolate(startColor[2] * 255, endColor[2] * 255, value),
+                (int) interpolate(startColor[3] * 255, endColor[3] * 255, value));
+    }
+    public static int gradient(int start, int end, int index, int speed) {
+        int angle = (int) ((System.currentTimeMillis() / speed + index) % 360);
+        angle = (angle > 180 ? 360 - angle : angle) + 180;
+        int color = interpolate(start, end, Mth.clamp(angle / 180f - 1, 0, 1));
+        float[] hs = rgba(color);
+        float[] hsb = Color.RGBtoHSB((int) (hs[0] * 255), (int) (hs[1] * 255), (int) (hs[2] * 255), null);
+
+        hsb[1] *= 1.5F;
+        hsb[1] = Math.min(hsb[1], 1.0f);
+
+        return Color.HSBtoRGB(hsb[0], hsb[1], hsb[2]);
+    }
+    public static int rgb(int r, int g, int b) {
+        return 255 << 24 | r << 16 | g << 8 | b;
+    }
+    public static int getColor(int index, float mult) {
+        int color1 = rgb(109, 10, 40);
+        int color2 = rgb(239, 96, 136);
+        {
+            return gradient(color1, color2, (int) (index * mult), 10);
+        }
+    }
+
+    public static int getColor2(int index, float mult) {
+        int color1 = rgb(17, 109, 10);
+        int color2 = rgb(122, 239, 96);
+        return gradient(color1, color2, (int) (index * mult), 10);
     }
 
     public static int astolfo(int speed, int offset, float saturation, float brightness, float alpha) {

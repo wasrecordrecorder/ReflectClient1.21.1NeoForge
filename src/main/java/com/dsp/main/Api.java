@@ -1,37 +1,48 @@
 package com.dsp.main;
 
+import com.dsp.main.Functions.Combat.AimAssistant;
+import com.dsp.main.Functions.Combat.AntiBot;
 import com.dsp.main.Functions.Combat.TriggerBot;
-import com.dsp.main.Functions.Misc.AntiAttack;
-import com.dsp.main.Functions.Misc.AutoLeave;
-import com.dsp.main.Functions.Misc.UnHook;
+import com.dsp.main.Functions.Misc.*;
 import com.dsp.main.Functions.Player.ClickActions;
+import com.dsp.main.Functions.Player.FastExp;
 import com.dsp.main.Functions.Player.NoDelay;
 import com.dsp.main.Functions.Player.NoPush;
+import com.dsp.main.Functions.Render.BoxEsp;
 import com.dsp.main.Functions.Render.HudElement;
 import com.dsp.main.Functions.Render.NoRender;
+import com.dsp.main.Functions.Render.Notifications;
 import com.dsp.main.Managers.ConfigSystem.CfgManager;
+import com.dsp.main.Managers.Event.UpdateInputEvent;
 import com.dsp.main.UI.ClickGui.ClickGuiScreen;
 import com.dsp.main.Functions.Movement.Test;
 import com.dsp.main.Functions.Movement.AutoSprint;
 import com.dsp.main.UI.ClickGui.Settings.BindCheckBox;
 import com.dsp.main.UI.ClickGui.Settings.Setting;
+import com.dsp.main.UI.Draggable.DragElements.StaffList;
 import com.dsp.main.UI.Draggable.DragManager;
 import com.dsp.main.UI.Draggable.DraggableElement;
 import com.dsp.main.UI.MainMenu.MainMenuScreen;
 import com.dsp.main.Managers.Hooks.InventoryScreenHook;
+import com.dsp.main.UI.Notifications.NotificationManager;
+import com.dsp.main.Utils.Minecraft.Chat.ChatUtil;
+import com.dsp.main.Utils.TimerUtil;
+import com.mojang.datafixers.types.Func;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.MouseHandler;
 import net.minecraft.client.gui.GuiGraphics;
+import net.neoforged.bus.api.EventPriority;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.neoforge.client.event.*;
 import org.lwjgl.glfw.GLFW;
 
+import java.util.Arrays;
 import java.util.Objects;
-import java.util.Set;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.util.concurrent.CopyOnWriteArrayList;
 
+import static com.dsp.main.Functions.Render.HudElement.snapGride;
 import static com.dsp.main.Main.isDetect;
 
 public class Api {
@@ -40,6 +51,8 @@ public class Api {
     public static Minecraft mc = Minecraft.getInstance();
     public static CopyOnWriteArrayList<Module> Functions = new CopyOnWriteArrayList<>();
     private boolean isCfgLoaded = false;
+    public static boolean isResetingSprint = false;
+    public static NotificationManager notificationManager = new NotificationManager();
 
     private static final Timer autoSaveTimer = new Timer(true);
 
@@ -56,7 +69,7 @@ public class Api {
 
     public static void Initialize() {
         Functions.add(new AutoSprint());
-        Functions.add(new Test());
+        //Functions.add(new Test());
         Functions.add(new HudElement());
         Functions.add(new NoRender());
         Functions.add(new AutoLeave());
@@ -66,6 +79,13 @@ public class Api {
         Functions.add(new NoDelay());
         Functions.add(new AntiAttack());
         Functions.add(new NoPush());
+        Functions.add(new ItemScroller());
+        Functions.add(new FastExp());
+        Functions.add(new AutoAccept());
+        Functions.add(new AimAssistant());
+        Functions.add(new BoxEsp());
+        Functions.add(new AntiBot());
+        Functions.add(new Notifications());
     }
 
     public static boolean isEnabled(String name) {
@@ -125,21 +145,25 @@ public class Api {
             }
         }
     }
-    @SubscribeEvent
-    public void onRenderGui(RenderGuiEvent.Post event) {
+    @SubscribeEvent(priority = EventPriority.HIGHEST)
+    public void onRenderGui(RenderGuiEvent.Pre event) {
         GuiGraphics guiGraphics = event.getGuiGraphics();
         MouseHandler mouseHandler = Minecraft.getInstance().mouseHandler;
         mouseX = mouseHandler.xpos() * Minecraft.getInstance().getWindow().getGuiScaledWidth() / Minecraft.getInstance().getWindow().getScreenWidth();
         mouseY = mouseHandler.ypos() * Minecraft.getInstance().getWindow().getGuiScaledHeight() / Minecraft.getInstance().getWindow().getScreenHeight();
-
+        if (DragManager.isAnyDragging() && snapGride.isEnabled()) {
+            DragManager.renderGrid(guiGraphics, mc.getWindow());
+        }
         for (DraggableElement element : DragManager.draggables.values()) {
             element.onDraw((int) mouseX, (int) mouseY, Minecraft.getInstance().getWindow());
             element.render(guiGraphics);
         }
+        notificationManager.render(guiGraphics);
     }
 
     @SubscribeEvent
     public void onMouseClick(ScreenEvent.MouseButtonPressed.Pre event) {
+        if (mc.player == null || mc.level == null) return;
         for (DraggableElement element : DragManager.draggables.values()) {
             element.onClick(event.getMouseX(), event.getMouseY(), event.getButton());
         }
@@ -150,6 +174,24 @@ public class Api {
         for (DraggableElement element : DragManager.draggables.values()) {
             element.onRelease(event.getButton());
         }
+    }
+    @SubscribeEvent
+    public void OnTickEvent(ClientTickEvent.Pre event) {
+
+    }
+
+    @SubscribeEvent
+    public void onClientCommand(ClientChatEvent event) {
+        String msg = event.getMessage();
+        String[] parts = msg.toLowerCase().trim().split("\\s+");
+        System.out.println(Arrays.toString(parts));
+        for (DraggableElement element : DragManager.draggables.values()) {
+            System.out.println(element);
+            if (element instanceof StaffList staffList) {
+                staffList.handleCommand(msg);
+            }
+        }
+        if (msg.startsWith(".staff")) event.setCanceled(true);
     }
 
     @SubscribeEvent
@@ -163,6 +205,16 @@ public class Api {
             mc.setScreen(new MainMenuScreen());
         } if (e.getScreen() instanceof  net.minecraft.client.gui.screens.inventory.InventoryScreen && !isDetect && mc.player != null) {
             mc.setScreen(new InventoryScreenHook(mc.player));
+        }
+    }
+    @SubscribeEvent
+    public void onUpdateInput(UpdateInputEvent event) {
+        if (isResetingSprint) {
+            event.setLeftImpulse(0.0f);
+            event.setForwardImpulse(0.0f);
+            event.setSprintTriggerTime(5);
+            mc.player.setSprinting(false);
+            TimerUtil.sleepVoid(() -> isResetingSprint = false, 10);
         }
     }
 }

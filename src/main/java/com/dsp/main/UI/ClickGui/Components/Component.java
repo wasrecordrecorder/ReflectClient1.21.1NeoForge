@@ -9,10 +9,12 @@ public abstract class Component {
     protected double y;
     protected Button parent;
     protected Setting setting;
+    protected final float scaleFactor;
 
-    public Component(Setting setting, Button parent) {
+    public Component(Setting setting, Button parent, float scaleFactor) {
         this.setting = setting;
         this.parent = parent;
+        this.scaleFactor = scaleFactor;
     }
 
     public Setting getSetting() {
@@ -24,11 +26,11 @@ public abstract class Component {
     }
 
     public void setX(double x) {
-        this.x = x;
+        this.x = x * scaleFactor;
     }
 
     public void setY(double y) {
-        this.y = y;
+        this.y = y * scaleFactor;
     }
 
     public double getX() {
@@ -57,5 +59,8 @@ public abstract class Component {
         if (!setting.isVisible()) return false;
         return mouseX > x && mouseX < x + parent.getWidth()
                 && mouseY > y && mouseY < y + getHeight();
+    }
+    public boolean isInputActive() {
+        return false;
     }
 }

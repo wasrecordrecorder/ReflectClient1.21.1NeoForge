@@ -2,6 +2,7 @@ package com.dsp.main.UI.Draggable.DragElements;
 
 import com.dsp.main.Api;
 import com.dsp.main.UI.Draggable.DraggableElement;
+import com.dsp.main.UI.Themes.ThemesUtil;
 import com.dsp.main.Utils.Font.builders.Builder;
 import com.dsp.main.Utils.Font.builders.states.QuadColorState;
 import com.dsp.main.Utils.Font.builders.states.QuadRadiusState;
@@ -9,6 +10,7 @@ import com.dsp.main.Utils.Font.builders.states.SizeState;
 import com.dsp.main.Utils.Font.renderers.impl.BuiltBorder;
 import com.dsp.main.Utils.Font.renderers.impl.BuiltText;
 import com.dsp.main.Utils.Render.Blur.DrawShader;
+import com.dsp.main.Utils.Color.ColorHelper;
 import com.dsp.main.Utils.Render.DrawHelper;
 import com.mojang.blaze3d.vertex.PoseStack;
 import net.minecraft.client.Minecraft;
@@ -21,7 +23,7 @@ import static com.dsp.main.Functions.Render.HudElement.HudElements;
 import static com.dsp.main.Functions.Render.HudElement.IconColor;
 import static com.dsp.main.Main.BIKO_FONT;
 import static com.dsp.main.Main.ICONS;
-import static com.dsp.main.Utils.Color.ColorHelper.twoColorEffect;
+import static com.dsp.main.Utils.Color.ColorHelper.*;
 
 public class WaterMark extends DraggableElement {
     private static final int BASE_HEIGHT = 24;
@@ -66,7 +68,7 @@ public class WaterMark extends DraggableElement {
             BuiltText ReflectLogo = Builder.text()
                     .font(ICONS.get())
                     .text("X")
-                    .color(IconColor)
+                    .color(ColorHelper.gradient(ThemesUtil.getCurrentStyle().getColor(1), ThemesUtil.getCurrentStyle().getColor(2), 20, 10))
                     .size(18f)
                     .thickness(0.05f)
                     .build();
@@ -75,7 +77,7 @@ public class WaterMark extends DraggableElement {
             BuiltText UserIcon = Builder.text()
                     .font(ICONS.get())
                     .text("A")
-                    .color(IconColor)
+                    .color(ColorHelper.gradient(ThemesUtil.getCurrentStyle().getColor(1), ThemesUtil.getCurrentStyle().getColor(2), 20, 10))
                     .size(14f)
                     .thickness(0.05f)
                     .build();
@@ -93,7 +95,7 @@ public class WaterMark extends DraggableElement {
             BuiltText PingIcon = Builder.text()
                     .font(ICONS.get())
                     .text("J")
-                    .color(IconColor)
+                    .color(ColorHelper.gradient(ThemesUtil.getCurrentStyle().getColor(1), ThemesUtil.getCurrentStyle().getColor(2), 20, 10))
                     .size(12f)
                     .thickness(0.05f)
                     .build();
@@ -111,7 +113,7 @@ public class WaterMark extends DraggableElement {
             BuiltText FpsIcon = Builder.text()
                     .font(ICONS.get())
                     .text("e")
-                    .color(IconColor)
+                    .color(ColorHelper.gradient(ThemesUtil.getCurrentStyle().getColor(1), ThemesUtil.getCurrentStyle().getColor(2), 20, 10))
                     .size(12f)
                     .thickness(0.05f)
                     .build();

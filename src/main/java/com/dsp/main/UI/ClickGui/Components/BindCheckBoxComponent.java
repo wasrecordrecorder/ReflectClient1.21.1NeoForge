@@ -25,14 +25,14 @@ public class BindCheckBoxComponent extends Component {
     private boolean binding;
     private float hoverAnimation = 0;
 
-    public BindCheckBoxComponent(Setting setting, Button parent) {
-        super(setting, parent);
+    public BindCheckBoxComponent(Setting setting, Button parent, float scaleFactor) {
+        super(setting, parent, scaleFactor);
         this.bindSetting = (BindCheckBox) setting;
     }
 
     @Override
     public float getHeight() {
-        return BIKO_FONT.get().getMetrics().lineHeight() * 8f + 2;
+        return BIKO_FONT.get().getMetrics().lineHeight() * 8f * scaleFactor + 2 * scaleFactor;
     }
 
     @Override
@@ -41,40 +41,40 @@ public class BindCheckBoxComponent extends Component {
 
         int compX = (int) this.x;
         int compY = (int) this.y;
-        int width = parent.getWidth();
+        int width = (int) (parent.getWidth());
 
         boolean isHovered = isHovered(mouseX, mouseY);
         hoverAnimation += isHovered ? (1 - hoverAnimation) * 0.1f : (0 - hoverAnimation) * 0.1f;
-        int textX = compX + 5;
-        int textY = (int) (compY + (getHeight() - BIKO_FONT.get().getMetrics().lineHeight() * 8f) / 2);
+        int textX = (int) (compX + 5 * scaleFactor);
+        int textY = (int) (compY + (getHeight() - BIKO_FONT.get().getMetrics().lineHeight() * 8f * scaleFactor) / 2);
         String name = bindSetting.getName();
 
-        DrawShader.drawRoundBlur(graphics.pose(), (float) textX - 1, (float) textY - 1, BIKO_FONT.get().getWidth(name, 8f) + 5, BIKO_FONT.get().getMetrics().lineHeight() * 8f + 2, 3, new Color(29, 29, 31).hashCode(), 90, 0.7f);
+        DrawShader.drawRoundBlur(graphics.pose(), (float) textX - 1 * scaleFactor, (float) textY - 1 * scaleFactor, BIKO_FONT.get().getWidth(name, 8f * scaleFactor) + 5 * scaleFactor, BIKO_FONT.get().getMetrics().lineHeight() * 8f * scaleFactor + 2 * scaleFactor, 3 * scaleFactor, new Color(29, 29, 31).hashCode(), 90, 0.7f);
         BuiltText bindSettName = Builder.text()
                 .font(BIKO_FONT.get())
                 .text(name)
                 .color(Color.WHITE)
-                .size(8f)
+                .size(8f * scaleFactor)
                 .thickness(0.05f)
                 .build();
         bindSettName.render(new Matrix4f(), textX, textY);
 
         String keyText = getString();
-        int keyWidth = (int) BIKO_FONT.get().getWidth(keyText, 8f);
-        int bindX = compX + width - keyWidth - 12;
+        int keyWidth = (int) (BIKO_FONT.get().getWidth(keyText, 8f * scaleFactor) * scaleFactor);
+        int bindX = (int) (compX + width - keyWidth - 12 * scaleFactor);
         BuiltBorder border = Builder.border()
-                .size(new SizeState(BIKO_FONT.get().getWidth(keyText.toUpperCase(), 8f) + 5.5f, 11))
+                .size(new SizeState(BIKO_FONT.get().getWidth(keyText.toUpperCase(), 8f * scaleFactor) + 5.5f * scaleFactor, 11 * scaleFactor))
                 .color(new QuadColorState(Color.DARK_GRAY, Color.GRAY, Color.DARK_GRAY, Color.GRAY))
-                .radius(new QuadRadiusState(2f, 2f, 2f, 2f))
+                .radius(new QuadRadiusState(2f * scaleFactor, 2f * scaleFactor, 2f * scaleFactor, 2f * scaleFactor))
                 .thickness(0.01f)
                 .smoothness(1f, 1f)
                 .build();
-        border.render(new Matrix4f(), bindX - 2.25, textY - 2);
+        border.render(new Matrix4f(), bindX - 2.25 * scaleFactor, textY - 2 * scaleFactor);
         BuiltText text2 = Builder.text()
                 .font(BIKO_FONT.get())
                 .text(keyText.toUpperCase())
                 .color(Color.WHITE)
-                .size(8f)
+                .size(8f * scaleFactor)
                 .thickness(0.05f)
                 .build();
         text2.render(new Matrix4f(), bindX, textY);
@@ -92,8 +92,8 @@ public class BindCheckBoxComponent extends Component {
 
     @Override
     public void mouseClicked(int mx, int my, int mb) {
-        if(isHovered(mx, my)) {
-            if(mb == 2 && !binding) {
+        if (isHovered(mx, my)) {
+            if (mb == 2 && !binding) {
                 binding = true;
                 return;
             }
@@ -116,17 +116,12 @@ public class BindCheckBoxComponent extends Component {
 
     @Override
     public boolean isHovered(double mx, double my) {
-        return mx > x && mx < x + parent.getWidth() &&
-                my > y && my < y + getHeight();
+        return mx > x && mx < x + parent.getWidth()
+                && my > y && my < y + getHeight();
     }
 
     @Override
-    public void setY(double y) {
-        this.y = y;
-    }
-
-    @Override
-    public void setX(double x) {
-        this.x = x;
+    public boolean isInputActive() {
+        return binding;
     }
 }

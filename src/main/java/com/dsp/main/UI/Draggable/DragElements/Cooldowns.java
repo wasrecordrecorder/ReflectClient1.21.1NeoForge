@@ -2,6 +2,8 @@ package com.dsp.main.UI.Draggable.DragElements;
 
 import com.dsp.main.Api;
 import com.dsp.main.UI.Draggable.DraggableElement;
+import com.dsp.main.UI.Themes.ThemesUtil;
+import com.dsp.main.Utils.Color.ColorHelper;
 import com.dsp.main.Utils.Font.builders.Builder;
 import com.dsp.main.Utils.Font.renderers.impl.BuiltText;
 import com.dsp.main.Utils.Render.Blur.DrawShader;
@@ -126,7 +128,6 @@ public class Cooldowns extends DraggableElement {
             for (Item item : itemsOnCooldown) {
                 Color textColorWithAlpha = new Color(255, 255, 255, alpha);
 
-                // Render item texture
                 if (item == Items.ENCHANTED_GOLDEN_APPLE) {
                     ResourceLocation itemTexture = ResourceLocation.fromNamespaceAndPath("dsp", "textures/item/golden_apple.png");
                     DrawHelper.drawTexture(itemTexture, guiGraphics.pose().last().pose(), xPos + PADDING - 3, currentY - 2.5f, ICON_SIZE, ICON_SIZE);
@@ -140,8 +141,6 @@ public class Cooldowns extends DraggableElement {
                     ResourceLocation itemTexture = ResourceLocation.fromNamespaceAndPath("dsp", "textures/item/" + item.getDescriptionId().replace("item.minecraft.", "") + ".png");
                     DrawHelper.drawTexture(itemTexture, guiGraphics.pose().last().pose(), xPos + PADDING - 3, currentY - 2.5f, ICON_SIZE, ICON_SIZE);
                 }
-
-                // Render item name at the top
                 String itemName = getFormattedName(new ItemStack(item));
                 BuiltText itemText = Builder.text()
                         .font(RUS.get())
@@ -151,20 +150,17 @@ public class Cooldowns extends DraggableElement {
                         .thickness(0.1f)
                         .build();
                 itemText.render(new Matrix4f(), xPos + PADDING + 9, currentY - 3.5f);
-
-                // Render cooldown bar background
-                float maxBarWidth = currentWidth - ICON_SIZE - 2 * PADDING - 10; // Adjusted for icon and padding
+                float maxBarWidth = currentWidth - ICON_SIZE - 2 * PADDING - 10;
                 DrawHelper.rectangle(
                         guiGraphics.pose(),
-                        xPos + PADDING + ICON_SIZE, // Start after icon and padding
+                        xPos + PADDING + ICON_SIZE,
                         currentY + TEXT_HEIGHT + BAR_OFFSET_Y - 1,
                         maxBarWidth,
                         BAR_HEIGHT,
                         1.0f,
-                        new Color(64, 64, 64, alpha).getRGB() // Gray background
+                        new Color(64, 64, 64, alpha).getRGB()
                 );
 
-                // Render cooldown bar
                 float cooldownPercent = mc.player.getCooldowns().getCooldownPercent(item, 0);
                 float targetBarWidth = maxBarWidth * cooldownPercent; // Decreases from full to zero
                 float currentBarWidth = currentBarWidths.getOrDefault(item, targetBarWidth);
@@ -179,13 +175,12 @@ public class Cooldowns extends DraggableElement {
                             currentBarWidth,
                             BAR_HEIGHT,
                             1.0f,
-                            lineColor.getRGB()
+                            ColorHelper.gradient(ThemesUtil.getCurrentStyle().getColorLowSpeed(1), ThemesUtil.getCurrentStyle().getColorLowSpeed(2), 20, 10)
                     );
                 }
 
                 currentY += TEXT_HEIGHT + BAR_HEIGHT + BAR_OFFSET_Y + 4;
             }
-            // Clean up bar widths for items no longer on cooldown
             currentBarWidths.keySet().removeIf(item -> !itemsOnCooldown.contains(item));
         }
     }
@@ -205,7 +200,7 @@ public class Cooldowns extends DraggableElement {
             if (itemsOnCooldown.isEmpty() && isChatOpen()) {
                 Item fakeItem = Items.GOLDEN_HELMET;
                 itemsOnCooldown.add(fakeItem);
-                itemCooldowns.put(fakeItem, 0.5f); // Full cooldown for fake item
+                itemCooldowns.put(fakeItem, 0.5f);
             }
         }
         return itemsOnCooldown;

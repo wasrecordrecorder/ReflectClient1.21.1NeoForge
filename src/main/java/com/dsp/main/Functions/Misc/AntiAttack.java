@@ -12,6 +12,7 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.network.protocol.game.ServerboundInteractPacket;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.animal.IronGolem;
 import net.minecraft.world.entity.monster.ZombifiedPiglin;
 import net.minecraft.world.entity.npc.Villager;
 import net.neoforged.bus.api.SubscribeEvent;
@@ -23,6 +24,7 @@ public class AntiAttack extends Module {
             new CheckBox("Friends", false),
             new CheckBox("Villager", false),
             new CheckBox("Zoglin", false),
+            new CheckBox("IronGolem", false),
             new CheckBox("Low Hp", false)
     ));
     public static Slider HpVal = new Slider("Hp", 1,20,4,1).setVisible(() -> Options.isOptionEnabled("Low Hp"));
@@ -39,6 +41,8 @@ public class AntiAttack extends Module {
             if (FriendManager.isFriend(entity.getName().getString()) && Options.isOptionEnabled("Friends"))
                 e.setCanceled(true);
             if (entity instanceof ZombifiedPiglin && Options.isOptionEnabled("Zoglin"))
+                e.setCanceled(true);
+            if (entity instanceof IronGolem && Options.isOptionEnabled("IronGolem"))
                 e.setCanceled(true);
             if (entity instanceof Villager && Options.isOptionEnabled("Villager")) {
                 e.setCanceled(true);

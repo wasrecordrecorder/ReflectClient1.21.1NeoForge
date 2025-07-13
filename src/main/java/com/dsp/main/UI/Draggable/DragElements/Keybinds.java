@@ -3,9 +3,12 @@ package com.dsp.main.UI.Draggable.DragElements;
 import com.dsp.main.Api;
 import com.dsp.main.Module;
 import com.dsp.main.UI.Draggable.DraggableElement;
+import com.dsp.main.UI.Themes.ThemesUtil;
+import com.dsp.main.Utils.Color.ColorHelper;
 import com.dsp.main.Utils.Font.builders.Builder;
 import com.dsp.main.Utils.Font.renderers.impl.BuiltText;
 import com.dsp.main.Utils.Render.Blur.DrawShader;
+import com.dsp.main.Utils.Render.ColorUtil;
 import com.dsp.main.Utils.TimerUtil;
 import net.minecraft.client.gui.GuiGraphics;
 import org.joml.Matrix4f;
@@ -15,7 +18,6 @@ import java.util.List;
 
 import static com.dsp.main.Api.mc;
 import static com.dsp.main.Functions.Render.HudElement.HudElements;
-import static com.dsp.main.Functions.Render.HudElement.IconColor;
 import static com.dsp.main.Main.BIKO_FONT;
 import static com.dsp.main.Main.ICONS;
 import static com.dsp.main.Utils.KeyName.getKeyName;
@@ -116,7 +118,6 @@ public class Keybinds extends DraggableElement {
                     new Color(23, 29, 35, alpha).getRGB(), 120, 0.4f);
             float currentY = yPos + PADDING - 1;
             for (Module module : activeModulesWithBind) {
-                Color iconColorWithAlpha = new Color(IconColor.getRed(), IconColor.getGreen(), IconColor.getBlue(), alpha);
                 Color textColorWithAlpha = new Color(255, 255, 255, alpha);
 
                 switch (module.getCategory().toString().toLowerCase()) {
@@ -124,7 +125,7 @@ public class Keybinds extends DraggableElement {
                         BuiltText combatIcon = Builder.text()
                                 .font(ICONS.get())
                                 .text("a")
-                                .color(iconColorWithAlpha)
+                                .color(ColorHelper.gradient(ThemesUtil.getCurrentStyle().getColor(1), ThemesUtil.getCurrentStyle().getColor(2), 20, 10))
                                 .size(ICON_SIZE)
                                 .thickness(0.05f)
                                 .build();
@@ -134,7 +135,7 @@ public class Keybinds extends DraggableElement {
                         BuiltText movementIcon = Builder.text()
                                 .font(ICONS.get())
                                 .text("K")
-                                .color(iconColorWithAlpha)
+                                .color(ColorHelper.gradient(ThemesUtil.getCurrentStyle().getColor(1), ThemesUtil.getCurrentStyle().getColor(2), 20, 10))
                                 .size(ICON_SIZE)
                                 .thickness(0.05f)
                                 .build();
@@ -144,7 +145,7 @@ public class Keybinds extends DraggableElement {
                         BuiltText renderIcon = Builder.text()
                                 .font(ICONS.get())
                                 .text("c")
-                                .color(iconColorWithAlpha)
+                                .color(ColorHelper.gradient(ThemesUtil.getCurrentStyle().getColor(1), ThemesUtil.getCurrentStyle().getColor(2), 20, 10))
                                 .size(ICON_SIZE)
                                 .thickness(0.05f)
                                 .build();
@@ -154,7 +155,7 @@ public class Keybinds extends DraggableElement {
                         BuiltText playerIcon = Builder.text()
                                 .font(ICONS.get())
                                 .text("B")
-                                .color(iconColorWithAlpha)
+                                .color(ColorHelper.gradient(ThemesUtil.getCurrentStyle().getColor(1), ThemesUtil.getCurrentStyle().getColor(2), 20, 10))
                                 .size(ICON_SIZE)
                                 .thickness(0.05f)
                                 .build();
@@ -164,7 +165,7 @@ public class Keybinds extends DraggableElement {
                         BuiltText miscIcon = Builder.text()
                                 .font(ICONS.get())
                                 .text("e")
-                                .color(iconColorWithAlpha)
+                                .color(ColorHelper.gradient(ThemesUtil.getCurrentStyle().getColor(1), ThemesUtil.getCurrentStyle().getColor(2), 20, 10))
                                 .size(ICON_SIZE)
                                 .thickness(0.05f)
                                 .build();
@@ -174,7 +175,7 @@ public class Keybinds extends DraggableElement {
                         BuiltText testIcon = Builder.text()
                                 .font(ICONS.get())
                                 .text("f")
-                                .color(iconColorWithAlpha)
+                                .color(ColorHelper.gradient(ThemesUtil.getCurrentStyle().getColor(1), ThemesUtil.getCurrentStyle().getColor(2), 20, 10))
                                 .size(ICON_SIZE)
                                 .thickness(0.05f)
                                 .build();

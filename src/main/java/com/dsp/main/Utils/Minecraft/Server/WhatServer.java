@@ -31,4 +31,8 @@ public class WhatServer {
         if (mc.getCurrentServer() != null) return mc.getCurrentServer().ip.contains("space-time");
         return false;
     }
+    public static boolean isFkt() {
+        if (mc.getCurrentServer() != null) return mc.getCurrentServer().ip.contains("faketime");
+        return false;
+    }
 }

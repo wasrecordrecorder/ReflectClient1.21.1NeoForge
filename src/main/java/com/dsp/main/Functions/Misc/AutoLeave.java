@@ -56,15 +56,15 @@ public class AutoLeave extends Module {
                         mc.level.disconnect();
                         this.toggle();
                     } else if (LeaveMode.isMode("/spawn")) {
-                        mc.player.connection.sendChat("/spawn");
+                        mc.player.connection.sendCommand("spawn");
                         this.toggle();
                     } else if (LeaveMode.isMode("/hub")) {
-                        mc.player.connection.sendChat("/hub");
+                        mc.player.connection.sendCommand("hub");
                         this.toggle();
                     } else if (LeaveMode.isMode("/darena")) {
                         long currentTime = System.currentTimeMillis();
                         if (currentTime - lastDarenaTime >= DARENA_COOLDOWN) {
-                            mc.player.connection.sendChat("/darena");
+                            mc.player.connection.sendCommand("darena");
                             lastDarenaTime = currentTime;
                         }
                         if (currentTime - lastDarenaTime >= DARENA_SCREEN_CHECK_DELAY && mc.screen instanceof ContainerScreen containerScreen) {

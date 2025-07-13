@@ -1,6 +1,8 @@
 package com.dsp.main.Mixin;
 
+import com.dsp.main.Managers.Event.ClientPacketReceiveEvent;
 import com.dsp.main.Managers.Event.ClientPacketSendEvent;
+import io.netty.channel.ChannelHandlerContext;
 import net.minecraft.network.Connection;
 import net.minecraft.network.protocol.Packet;
 import net.minecraft.network.PacketSendListener;
@@ -22,6 +24,21 @@ public class ConnectionMixin {
         Connection instance = (Connection) (Object) this;
         if (instance.getSending() == PacketFlow.SERVERBOUND) {
             ClientPacketSendEvent event = new ClientPacketSendEvent(packet);
+            NeoForge.EVENT_BUS.post(event);
+            if (event.isCanceled()) {
+                ci.cancel();
+            }
+        }
+    }
+    @Inject(
+            method = "channelRead0(Lio/netty/channel/ChannelHandlerContext;Lnet/minecraft/network/protocol/Packet;)V",
+            at = @At("HEAD"),
+            cancellable = true
+    )
+    private void interceptReceivePacket(ChannelHandlerContext context, Packet<?> packet, CallbackInfo ci) {
+        Connection instance = (Connection) (Object) this;
+        if (instance.getReceiving() == PacketFlow.CLIENTBOUND) {
+            ClientPacketReceiveEvent event = new ClientPacketReceiveEvent(packet);
             NeoForge.EVENT_BUS.post(event);
             if (event.isCanceled()) {
                 ci.cancel();

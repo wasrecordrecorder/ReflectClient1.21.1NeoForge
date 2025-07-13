@@ -5,6 +5,7 @@ import com.mojang.blaze3d.systems.RenderSystem;
 import javax.annotation.Nullable;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.ImageButton;
 import net.minecraft.client.gui.screens.inventory.CreativeModeInventoryScreen;
 import net.minecraft.client.gui.screens.inventory.EffectRenderingInventoryScreen;
@@ -54,6 +55,12 @@ public class InventoryScreenHook extends EffectRenderingInventoryScreen<Inventor
             this.widthTooNarrow = this.width < 379;
             this.recipeBookComponent.init(this.width, this.height, this.minecraft, this.widthTooNarrow, this.menu);
             this.leftPos = this.recipeBookComponent.updateScreenPosition(this.width, this.imageWidth);
+            this.addRenderableWidget(new Button.Builder(
+                    Component.literal("Drop All"),
+                    button -> dropAllItems()
+            ).pos(this.leftPos + this.imageWidth / 2 - 50, this.topPos - 30)
+                    .size(100, 20)
+                    .build());
             this.addRenderableWidget(new ImageButton(
                     this.leftPos + 104, this.height / 2 - 22, 20, 18, RecipeBookComponent.RECIPE_BUTTON_SPRITES,
                     button -> {
@@ -64,6 +71,21 @@ public class InventoryScreenHook extends EffectRenderingInventoryScreen<Inventor
                     }
             ));
             this.addWidget(this.recipeBookComponent);
+        }
+    }
+
+    private void dropAllItems() {
+        if (this.minecraft == null || this.minecraft.gameMode == null || this.minecraft.player == null) return;
+        for (Slot slot : this.menu.slots) {
+            if (slot.hasItem() && slot.mayPickup(this.minecraft.player)) {
+                this.minecraft.gameMode.handleInventoryMouseClick(
+                        this.menu.containerId,
+                        slot.index,
+                        1, // Клавиша для полного выброса (Q)
+                        ClickType.THROW,
+                        this.minecraft.player
+                );
+            }
         }
     }
 

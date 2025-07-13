@@ -18,6 +18,7 @@
     "LevelRendererMixin",
     "LivingEntityMixin",
     "LocalPlayerMixin",
+    "LocalPlayerSprintAccessorMixin",
     "MinecraftMixin",
     "MultiPlayerGameModeMixin",
     "PlayerTabOverlayMixin",

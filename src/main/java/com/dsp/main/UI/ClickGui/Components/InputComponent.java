@@ -25,8 +25,8 @@ public class InputComponent extends Component {
     private boolean typing;
     private final Input textSetting;
 
-    public InputComponent(Setting setting, Button parent) {
-        super(setting, parent);
+    public InputComponent(Setting setting, Button parent, float scaleFactor) {
+        super(setting, parent, scaleFactor);
         this.textSetting = (Input) setting;
         this.text = new StringBuilder(textSetting.getValue());
     }
@@ -34,39 +34,37 @@ public class InputComponent extends Component {
     @Override
     public void draw(GuiGraphics graphics, int mouseX, int mouseY) {
         int compX = (int) this.x;
-        int compY = (int) this.y + 3;
-        int width = parent.getWidth() - 12;
-        int height = parent.getHeight() - 2;
+        int compY = (int) (this.y + 3 * scaleFactor);
+        int width = (int) (parent.getWidth() - 12 * scaleFactor);
+        int height = (int) (parent.getHeight() - 2 * scaleFactor);
 
         this.text = new StringBuilder(textSetting.getValue());
 
         Color borderColor = new Color(20, 30, 50);
-        DrawShader.drawRoundBlur(graphics.pose(), compX +4, compY, width, height, 3, borderColor.hashCode());
+        DrawShader.drawRoundBlur(graphics.pose(), compX + 4 * scaleFactor, compY, width, height, 3 * scaleFactor, borderColor.hashCode());
         BuiltBorder border = Builder.border()
                 .size(new SizeState(width, height))
                 .color(new QuadColorState(Color.DARK_GRAY, Color.GRAY, Color.DARK_GRAY, Color.GRAY))
-                .radius(new QuadRadiusState(2f, 2f, 2f, 2f))
+                .radius(new QuadRadiusState(2f * scaleFactor, 2f * scaleFactor, 2f * scaleFactor, 2f * scaleFactor))
                 .thickness(0.01f)
                 .smoothness(0.8f, 0.8f)
                 .build();
-        border.render(new Matrix4f(), compX +4, compY);
-
+        border.render(new Matrix4f(), compX + 4 * scaleFactor, compY);
 
         String displayText = text.length() > 0 ? text.toString() : textSetting.getName();
         int colorDisp = text.length() > 0 ? Color.WHITE.getRGB() : Color.GRAY.getRGB();
-        int textY = compY + (height - mc.font.lineHeight) / 2;
+        int textY = (int) (compY + (height - mc.font.lineHeight * scaleFactor) / 2);
 
         BuiltText text = Builder.text()
                 .font(BIKO_FONT.get())
                 .text(displayText)
                 .color(colorDisp)
-                .size(7f)
+                .size(7f * scaleFactor)
                 .thickness(0.05f)
                 .build();
-        float textWidth = BIKO_FONT.get().getWidth(displayText, 7f);
-        float textX = compX + 1 + (width - textWidth) / 2f;
-        text.render(new Matrix4f(), textX, textY + 2);
-
+        float textWidth = BIKO_FONT.get().getWidth(displayText, 7f * scaleFactor);
+        float textX = compX + 1 * scaleFactor + (width - textWidth) / 2f;
+        text.render(new Matrix4f(), textX, textY + 2 * scaleFactor);
 
         super.draw(graphics, mouseX, mouseY);
     }
@@ -82,10 +80,11 @@ public class InputComponent extends Component {
         return mouseX > x && mouseX < x + parent.getWidth()
                 && mouseY > y && mouseY < y + parent.getHeight();
     }
+
     @Override
     public float getHeight() {
-        float textHeight = BIKO_FONT.get().getMetrics().lineHeight() * 10.0f + 4; // Text field height + border
-        return textHeight + 4; // 2 padding top + 2 padding bottom
+        float textHeight = BIKO_FONT.get().getMetrics().lineHeight() * 10.0f * scaleFactor + 4 * scaleFactor;
+        return textHeight + 4 * scaleFactor;
     }
 
     public void keyPressed(int keyCode) {
@@ -123,5 +122,10 @@ public class InputComponent extends Component {
 
     public void setText(String text) {
         this.text = new StringBuilder(text);
+    }
+
+    @Override
+    public boolean isInputActive() {
+        return typing;
     }
 }

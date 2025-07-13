@@ -27,6 +27,7 @@ import org.spongepowered.asm.mixin.injection.ModifyVariable;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
+import static com.dsp.main.Api.isResetingSprint;
 import static com.dsp.main.Api.mc;
 import static com.dsp.main.Main.isDetect;
 import static com.dsp.main.Utils.Minecraft.Client.ClientPlayerUtil.hasEnoughImpulseToStartSprinting;
@@ -44,16 +45,12 @@ public abstract class MultiPlayerGameModeMixin {
             at = @At("HEAD")
     )
     private void resetSprintBeforeAttack(Player player, Entity targetEntity, CallbackInfo ci) {
-        if (mc.player.isSprinting()) System.out.println("Sprint Check 1");
-        if (isMoving()) System.out.println("isMoving Check 2");
-        if (isFt()) System.out.println("isFt single check");
-        if ((isFt() || isRw() || isAm() || isSp())) System.out.println("Multi Server Check");
-
         if (mc.player.isSprinting() && isMoving() && (isFt() || isRw() || isAm() || isSp())) {
-            System.out.println("CtidkawkdawkdWKAdkakwakdwakdkadkwkadkwakdakdkwkadkawkdwkakd");
             mc.player.setSprinting(false);
             mc.getConnection().send(new ServerboundPlayerCommandPacket(mc.player, ServerboundPlayerCommandPacket.Action.STOP_SPRINTING));
-            mc.player.setDeltaMovement(mc.player.getDeltaMovement().multiply(0.6, 1, 0.6));
+            if (!isRw()) mc.player.setDeltaMovement(mc.player.getDeltaMovement().multiply(0.6, 1, 0.6));
+        } else {
+            isResetingSprint = true;
         }
     }
     @Inject(
@@ -71,12 +68,6 @@ public abstract class MultiPlayerGameModeMixin {
     @Inject(method = "continueDestroyBlock", at = @At("HEAD"), cancellable = true)
     private void onContinueDestroyBlock(BlockPos posBlock, Direction directionFacing, CallbackInfoReturnable<Boolean> cir) {
         if (!isDetect && Api.isEnabled("NoDelay") && NoDelay.Options.isOptionEnabled("Break Block")) {
-            destroyDelay = 0;
-        }
-    }
-    @Inject(method = "useItemOn", at = @At("HEAD"), cancellable = true)
-    private void onUseItemOn(LocalPlayer player, InteractionHand hand, BlockHitResult result, CallbackInfoReturnable<InteractionResult> cir) {
-        if (!isDetect && Api.isEnabled("NoDelay") && NoDelay.Options.isOptionEnabled("Place Block")) {
             destroyDelay = 0;
         }
     }
