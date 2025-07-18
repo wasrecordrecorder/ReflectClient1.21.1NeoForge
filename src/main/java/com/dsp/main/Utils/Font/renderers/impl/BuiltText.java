@@ -77,7 +77,6 @@ public record BuiltText(
 		try {
 			BufferUploader.drawWithShader(builder.buildOrThrow());
 		} catch (IllegalStateException e) {
-			System.err.println("Failed to render text: '" + text + "'. Buffer was empty.");
 		}
 
 		RenderSystem.setShaderTexture(0, 0);

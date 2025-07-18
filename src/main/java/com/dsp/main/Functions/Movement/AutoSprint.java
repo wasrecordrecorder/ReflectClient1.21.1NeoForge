@@ -1,5 +1,6 @@
 package com.dsp.main.Functions.Movement;
 
+import com.dsp.main.Managers.Event.OnUpdate;
 import com.dsp.main.UI.ClickGui.Settings.Mode;
 import com.dsp.main.Module;
 import net.neoforged.bus.api.SubscribeEvent;
@@ -15,7 +16,7 @@ public class AutoSprint extends Module {
         addSetting(SprintType);
     }
     @SubscribeEvent
-    public void onTick(ClientTickEvent.Pre event) {
+    public void onTick(OnUpdate event) {
         if (!this.isEnabled()) return;
         if (!(mc.player == null) && mc.player.getFoodData().getFoodLevel() > 6 && SprintType.isMode("Legit")) {
             mc.options.keySprint.setDown(true);

@@ -1,4 +1,3 @@
-
 package com.dsp.main.Functions.Render;
 
 import com.dsp.main.Managers.FrndSys.FriendManager;
@@ -8,13 +7,25 @@ import com.dsp.main.UI.Themes.ThemesUtil;
 import com.dsp.main.Utils.Render.ColorUtil;
 import com.dsp.main.Utils.Render.DrawHelper;
 import com.mojang.blaze3d.systems.RenderSystem;
+import com.mojang.blaze3d.vertex.*;
+import net.minecraft.client.Camera;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.player.AbstractClientPlayer;
 import net.minecraft.client.renderer.GameRenderer;
+import net.minecraft.client.renderer.LevelRenderer;
+import net.minecraft.client.renderer.MultiBufferSource;
+import net.minecraft.client.renderer.RenderType;
+import net.minecraft.util.Mth;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.phys.AABB;
+import net.minecraft.world.phys.Vec3;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.neoforge.client.event.RenderLevelStageEvent;
+import org.joml.Matrix4f;
 import org.joml.Vector4f;
 
+import javax.annotation.Nullable;
 import java.awt.*;
 import java.util.List;
 
@@ -44,37 +55,72 @@ public class BoxEsp extends Module {
     }
 
     @SubscribeEvent
-    public void onRenderLevel(RenderLevelStageEvent event) {
+    public void onRenderWorld(RenderLevelStageEvent event) {
         if (event.getStage() != RenderLevelStageEvent.Stage.AFTER_ENTITIES) return;
-        if (mc.level == null || mc.player == null || event.getCamera() == null) return;
+        Minecraft mc = Minecraft.getInstance();
+        Camera camera = event.getCamera();
+        PoseStack poseStack = event.getPoseStack();
+        Matrix4f matrix = poseStack.last().pose();
 
-        // Настройки рендеринга
-        RenderSystem.enableBlend();
-        RenderSystem.disableDepthTest();
-        RenderSystem.blendFuncSeparate(770, 771, 1, 0);
-        RenderSystem.lineWidth(1.5f);
-        RenderSystem.setShader(GameRenderer::getPositionColorShader);
+        for (Player entity : mc.level.players()) {
+            if (entity == mc.player || entity.isInvisible()) continue;
 
-        List<AbstractClientPlayer> players = mc.level.players();
-        for (Player entity : players) {
-            if (entity.equals(mc.player)) continue;
-            if (tools.isMode("Box")) {
-                entity.setGlowingTag(false);
-                Vector4f colors = new Vector4f(getColor(180, 1), getColor(90, 1), getColor(180, 1), getColor(270, 1));
-                Vector4f friendColors = new Vector4f(getColor2(180, 1), getColor2(90, 1), getColor2(180, 1), getColor2(270, 1));
-                int boxColor = ThemesUtil.getCurrentStyle().getColorLowSpeed(0);
-                DrawHelper.drawBox(entity.getX() - 0.5f, entity.getY() - 0.5f, entity.getZ() + 0.5f, entity.getBbHeight() + 0.5f, 2, ColorUtil.rgba(0, 0, 0, 128));
-                DrawHelper.drawBoxTest(entity.getX(), entity.getY(), entity.getZ(), entity.getBbHeight(), 1,
-                        FriendManager.isFriend(entity.getName().getString()) ? friendColors : colors);
-            } else if (tools.isMode("Effect Glow")) {
-                entity.setGlowingTag(true);
-            } else {
-                entity.setGlowingTag(false);
+            AABB box = entity.getBoundingBox();
+            List<Vec3> corners = getBoxCorners(box);
+
+            double minX = Double.MAX_VALUE, minY = Double.MAX_VALUE;
+            double maxX = Double.MIN_VALUE, maxY = Double.MIN_VALUE;
+
+            for (Vec3 point : corners) {
+                Vec3 projected = projectTo2D(point, event.getPartialTick().getGameTimeDeltaTicks(), camera);
+                if (projected == null) continue;
+
+                minX = Math.min(minX, projected.x);
+                minY = Math.min(minY, projected.y);
+                maxX = Math.max(maxX, projected.x);
+                maxY = Math.max(maxY, projected.y);
+            }
+
+            if (minX < maxX && minY < maxY) {
+                DrawHelper.rectangle(event.getPoseStack(), (float) minX, (float) minY, (float) maxX, (float) maxY, 3, 0x80FF0000);
             }
         }
+    }
+    private static List<Vec3> getBoxCorners(AABB box) {
+        return List.of(
+                new Vec3(box.minX, box.minY, box.minZ),
+                new Vec3(box.minX, box.minY, box.maxZ),
+                new Vec3(box.maxX, box.minY, box.minZ),
+                new Vec3(box.maxX, box.minY, box.maxZ),
+                new Vec3(box.minX, box.maxY, box.minZ),
+                new Vec3(box.minX, box.maxY, box.maxZ),
+                new Vec3(box.maxX, box.maxY, box.minZ),
+                new Vec3(box.maxX, box.maxY, box.maxZ)
+        );
+    }
+    @Nullable
+    private static Vec3 projectTo2D(Vec3 worldPos, float partialTicks, Camera camera) {
+        Minecraft mc = Minecraft.getInstance();
+        double camX = Mth.lerp(partialTicks, camera.getPosition().x, camera.getPosition().x);
+        double camY = Mth.lerp(partialTicks, camera.getPosition().y, camera.getPosition().y);
+        double camZ = Mth.lerp(partialTicks, camera.getPosition().z, camera.getPosition().z);
 
-        RenderSystem.lineWidth(1.0f);
-        RenderSystem.enableDepthTest();
-        RenderSystem.disableBlend();
+        Vec3 relative = worldPos.subtract(camX, camY, camZ);
+
+        Matrix4f matrix = RenderSystem.getProjectionMatrix();
+        matrix.mul(RenderSystem.getModelViewMatrix());
+
+        Vector4f pos = new Vector4f((float) relative.x, (float) relative.y, (float) relative.z, 1.0f);
+        pos.mulTranspose(matrix);
+
+        if (pos.w() <= 0.0f) return null;
+
+        float screenWidth = mc.getWindow().getGuiScaledWidth();
+        float screenHeight = mc.getWindow().getGuiScaledHeight();
+
+        float screenX = (pos.x() / pos.w() * 0.5f + 0.5f) * screenWidth;
+        float screenY = (1.0f - (pos.y() / pos.w() * 0.5f + 0.5f)) * screenHeight;
+
+        return new Vec3(screenX, screenY, 0);
     }
 }

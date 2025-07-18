@@ -1,17 +1,22 @@
 package com.dsp.main.Mixin;
 
+import com.dsp.main.Api;
+import com.dsp.main.Functions.Player.StreamerMode;
 import net.minecraft.client.DeltaTracker;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Gui;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.ChatScreen;
 import net.minecraft.client.player.LocalPlayer;
+import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.world.entity.PlayerRideableJumping;
 import net.minecraft.world.item.ItemStack;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.ModifyVariable;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import java.util.ArrayList;
@@ -46,6 +51,36 @@ public abstract class GuiHotbarMixin {
             guiGraphics.pose().pushPose();
             guiGraphics.pose().translate(0.0F, hotbarOffset, 0.0F);
         }
+    }
+
+    @ModifyVariable(
+            method = "setOverlayMessage(Lnet/minecraft/network/chat/Component;Z)V",
+            at = @At("HEAD"),
+            index = 1,
+            argsOnly = true
+    )
+    private Component replaceFuntimeInOverlay(Component original) {
+        if (!Api.isEnabled("StreamerMode") || !StreamerMode.FuntimePr.isEnabled()) {
+            return original;
+        }
+
+        return processComponent(original);
+    }
+
+    private Component processComponent(Component component) {
+        String text = component.getString();
+        MutableComponent newComponent;
+        if (text.toLowerCase().contains("funtime")) {
+            String newText = text.replaceAll("(?i)funtime", "xuitime");
+            newComponent = Component.literal(newText).withStyle(component.getStyle());
+        } else {
+            newComponent = component.copy();
+        }
+        for (Component child : component.getSiblings()) {
+            Component processedChild = processComponent(child);
+            newComponent = newComponent.append(processedChild);
+        }
+        return newComponent;
     }
 
     private void popPoseIfNeeded(GuiGraphics guiGraphics) {

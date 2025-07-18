@@ -1,6 +1,7 @@
 package com.dsp.main.UI.Draggable.DragElements;
 
 import com.dsp.main.Api;
+import com.dsp.main.Functions.Combat.Aura.Aura;
 import com.dsp.main.Functions.Render.HudElement;
 import com.dsp.main.UI.Draggable.DraggableElement;
 import com.dsp.main.UI.Themes.ThemesUtil;
@@ -32,8 +33,10 @@ import java.awt.*;
 import java.util.ArrayList;
 import java.util.List;
 
+import static com.dsp.main.Functions.Combat.Aura.Aura.Target;
 import static com.dsp.main.Main.RUS;
 import static com.dsp.main.Api.mc;
+import static com.dsp.main.Utils.Minecraft.Client.ClientPlayerUtil.getHealthFromScoreboard;
 
 public class TargetHud extends DraggableElement {
     private static final int HEIGHT = 32;
@@ -117,6 +120,8 @@ public class TargetHud extends DraggableElement {
     public void render(GuiGraphics guiGraphics) {
         if (isChatOpen()) {
             setCurrentTarget(mc.player);
+        } else if (Target != null) {
+            setCurrentTarget((LivingEntity) Target);
         } else {
             HitResult hitResult = mc.hitResult;
             if (hitResult != null && hitResult.getType() == HitResult.Type.ENTITY) {
@@ -130,6 +135,7 @@ public class TargetHud extends DraggableElement {
             } else {
                 tick();
             }
+
         }
 
         if (currentTarget == null || !Api.isEnabled("Hud") || !HudElement.HudElements.isOptionEnabled("Target Hud")) {
@@ -237,27 +243,6 @@ public class TargetHud extends DraggableElement {
         float angleXComponent = -((centerX - (x1 + x2) / 2.0f) / 100.0f);
         float angleYComponent = -((centerY - (y1 + y2) / 2.0f) / 100.0f);
         renderEntityInInventoryFollowsAngle(guiGraphics, x1, y1, x2, y2, size / 2, 0.0f, angleXComponent, angleYComponent, entity);
-    }
-    public static float[] getHealthFromScoreboard(LivingEntity target) {
-        if (mc.player != null && mc.level != null && mc.gameMode != null) {
-            float[] healthInfo = new float[2];
-            healthInfo[0] = target.getHealth();
-            healthInfo[1] = target.getMaxHealth();
-
-            Scoreboard scoreboard = mc.level.getScoreboard();
-            Objective objective = scoreboard.getDisplayObjective(DisplaySlot.BELOW_NAME);
-            if (objective != null) {
-                ReadOnlyScoreInfo scoreInfo = scoreboard.getPlayerScoreInfo(target, objective);
-                if (scoreInfo != null) {
-                    healthInfo[0] = scoreInfo.value();
-                    healthInfo[1] = 20;
-                }
-            }
-
-            return healthInfo;
-        }
-
-        return new float[0];
     }
 
 

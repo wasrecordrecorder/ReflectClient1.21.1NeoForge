@@ -1,6 +1,7 @@
 package com.dsp.main;
 
 import com.dsp.main.Managers.ChatManager.ChatManager;
+import com.dsp.main.Managers.FreeLook;
 import com.dsp.main.UI.Draggable.DragElements.*;
 import com.dsp.main.UI.Draggable.DragManager;
 import com.dsp.main.UI.Themes.ThemesUtil;
@@ -37,6 +38,7 @@ public class Main {
         // Utils event Bus
         EVENT_BUS.register(new Api());
         EVENT_BUS.register(new AutoEatUtil());
-        EVENT_BUS.register((new ChatManager()));
+        EVENT_BUS.register(new ChatManager());
+        EVENT_BUS.register(new FreeLook());
     }
 }

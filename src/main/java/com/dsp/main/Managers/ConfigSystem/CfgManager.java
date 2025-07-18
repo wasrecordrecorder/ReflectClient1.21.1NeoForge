@@ -3,6 +3,7 @@ package com.dsp.main.Managers.ConfigSystem;
 import com.dsp.main.Module;
 import com.dsp.main.UI.ClickGui.Settings.*;
 import com.dsp.main.UI.Draggable.DragManager;
+import com.dsp.main.UI.Themes.ThemesUtil; // Added import for ThemesUtil
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.dsp.main.Api;
@@ -19,6 +20,8 @@ public class CfgManager {
     private static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();
     private static final Path CONFIG_DIR = Paths.get(System.getenv("APPDATA"), "Some", "canfigutatia");
     private static final List<Module> modules = Api.Functions;
+    private static final ThemesUtil themesUtil = new ThemesUtil();
+
     static {
         try {
             Files.createDirectories(CONFIG_DIR);
@@ -29,6 +32,8 @@ public class CfgManager {
 
     public static void saveCfg(String name) {
         CfgStorage storage = new CfgStorage();
+        storage.currentTheme = ThemesUtil.getCurrentStyle() != null ? ThemesUtil.getCurrentStyle().getName() : "Light";
+
         for (Module module : modules) {
             CfgStorage.ModuleConfig moduleConfig = new CfgStorage.ModuleConfig();
             moduleConfig.name = module.getName();
@@ -85,13 +90,13 @@ public class CfgManager {
         }
         DragManager.save();
     }
+
     public static void loadCfg(String name) {
         Path configPath = CONFIG_DIR.resolve(name + ".rfcl");
         if (!Files.exists(configPath)) {
             System.out.println("Config file not found: " + configPath);
             return;
         }
-
         CfgStorage storage;
         try (Reader reader = new FileReader(configPath.toFile())) {
             storage = GSON.fromJson(reader, CfgStorage.class);
@@ -99,6 +104,10 @@ public class CfgManager {
             e.printStackTrace();
             return;
         }
+        if (storage.currentTheme != null) {
+            themesUtil.setCurrentThemeByName(storage.currentTheme);
+        }
+
         for (CfgStorage.ModuleConfig moduleConfig : storage.modules) {
             for (Module module : modules) {
                 if (module.getName().equals(moduleConfig.name)) {

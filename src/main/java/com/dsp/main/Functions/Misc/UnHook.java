@@ -1,5 +1,6 @@
 package com.dsp.main.Functions.Misc;
 
+import com.dsp.main.Managers.Event.OnUpdate;
 import com.dsp.main.Module;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.neoforge.client.event.ClientTickEvent;
@@ -20,7 +21,7 @@ public class UnHook extends Module {
         disableAllModules();
     }
     @SubscribeEvent
-    public void ondwad(ClientTickEvent.Pre event) {
+    public void ondwad(OnUpdate event) {
 
     }
 }

@@ -1,6 +1,6 @@
 package com.dsp.main.Mixin;
 
-import com.dsp.main.Managers.Hooks.ServerboundInteractPacketAccessor;
+import com.dsp.main.Managers.Other.ServerboundInteractPacketAccessor;
 import net.minecraft.network.protocol.game.ServerboundInteractPacket;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;

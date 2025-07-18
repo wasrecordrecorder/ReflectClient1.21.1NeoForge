@@ -1,10 +1,13 @@
 package com.dsp.main.Functions.Player;
 
+import com.dsp.main.Managers.Event.OnUpdate;
+import com.dsp.main.Managers.FreeLook;
 import com.dsp.main.Managers.FrndSys.FriendManager;
 import com.dsp.main.Module;
 import com.dsp.main.UI.ClickGui.Settings.BindCheckBox;
 import com.dsp.main.UI.ClickGui.Settings.CheckBox;
 import com.dsp.main.Utils.Minecraft.Chat.ChatUtil;
+import com.dsp.main.Utils.Minecraft.Client.InvUtil;
 import net.minecraft.client.Minecraft;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.player.Player;
@@ -14,17 +17,25 @@ import net.minecraft.world.phys.HitResult;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.neoforge.client.event.ClientTickEvent;
 
+import static com.dsp.main.Api.mc;
 import static com.dsp.main.Managers.FrndSys.FriendManager.*;
 import static com.dsp.main.Utils.Minecraft.Client.AutoEatUtil.eatItemFromInventory;
 import static com.dsp.main.Utils.Minecraft.Client.InventoryUtils.useItemFromInventory;
 
 public class ClickActions extends Module {
-    public static CheckBox shiftBp = new CheckBox("Shift Bypass", false);
+    public static CheckBox shiftBp = new CheckBox("Bypass", false);
+    private final InvUtil invUtil = new InvUtil();
     public ClickActions() {
-        super("Click Actions", 0, Category.PLAYER, "Действия на предметах");
+        super("Click Actions", 0, Category.PLAYER, "Actions on clicks");
         addSettings(
                 shiftBp,
-                new BindCheckBox("Throw Pearl", 0, ()->useItemFromInventory(Items.ENDER_PEARL, 8)),
+                new BindCheckBox("Throw Pearl", 0, ()-> {
+                    if (!FreeLook.isFreeLookEnabled) {
+                        invUtil.findItemAndThrow(Items.ENDER_PEARL, mc.player.getYRot(), mc.player.getXRot());
+                    } else {
+                        invUtil.findItemAndThrow(Items.ENDER_PEARL, FreeLook.getCameraYaw(), FreeLook.getCameraPitch());
+                    }
+                }),
                 new BindCheckBox("Click Friend", 0, this::ClickFriend),
                 new BindCheckBox("Eat GApple", 0, ()->eatItemFromInventory(Items.GOLDEN_APPLE)),
                 new BindCheckBox("Eat Enchanted GApple", 0, ()->eatItemFromInventory(Items.ENCHANTED_GOLDEN_APPLE)),
@@ -56,7 +67,7 @@ public class ClickActions extends Module {
         }
     }
     @SubscribeEvent
-    public void onbldlaw(ClientTickEvent.Pre event) {
+    public void onbldlaw(OnUpdate event) {
 
     }
 }

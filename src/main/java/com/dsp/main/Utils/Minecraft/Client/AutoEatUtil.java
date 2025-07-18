@@ -1,5 +1,6 @@
 package com.dsp.main.Utils.Minecraft.Client;
 
+import com.dsp.main.Managers.Event.OnUpdate;
 import com.dsp.main.Utils.TimerUtil;
 import net.minecraft.client.Minecraft;
 import net.minecraft.core.component.DataComponents;
@@ -17,6 +18,7 @@ import net.neoforged.neoforge.event.entity.living.LivingEntityUseItemEvent;
 
 import java.util.List;
 
+import static com.dsp.main.Api.isSlowBypass;
 import static com.dsp.main.Functions.Player.ClickActions.shiftBp;
 
 public class AutoEatUtil {
@@ -77,25 +79,25 @@ public class AutoEatUtil {
         }
         player.swing(InteractionHand.MAIN_HAND);
         mc.options.keyUse.setDown(true);
-        if (shiftBp.isEnabled()) mc.options.keyShift.setDown(true);
+        if (shiftBp.isEnabled()) isSlowBypass = true;
         TimerUtil.sleepVoid(() -> eating = true, 180);
     }
 
     @SubscribeEvent
-    public void onClientTick(ClientTickEvent.Pre event) {
+    public void onClientTick(OnUpdate event) {
         if (!eating || mc.player == null) {
             return;
         }
         Player player = mc.player;
         if (player.isUsingItem()) {
-            if (shiftBp.isEnabled()) mc.options.keyShift.setDown(true);
+            if (shiftBp.isEnabled()) isSlowBypass = true;
             mc.options.keyUse.setDown(true);
         }
     }
 
     private static void finishEating() {
         mc.options.keyUse.setDown(false);
-        if (shiftBp.isEnabled()) mc.options.keyShift.setDown(false);
+        if (shiftBp.isEnabled()) isSlowBypass = true;
         if (foundSlot > 8) {
             mc.gameMode.handlePickItem(foundSlot);
         }

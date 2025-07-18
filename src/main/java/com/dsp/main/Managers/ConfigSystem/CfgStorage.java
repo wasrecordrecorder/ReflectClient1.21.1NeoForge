@@ -5,6 +5,7 @@ import java.util.List;
 
 public class CfgStorage {
     public List<ModuleConfig> modules = new ArrayList<>();
+    public String currentTheme;
 
     public static class ModuleConfig {
         public String name;

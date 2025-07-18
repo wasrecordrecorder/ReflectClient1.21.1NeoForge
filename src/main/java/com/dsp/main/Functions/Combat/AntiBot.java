@@ -1,5 +1,6 @@
 package com.dsp.main.Functions.Combat;
 
+import com.dsp.main.Managers.Event.OnUpdate;
 import com.dsp.main.Module;
 import com.dsp.main.UI.ClickGui.Settings.CheckBox;
 import com.dsp.main.UI.ClickGui.Settings.MultiCheckBox;
@@ -26,7 +27,7 @@ public class AntiBot extends Module {
     private static final double MOTION_THRESHOLD = 9.0; // Adjusted for sprinting (~0.1 blocks/tick squared)
 
     private final MultiCheckBox options;
-
+    private static AntiBot INSTANCE;
     public AntiBot() {
         super("AntiBot", 0, Category.COMBAT, "Detect and filter fake players");
 
@@ -36,12 +37,15 @@ public class AntiBot extends Module {
         checks.add(new CheckBox("Motion Check", false));
         checks.add(new CheckBox("Auto Remove", false));
         this.options = new MultiCheckBox("Bot Checks", checks);
-
+        INSTANCE = this;
         addSettings(options);
+    }
+    public static boolean isBot(UUID uuid) {
+        return INSTANCE != null && INSTANCE.bots.contains(uuid);
     }
 
     @SubscribeEvent
-    public void onTick(ClientTickEvent.Pre event) {
+    public void onTick(OnUpdate event) {
         if (mc.level == null || mc.player == null || mc.getConnection() == null) return;
 
         List<Player> toRemove = new ArrayList<>();

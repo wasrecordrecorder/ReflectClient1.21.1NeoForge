@@ -322,124 +322,98 @@ public class DrawHelper implements Mine {
                                      final float height) {
         return mouseX >= x && mouseX <= x + width && mouseY >= y && mouseY <= y + height;
     }
-    public static void rectangleOutline(PoseStack matrices, float x, float y, float width, float height, float lineWidth, int color) {
-        RenderSystem.enableBlend();
-        RenderSystem.defaultBlendFunc();
-        RenderSystem.setShader(GameRenderer::getPositionColorShader);
-        RenderSystem.lineWidth(lineWidth);
-
-        Matrix4f matrix = matrices.last().pose();
-        BufferBuilder bufferBuilder = Tesselator.getInstance().begin(VertexFormat.Mode.LINES, DefaultVertexFormat.POSITION_COLOR);
-
-        float r = ColorUtil.getRed(color) / 255f;
-        float g = ColorUtil.getGreen(color) / 255f;
-        float b = ColorUtil.getBlue(color) / 255f;
-        float a = ColorUtil.getAlpha(color) / 255f;
-
-        // Определяем четыре угла прямоугольника
-        bufferBuilder.addVertex(matrix, x, y, 0).setColor(r, g, b, a);
-        bufferBuilder.addVertex(matrix, x + width, y, 0).setColor(r, g, b, a);
-        bufferBuilder.addVertex(matrix, x + width, y + height, 0).setColor(r, g, b, a);
-        bufferBuilder.addVertex(matrix, x, y + height, 0).setColor(r, g, b, a);
-
-        BufferUploader.drawWithShader(bufferBuilder.buildOrThrow());
-        RenderSystem.disableBlend();
-    }
-    public static void drawCircle(PoseStack matrices, float centerX, float centerY, float radius, int color) {
-        int segments = 32; // Количество сегментов для аппроксимации круга
-        float angleStep = (float) (2 * Math.PI / segments);
-
-        RenderSystem.enableBlend();
-        RenderSystem.defaultBlendFunc();
-        RenderSystem.setShader(GameRenderer::getPositionColorShader);
-
-        Matrix4f matrix = matrices.last().pose();
-        BufferBuilder bufferBuilder = Tesselator.getInstance().begin(VertexFormat.Mode.TRIANGLE_FAN, DefaultVertexFormat.POSITION_COLOR);
-
-        float r = ColorUtil.getRed(color) / 255f;
-        float g = ColorUtil.getGreen(color) / 255f;
-        float b = ColorUtil.getBlue(color) / 255f;
-        float a = ColorUtil.getAlpha(color) / 255f;
-
-        // Центр круга
-        bufferBuilder.addVertex(matrix, centerX, centerY, 0).setColor(r, g, b, a);
-
-        // Вершины по окружности
-        for (int i = 0; i <= segments; i++) {
-            float angle = i * angleStep;
-            float x = centerX + radius * (float) Math.cos(angle);
-            float y = centerY + radius * (float) Math.sin(angle);
-            bufferBuilder.addVertex(matrix, x, y, 0).setColor(r, g, b, a);
-        }
-
-        BufferUploader.drawWithShader(bufferBuilder.buildOrThrow());
-        RenderSystem.disableBlend();
-    }
     private static final float LINE_WIDTH = 1.0f;
-    public static void drawBox(PoseStack matrixStack, BlockPos pos, float partialTicks, Color color) {
-        Vec3 playerPos = Minecraft.getInstance().player.getEyePosition(partialTicks);
-        double renderX = pos.getX() - playerPos.x;
-        double renderY = pos.getY() - playerPos.y;
-        double renderZ = pos.getZ() - playerPos.z;
-        if (playerPos.distanceTo(new Vec3(pos.getX(), pos.getY(), pos.getZ())) > 64) return;
 
+    public static void drawBox(PoseStack matrixStack, double x, double y, double z, double height, Color color) {
         matrixStack.pushPose();
-        RenderSystem.disableDepthTest();
+        RenderSystem.enableBlend();
+        RenderSystem.enableDepthTest();
         RenderSystem.depthMask(false);
         RenderSystem.lineWidth(LINE_WIDTH);
-        RenderSystem.setShaderColor(color.getRed() / 255.0f, color.getGreen() / 255.0f, color.getBlue() / 255.0f, color.getAlpha() / 255.0f);
-
-        Tesselator tessellator = Tesselator.getInstance();
-        BufferBuilder bufferBuilder = tessellator.begin(VertexFormat.Mode.LINES, DefaultVertexFormat.POSITION_COLOR);
-        drawCubeEdges(bufferBuilder, renderX, renderY, renderZ, color);
-        BufferUploader.drawWithShader(bufferBuilder.buildOrThrow());
-
-        RenderSystem.enableDepthTest();
-        RenderSystem.depthMask(true);
-        matrixStack.popPose();
-    }
-
-    private static void drawCubeEdges(BufferBuilder bufferBuilder, double x, double y, double z, Color color) {
-        double[][] vertices = {
-                {x, y, z}, {x + 1, y, z}, {x + 1, y, z}, {x + 1, y + 1, z},
-                {x + 1, y + 1, z}, {x, y + 1, z}, {x, y + 1, z}, {x, y, z},
-                {x, y, z + 1}, {x + 1, y, z + 1}, {x + 1, y, z + 1}, {x + 1, y + 1, z + 1},
-                {x + 1, y + 1, z + 1}, {x, y + 1, z + 1}, {x, y + 1, z + 1}, {x, y, z + 1},
-                {x, y, z}, {x, y, z + 1}, {x + 1, y, z}, {x + 1, y, z + 1},
-                {x + 1, y + 1, z}, {x + 1, y + 1, z + 1}, {x, y + 1, z}, {x, y + 1, z + 1},
-        };
         float r = color.getRed() / 255.0f;
         float g = color.getGreen() / 255.0f;
         float b = color.getBlue() / 255.0f;
         float a = color.getAlpha() / 255.0f;
-        for (int i = 0; i < vertices.length; i += 2) {
-            bufferBuilder.addVertex((float) vertices[i][0], (float) vertices[i][1], (float) vertices[i][2]).setColor(r, g, b, a);
-            bufferBuilder.addVertex((float)vertices[i + 1][0], (float)vertices[i + 1][1], (float)vertices[i + 1][2]).setColor(r, g, b, a);
-        }
+        RenderSystem.setShaderColor(r, g, b, a);
+
+        Tesselator tessellator = Tesselator.getInstance();
+        BufferBuilder bufferBuilder = tessellator.begin(VertexFormat.Mode.LINES, DefaultVertexFormat.POSITION_COLOR);
+        // Bottom face
+        bufferBuilder.addVertex((float) x, (float) y, (float) z).setColor(r, g, b, a);
+        bufferBuilder.addVertex((float) (x + 1), (float) y, (float) z).setColor(r, g, b, a);
+
+        bufferBuilder.addVertex((float) (x + 1), (float) y, (float) z).setColor(r, g, b, a);
+        bufferBuilder.addVertex((float) (x + 1), (float) y, (float) (z + 1)).setColor(r, g, b, a);
+
+        bufferBuilder.addVertex((float) (x + 1), (float) y, (float) (z + 1)).setColor(r, g, b, a);
+        bufferBuilder.addVertex((float) x, (float) y, (float) (z + 1)).setColor(r, g, b, a);
+
+        bufferBuilder.addVertex((float) x, (float) y, (float) (z + 1)).setColor(r, g, b, a);
+        bufferBuilder.addVertex((float) x, (float) y, (float) z).setColor(r, g, b, a);
+
+        // Top face
+        double topY = y + height;
+        bufferBuilder.addVertex((float) x, (float) topY, (float) z).setColor(r, g, b, a);
+        bufferBuilder.addVertex((float) (x + 1), (float) topY, (float) z).setColor(r, g, b, a);
+
+        bufferBuilder.addVertex((float) (x + 1), (float) topY, (float) z).setColor(r, g, b, a);
+        bufferBuilder.addVertex((float) (x + 1), (float) topY, (float) (z + 1)).setColor(r, g, b, a);
+
+        bufferBuilder.addVertex((float) (x + 1), (float) topY, (float) (z + 1)).setColor(r, g, b, a);
+        bufferBuilder.addVertex((float) x, (float) topY, (float) (z + 1)).setColor(r, g, b, a);
+
+        bufferBuilder.addVertex((float) x, (float) topY, (float) (z + 1)).setColor(r, g, b, a);
+        bufferBuilder.addVertex((float) x, (float) topY, (float) z).setColor(r, g, b, a);
+
+        // Vertical edges
+        bufferBuilder.addVertex((float) x, (float) y, (float) z).setColor(r, g, b, a);
+        bufferBuilder.addVertex((float) x, (float) topY, (float) z).setColor(r, g, b, a);
+
+        bufferBuilder.addVertex((float) (x + 1), (float) y, (float) z).setColor(r, g, b, a);
+        bufferBuilder.addVertex((float) (x + 1), (float) topY, (float) z).setColor(r, g, b, a);
+
+        bufferBuilder.addVertex((float) (x + 1), (float) y, (float) (z + 1)).setColor(r, g, b, a);
+        bufferBuilder.addVertex((float) (x + 1), (float) topY, (float) (z + 1)).setColor(r, g, b, a);
+
+        bufferBuilder.addVertex((float) x, (float) y, (float) (z + 1)).setColor(r, g, b, a);
+        bufferBuilder.addVertex((float) x, (float) topY, (float) (z + 1)).setColor(r, g, b, a);
+
+        BufferUploader.drawWithShader(bufferBuilder.buildOrThrow());
+
+        RenderSystem.depthMask(true);
+        RenderSystem.disableBlend();
+        matrixStack.popPose();
     }
 
-    public static void drawBox(double x, double y, double width, double height, double size, int color) {
-        drawRectBuilding(x + size, y, width - size, y + size, color);
-        drawRectBuilding(x, y, x + size, height, color);
-
-        drawRectBuilding(width - size, y, width, height, color);
-        drawRectBuilding(x + size, height - size, width - size, height, color);
+    public static void drawBox(PoseStack matrixStack, double x, double y, double width, double height, double size, int color) {
+        matrixStack.pushPose();
+        RenderSystem.enableBlend();
+        RenderSystem.enableDepthTest();
+        RenderSystem.depthMask(false);
+        drawRectBuilding(matrixStack, x + size, y, width - size, y + size, color);
+        drawRectBuilding(matrixStack, x, y, x + size, height, color);
+        drawRectBuilding(matrixStack, width - size, y, width, height, color);
+        drawRectBuilding(matrixStack, x + size, height - size, width - size, height, color);
+        RenderSystem.depthMask(true);
+        RenderSystem.disableBlend();
+        matrixStack.popPose();
     }
 
-    public static void drawBoxTest(double x, double y, double width, double height, double size, Vector4f colors) {
-        drawMCHorizontalBuilding(x + size, y, width - size, y + size, (int) colors.x(), (int) colors.z());
-        drawMCVerticalBuilding(x, y, x + size, height, (int) colors.z(), (int) colors.x());
-
-        drawMCVerticalBuilding(width - size, y, width, height, (int) colors.x(), (int) colors.z());
-        drawMCHorizontalBuilding(x + size, height - size, width - size, height, (int) colors.z(), (int) colors.x());
+    public static void drawBoxTest(PoseStack matrixStack, double x, double y, double width, double height, double size, Vector4f colors) {
+        matrixStack.pushPose();
+        RenderSystem.enableBlend();
+        RenderSystem.enableDepthTest();
+        RenderSystem.depthMask(false);
+        drawMCHorizontalBuilding(matrixStack, x + size, y, width - size, y + size, (int) colors.x(), (int) colors.z());
+        drawMCVerticalBuilding(matrixStack, x, y, x + size, height, (int) colors.z(), (int) colors.x());
+        drawMCVerticalBuilding(matrixStack, width - size, y, width, height, (int) colors.x(), (int) colors.z());
+        drawMCHorizontalBuilding(matrixStack, x + size, height - size, width - size, height, (int) colors.z(), (int) colors.x());
+        RenderSystem.depthMask(true);
+        RenderSystem.disableBlend();
+        matrixStack.popPose();
     }
 
-    public static void drawRectBuilding(
-            double left,
-            double top,
-            double right,
-            double bottom,
-            int color) {
+    public static void drawRectBuilding(PoseStack matrixStack, double left, double top, double right, double bottom, int color) {
         if (left < right) {
             double i = left;
             left = right;
@@ -459,14 +433,14 @@ public class DrawHelper implements Mine {
 
         Tesselator tessellator = Tesselator.getInstance();
         BufferBuilder bufferbuilder = tessellator.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_COLOR);
-        bufferbuilder.addVertex((float)left, (float)bottom, 0.0F).setColor(f, f1, f2, f3);
-        bufferbuilder.addVertex((float)right, (float)bottom, 0.0F).setColor(f, f1, f2, f3);
-        bufferbuilder.addVertex((float)right, (float)top, 0.0F).setColor(f, f1, f2, f3);
-        bufferbuilder.addVertex((float)left, (float)top, 0.0F).setColor(f, f1, f2, f3);
+        bufferbuilder.addVertex((float) left, (float) bottom, 0.0F).setColor(f, f1, f2, f3);
+        bufferbuilder.addVertex((float) right, (float) bottom, 0.0F).setColor(f, f1, f2, f3);
+        bufferbuilder.addVertex((float) right, (float) top, 0.0F).setColor(f, f1, f2, f3);
+        bufferbuilder.addVertex((float) left, (float) top, 0.0F).setColor(f, f1, f2, f3);
         BufferUploader.drawWithShader(bufferbuilder.buildOrThrow());
     }
 
-    public static void drawMCHorizontalBuilding(double x, double y, double width, double height, int start, int end) {
+    public static void drawMCHorizontalBuilding(PoseStack matrixStack, double x, double y, double width, double height, int start, int end) {
         float f = (float) (start >> 24 & 255) / 255.0F;
         float f1 = (float) (start >> 16 & 255) / 255.0F;
         float f2 = (float) (start >> 8 & 255) / 255.0F;
@@ -485,7 +459,7 @@ public class DrawHelper implements Mine {
         BufferUploader.drawWithShader(bufferbuilder.buildOrThrow());
     }
 
-    public static void drawMCVerticalBuilding(double x, double y, double width, double height, int start, int end) {
+    public static void drawMCVerticalBuilding(PoseStack matrixStack, double x, double y, double width, double height, int start, int end) {
         float f = (float) (start >> 24 & 255) / 255.0F;
         float f1 = (float) (start >> 16 & 255) / 255.0F;
         float f2 = (float) (start >> 8 & 255) / 255.0F;

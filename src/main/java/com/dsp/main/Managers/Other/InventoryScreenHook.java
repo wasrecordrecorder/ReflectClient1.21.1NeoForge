@@ -1,4 +1,4 @@
-package com.dsp.main.Managers.Hooks;
+package com.dsp.main.Managers.Other;
 
 import com.mojang.blaze3d.platform.Lighting;
 import com.mojang.blaze3d.systems.RenderSystem;

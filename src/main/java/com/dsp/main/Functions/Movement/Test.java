@@ -1,5 +1,7 @@
 package com.dsp.main.Functions.Movement;
 
+import com.dsp.main.Managers.Event.OnUpdate;
+import com.dsp.main.Managers.FreeLook;
 import com.dsp.main.UI.ClickGui.Settings.*;
 import com.dsp.main.Module;
 import net.neoforged.bus.api.SubscribeEvent;
@@ -34,11 +36,23 @@ public class Test extends Module {
         //).setVisible(() -> true));
     }
     @SubscribeEvent
-    public void onClientTick(ClientTickEvent.Pre event) {
+    public void onClientTick(OnUpdate event) {
         if (mc.player != null && !isDetect) {
         }
     }
     public void test(){
         System.out.println("dawada");
+    }
+
+    @Override
+    public void onEnable() {
+        super.onEnable();
+        FreeLook.enableFreeLook();
+    }
+
+    @Override
+    public void onDisable() {
+        super.onDisable();
+        FreeLook.disableFreeLook();
     }
 }

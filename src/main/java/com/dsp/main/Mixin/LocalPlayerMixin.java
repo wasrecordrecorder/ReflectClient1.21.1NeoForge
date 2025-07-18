@@ -2,8 +2,9 @@ package com.dsp.main.Mixin;
 
 import com.dsp.main.Api;
 import com.dsp.main.Functions.Player.NoPush;
+import com.dsp.main.Managers.Event.SlowWalkingEvent;
 import com.dsp.main.Managers.Event.UpdateInputEvent;
-import com.dsp.main.Managers.Hooks.LocalPlayerAccessor;
+import com.dsp.main.Managers.Other.LocalPlayerAccessor;
 import net.minecraft.client.player.Input;
 import net.minecraft.client.player.LocalPlayer;
 import net.neoforged.api.distmarker.Dist;
@@ -13,6 +14,7 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import static com.dsp.main.Main.isDetect;
@@ -22,6 +24,8 @@ import static com.dsp.main.Main.isDetect;
 public class LocalPlayerMixin {
     @Shadow
     protected int sprintTriggerTime = 0;
+    @Shadow
+    public Input input;
 
     @Inject(
             method = "moveTowardsClosestSpace",
@@ -50,5 +54,50 @@ public class LocalPlayerMixin {
         input.leftImpulse = event.getLeftImpulse();
         input.forwardImpulse = event.getForwardImpulse();
         accessor.setSprintTriggerTime(event.getSprintTriggerTime());
+    }
+    @Redirect(
+            method = "aiStep",
+            at = @At(
+                    value = "FIELD",
+                    target = "Lnet/minecraft/client/player/Input;forwardImpulse:F",
+                    opcode = org.objectweb.asm.Opcodes.PUTFIELD
+            )
+    )
+    private void redirectForwardImpulse(Input input, float value) {
+        if (((LocalPlayer)(Object)this).isUsingItem() && !((LocalPlayer)(Object)this).isPassenger()) {
+            SlowWalkingEvent event = new SlowWalkingEvent(this.input.forwardImpulse, this.input.leftImpulse);
+            NeoForge.EVENT_BUS.post(event);
+
+            if (event.isCanceled()) {
+                this.input.forwardImpulse = event.getForwardImpulse();
+            } else {
+                this.input.forwardImpulse = value;
+            }
+        } else {
+            this.input.forwardImpulse = value;
+        }
+    }
+
+    @Redirect(
+            method = "aiStep",
+            at = @At(
+                    value = "FIELD",
+                    target = "Lnet/minecraft/client/player/Input;leftImpulse:F",
+                    opcode = org.objectweb.asm.Opcodes.PUTFIELD
+            )
+    )
+    private void redirectLeftImpulse(Input input, float value) {
+        if (((LocalPlayer)(Object)this).isUsingItem() && !((LocalPlayer)(Object)this).isPassenger()) {
+            SlowWalkingEvent event = new SlowWalkingEvent(this.input.forwardImpulse, this.input.leftImpulse);
+            NeoForge.EVENT_BUS.post(event);
+
+            if (event.isCanceled()) {
+                this.input.leftImpulse = event.getLeftImpulse();
+            } else {
+                this.input.leftImpulse = value;
+            }
+        } else {
+            this.input.leftImpulse = value;
+        }
     }
 }

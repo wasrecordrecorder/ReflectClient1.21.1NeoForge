@@ -7,6 +7,8 @@ import net.minecraft.network.chat.Style;
 import net.minecraft.network.chat.TextColor;
 import net.minecraft.ChatFormatting;
 
+import java.awt.*;
+
 public class ChatUtil {
 
     public static void sendMessage(String message) {

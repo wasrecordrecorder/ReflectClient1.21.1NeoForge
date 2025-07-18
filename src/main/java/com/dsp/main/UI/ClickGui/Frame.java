@@ -27,6 +27,7 @@ public class Frame {
     private static final float SCROLLBAR_WIDTH = 2.0f;
     private static final float SCROLLBAR_ROUNDING = 3.0f;
     private static final float SCROLLBAR_ANIMATION_SPEED = 0.2f;
+    private static final float SCROLL_ANIMATION_SPEED = 0.3f;
     private static final long SCROLLBAR_FADE_DELAY = 1500;
 
     private final List<Button> buttons = new ArrayList<>();
@@ -45,7 +46,8 @@ public class Frame {
     private final int buttonBaseHeight;
     private final int maxVisibleHeight;
     private final int index;
-    private int scrollOffset = 0;
+    private float scrollOffset = 0;
+    private float targetScrollOffset = 0;
     private float scrollBarOpacity = 0.0f;
     private long lastScrollTime = 0;
     private boolean isScrolling = false;
@@ -94,6 +96,9 @@ public class Frame {
     }
 
     public void render(GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTicks) {
+        // Smoothly interpolate scrollOffset towards targetScrollOffset
+        scrollOffset = lerp(scrollOffset, targetScrollOffset, SCROLL_ANIMATION_SPEED * partialTicks);
+
         renderFrameBackground(guiGraphics);
         renderTitle(guiGraphics);
         renderButtons(guiGraphics, mouseX, mouseY, partialTicks);
@@ -222,10 +227,13 @@ public class Frame {
     public void mouseScrolled(double mouseX, double mouseY, double delta) {
         if (isHovered(mouseX, mouseY)) {
             int totalContentHeight = buttons.stream().mapToInt(b -> (int) (b.getHeightWithComponents() + BUTTON_PADDING * scaleFactor)).sum() - (int) (BUTTON_PADDING * scaleFactor);
-            int visibleContentHeight = Math.min(totalContentHeight, (int) (maxVisibleHeight));
+            int visibleContentHeight = Math.min(totalContentHeight, (int) (maxVisibleHeight) - 4);
             int maxScrollOffset = Math.max(0, totalContentHeight - visibleContentHeight);
-            scrollOffset += (int) (delta > 0 ? -20 * scaleFactor : 20 * scaleFactor);
-            scrollOffset = Math.max(0, Math.min(scrollOffset, maxScrollOffset));
+
+            // Update targetScrollOffset instead of scrollOffset directly
+            targetScrollOffset += (float) (delta > 0 ? -20 * scaleFactor : 20 * scaleFactor);
+            targetScrollOffset = Math.max(0, Math.min(targetScrollOffset, maxScrollOffset));
+
             isScrolling = true;
             lastScrollTime = System.currentTimeMillis();
         }

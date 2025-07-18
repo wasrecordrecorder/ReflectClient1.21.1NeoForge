@@ -1,5 +1,6 @@
 package com.dsp.main.Functions.Misc;
 
+import com.dsp.main.Managers.Event.OnUpdate;
 import com.dsp.main.Managers.FrndSys.FriendManager;
 import com.dsp.main.Module;
 import com.dsp.main.UI.ClickGui.Settings.CheckBox;
@@ -33,7 +34,7 @@ public class AutoLeave extends Module {
     }
 
     @SubscribeEvent
-    public void onTick(ClientTickEvent.Pre event) {
+    public void onTick(OnUpdate event) {
         if (mc.level == null || mc.player == null || (isPvP.isPvPMode() && PvPCheck.isEnabled())) {
             return;
         }

@@ -35,4 +35,8 @@ public class WhatServer {
         if (mc.getCurrentServer() != null) return mc.getCurrentServer().ip.contains("faketime");
         return false;
     }
+    public static boolean isFs() {
+        if (mc.getCurrentServer() != null) return mc.getCurrentServer().ip.contains("funsky");
+        return false;
+    }
 }

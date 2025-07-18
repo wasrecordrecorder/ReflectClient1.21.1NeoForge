@@ -268,7 +268,7 @@ public class MainMenuScreen extends Screen {
 
     public void handleMouseScrolled(double mouseX, double mouseY, double horizontal, double vertical) {
         if (open && isMouseOver(mouseX, mouseY, x, y, WIDTH, currentHeight)) {
-            scrollTarget += vertical * 10;
+            scrollTarget -= vertical * 10;
             float maxScroll = Math.max(0, alts.size() * ITEM_HEIGHT - (MAX_HEIGHT - 20 - 2 * ITEM_HEIGHT));
             scrollTarget = Math.max(0, Math.min(maxScroll, scrollTarget));
         }

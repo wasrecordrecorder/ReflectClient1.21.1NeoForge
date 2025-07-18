@@ -1,6 +1,7 @@
 package com.dsp.main.Managers.ChatManager;
 
 
+import com.dsp.main.Managers.Event.OnUpdate;
 import com.dsp.main.Utils.Minecraft.Chat.ChatUtil;
 import net.minecraft.client.multiplayer.ServerData;
 import net.neoforged.bus.api.EventPriority;
@@ -327,7 +328,7 @@ public class ChatManager {
     public static String lastChatMessage = "";
 
     @SubscribeEvent
-    public void OnEvent(ClientTickEvent.Pre event) {
+    public void OnEvent(OnUpdate event) {
 //        if (remainingTime == 0 && isOpeningSoon) {
 //            remainingTime = 60;
 //            isOpeningSoon = false;

@@ -1,6 +1,7 @@
 package com.dsp.main.Mixin;
 
 import com.dsp.main.Api;
+import com.dsp.main.Functions.Combat.Aura.Aura;
 import com.dsp.main.Functions.Player.NoDelay;
 import com.dsp.main.Main;
 import net.minecraft.client.Minecraft;
@@ -29,6 +30,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import static com.dsp.main.Api.isResetingSprint;
 import static com.dsp.main.Api.mc;
+import static com.dsp.main.Functions.Combat.Aura.Aura.resetSprintMode;
 import static com.dsp.main.Main.isDetect;
 import static com.dsp.main.Utils.Minecraft.Client.ClientPlayerUtil.hasEnoughImpulseToStartSprinting;
 import static com.dsp.main.Utils.Minecraft.Client.ClientPlayerUtil.isMoving;
@@ -45,12 +47,25 @@ public abstract class MultiPlayerGameModeMixin {
             at = @At("HEAD")
     )
     private void resetSprintBeforeAttack(Player player, Entity targetEntity, CallbackInfo ci) {
-        if (mc.player.isSprinting() && isMoving() && (isFt() || isRw() || isAm() || isSp())) {
+        if (mc.player.isSprinting() && isMoving() && (isFt() || isAm() || isSp() || isHw() || isFs() || resetSprintMode.isMode("Packet + Slow"))) {
             mc.player.setSprinting(false);
             mc.getConnection().send(new ServerboundPlayerCommandPacket(mc.player, ServerboundPlayerCommandPacket.Action.STOP_SPRINTING));
-            if (!isRw()) mc.player.setDeltaMovement(mc.player.getDeltaMovement().multiply(0.6, 1, 0.6));
-        } else {
+            mc.player.setDeltaMovement(mc.player.getDeltaMovement().multiply(0.6, 1, 0.6));
+        }
+        if (!Aura.attackType.isMode("1.8") && resetSprintMode.isMode("Legit")) {
             isResetingSprint = true;
+        }
+        if (resetSprintMode.isMode("Packet")) {
+            mc.player.setSprinting(false);
+            mc.getConnection().send(new ServerboundPlayerCommandPacket(mc.player, ServerboundPlayerCommandPacket.Action.STOP_SPRINTING));
+        }
+        if (resetSprintMode.isMode("Slow")) {
+            mc.player.setDeltaMovement(mc.player.getDeltaMovement().multiply(0.5, 1, 0.5));
+            isResetingSprint = true;
+        }
+        if (resetSprintMode.isMode("Legit + Packet")) {
+            isResetingSprint = true;
+            mc.getConnection().send(new ServerboundPlayerCommandPacket(mc.player, ServerboundPlayerCommandPacket.Action.STOP_SPRINTING));
         }
     }
     @Inject(
@@ -58,7 +73,7 @@ public abstract class MultiPlayerGameModeMixin {
             at = @At("TAIL")
     )
     private void resetSprintAfterAttack(Player player, Entity targetEntity, CallbackInfo ci) {
-        if (!mc.player.isSprinting() && (isFt() || isRw() || isAm() || isSp())) {
+        if (!mc.player.isSprinting() && (isFt() || isRw() || isAm() || isSp() || isHw() || isFs() || resetSprintMode.isMode("Packet") || resetSprintMode.isMode("Packet + Slow") || resetSprintMode.isMode("Legit + Packet"))) {
             mc.player.setSprinting(true);
             if (hasEnoughImpulseToStartSprinting() && mc.player.getFoodData().getFoodLevel() >= 3.5F && !mc.player.isUsingItem()) {
                 mc.getConnection().send(new ServerboundPlayerCommandPacket(mc.player, ServerboundPlayerCommandPacket.Action.START_SPRINTING));

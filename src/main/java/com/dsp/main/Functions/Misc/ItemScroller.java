@@ -1,13 +1,12 @@
 package com.dsp.main.Functions.Misc;
 
-import com.dsp.main.Managers.Hooks.InventoryScreenHook;
+import com.dsp.main.Managers.Other.InventoryScreenHook;
 import com.dsp.main.Module;
 import com.dsp.main.UI.ClickGui.Settings.Slider;
 import com.dsp.main.Utils.TimerUtil;
 import net.minecraft.client.gui.screens.inventory.ContainerScreen;
 import net.minecraft.client.gui.screens.inventory.ShulkerBoxScreen;
 import net.minecraft.world.inventory.ClickType;
-import net.minecraft.world.inventory.ShulkerBoxMenu;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.neoforge.client.event.ClientTickEvent;
 import org.lwjgl.glfw.GLFW;

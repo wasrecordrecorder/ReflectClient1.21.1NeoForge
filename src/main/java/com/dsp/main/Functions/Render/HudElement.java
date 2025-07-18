@@ -1,5 +1,6 @@
 package com.dsp.main.Functions.Render;
 
+import com.dsp.main.Managers.Event.OnUpdate;
 import com.dsp.main.Module;
 import com.dsp.main.UI.ClickGui.Settings.CheckBox;
 import com.dsp.main.UI.ClickGui.Settings.MultiCheckBox;
@@ -31,6 +32,6 @@ public class HudElement extends Module {
         addSettings(HudElements,snapGride);
     }
     @SubscribeEvent
-    public void ClientTickEvent(ClientTickEvent.Pre e ) {
+    public void ClientTickEvent(OnUpdate e ) {
     }
 }

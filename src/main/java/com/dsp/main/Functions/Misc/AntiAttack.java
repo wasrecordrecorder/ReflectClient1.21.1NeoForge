@@ -3,7 +3,7 @@ package com.dsp.main.Functions.Misc;
 import com.dsp.main.Api;
 import com.dsp.main.Managers.Event.ClientPacketSendEvent;
 import com.dsp.main.Managers.FrndSys.FriendManager;
-import com.dsp.main.Managers.Hooks.ServerboundInteractPacketAccessor;
+import com.dsp.main.Managers.Other.ServerboundInteractPacketAccessor;
 import com.dsp.main.Module;
 import com.dsp.main.UI.ClickGui.Settings.CheckBox;
 import com.dsp.main.UI.ClickGui.Settings.MultiCheckBox;

@@ -1,5 +1,6 @@
 package com.dsp.main.Functions.Player;
 
+import com.dsp.main.Managers.Event.OnUpdate;
 import com.dsp.main.Module;
 import com.dsp.main.UI.ClickGui.Settings.CheckBox;
 import com.dsp.main.UI.ClickGui.Settings.MultiCheckBox;
@@ -19,6 +20,6 @@ public class NoPush extends Module {
         addSetting(Options);
     }
     @SubscribeEvent
-    public void onTick(ClientTickEvent.Pre e) {
+    public void onTick(OnUpdate e) {
     }
 }

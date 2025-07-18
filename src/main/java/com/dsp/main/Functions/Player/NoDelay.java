@@ -1,5 +1,6 @@
 package com.dsp.main.Functions.Player;
 
+import com.dsp.main.Managers.Event.OnUpdate;
 import com.dsp.main.Module;
 import com.dsp.main.UI.ClickGui.Settings.CheckBox;
 import com.dsp.main.UI.ClickGui.Settings.MultiCheckBox;
@@ -11,7 +12,8 @@ import java.util.Arrays;
 public class NoDelay extends Module {
     public static MultiCheckBox Options = new MultiCheckBox("Options", Arrays.asList(
             new CheckBox("Jumping", false),
-            new CheckBox("Break Block", false)
+            new CheckBox("Break Block", false),
+            new CheckBox("Place Blocks", false)
     ));
 
     public NoDelay() {
@@ -19,6 +21,6 @@ public class NoDelay extends Module {
         addSetting(Options);
     }
     @SubscribeEvent
-    public void doawoda(ClientTickEvent.Pre event) {
+    public void doawoda(OnUpdate event) {
     }
 }

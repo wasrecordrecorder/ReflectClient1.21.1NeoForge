@@ -1,5 +1,6 @@
 package com.dsp.main.Functions.Player;
 
+import com.dsp.main.Managers.Event.OnUpdate;
 import com.dsp.main.Module;
 import com.dsp.main.UI.ClickGui.Settings.Slider;
 import net.neoforged.bus.api.SubscribeEvent;
@@ -10,7 +11,7 @@ public class FastExp extends Module {
         super("FastExp", 0, Category.PLAYER, "You can use exp very fast");
     }
     @SubscribeEvent
-    public void dwoaod(ClientTickEvent.Pre event) {
+    public void dwoaod(OnUpdate event) {
 
     }
 }

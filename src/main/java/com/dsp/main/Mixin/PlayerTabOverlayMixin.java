@@ -1,9 +1,13 @@
 package com.dsp.main.Mixin;
 
+import com.dsp.main.Api;
+import com.dsp.main.Functions.Player.StreamerMode;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.PlayerTabOverlay;
 import net.minecraft.client.multiplayer.PlayerInfo;
+import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.world.scores.Objective;
 import net.minecraft.world.scores.Scoreboard;
 import org.spongepowered.asm.mixin.Mixin;
@@ -13,6 +17,7 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import java.util.List;
 import java.util.stream.Stream;
@@ -87,5 +92,41 @@ public abstract class PlayerTabOverlayMixin {
     )
     private Stream<PlayerInfo> redirectLimit(Stream<PlayerInfo> stream, long limit) {
         return stream.limit(140L);
+    }
+
+    @Inject(method = "getNameForDisplay", at = @At("RETURN"), cancellable = true)
+    private void onGetNameForDisplay(PlayerInfo playerInfo, CallbackInfoReturnable<Component> cir) {
+        if (Api.isEnabled("StreamerMode")) {
+            Minecraft mc = Minecraft.getInstance();
+            String localPlayerName = mc.player != null ? mc.player.getName().getString() : "";
+            Component originalComponent = cir.getReturnValue();
+            String text = originalComponent.getString();
+            boolean replaced = false;
+            String newText = text;
+            if (!localPlayerName.isEmpty() && text.contains(localPlayerName)) {
+                newText = newText.replace(localPlayerName, StreamerMode.ProtectedName);
+                replaced = true;
+            }
+            if (StreamerMode.FuntimePr.isEnabled() && text.toLowerCase().contains("funtime")) {
+                newText = newText.replaceAll("(?i)funtime", "xuitime");
+                replaced = true;
+            }
+
+            if (replaced) {
+                MutableComponent newComponent = Component.literal(newText).withStyle(originalComponent.getStyle());
+                for (Component child : originalComponent.getSiblings()) {
+                    String childText = child.getString();
+                    String newChildText = childText;
+
+                    if (!localPlayerName.isEmpty() && childText.contains(localPlayerName)) {
+                        newChildText = newChildText.replace(localPlayerName, StreamerMode.ProtectedName);
+                    }
+                    if (StreamerMode.FuntimePr.isEnabled() && childText.toLowerCase().contains("funtime")) {
+                        newChildText = newChildText.replaceAll("(?i)funtime", "xuitime");
+                    }
+                }
+                cir.setReturnValue(newComponent);
+            }
+        }
     }
 }

@@ -1,5 +1,6 @@
 package com.dsp.main.Functions.Combat;
 
+import com.dsp.main.Managers.Event.OnUpdate;
 import com.dsp.main.Managers.FrndSys.FriendManager;
 import com.dsp.main.Module;
 import com.dsp.main.UI.ClickGui.Settings.CheckBox;
@@ -170,7 +171,7 @@ public class TriggerBot extends Module {
     }
 
     @SubscribeEvent
-    public void onLivingUpdate(ClientTickEvent.Pre event) {
+    public void onLivingUpdate(OnUpdate event) {
         if (isDetect || mc.level == null) return;
         if (mc.player.isLocalPlayer()) {
             performAttack(mc.player);

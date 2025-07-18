@@ -1,19 +1,15 @@
 package com.dsp.main;
 
-import com.dsp.main.Functions.Combat.AimAssistant;
-import com.dsp.main.Functions.Combat.AntiBot;
-import com.dsp.main.Functions.Combat.TriggerBot;
+import com.dsp.main.Functions.Combat.*;
+import com.dsp.main.Functions.Combat.Aura.Aura;
 import com.dsp.main.Functions.Misc.*;
-import com.dsp.main.Functions.Player.ClickActions;
-import com.dsp.main.Functions.Player.FastExp;
-import com.dsp.main.Functions.Player.NoDelay;
-import com.dsp.main.Functions.Player.NoPush;
-import com.dsp.main.Functions.Render.BoxEsp;
-import com.dsp.main.Functions.Render.HudElement;
-import com.dsp.main.Functions.Render.NoRender;
-import com.dsp.main.Functions.Render.Notifications;
+import com.dsp.main.Functions.Movement.*;
+import com.dsp.main.Functions.Player.*;
+import com.dsp.main.Functions.Render.*;
 import com.dsp.main.Managers.ConfigSystem.CfgManager;
+import com.dsp.main.Managers.Event.OnUpdate;
 import com.dsp.main.Managers.Event.UpdateInputEvent;
+import com.dsp.main.Managers.Other.KeyboardInputHook;
 import com.dsp.main.UI.ClickGui.ClickGuiScreen;
 import com.dsp.main.Functions.Movement.Test;
 import com.dsp.main.Functions.Movement.AutoSprint;
@@ -23,11 +19,9 @@ import com.dsp.main.UI.Draggable.DragElements.StaffList;
 import com.dsp.main.UI.Draggable.DragManager;
 import com.dsp.main.UI.Draggable.DraggableElement;
 import com.dsp.main.UI.MainMenu.MainMenuScreen;
-import com.dsp.main.Managers.Hooks.InventoryScreenHook;
+import com.dsp.main.Managers.Other.InventoryScreenHook;
 import com.dsp.main.UI.Notifications.NotificationManager;
-import com.dsp.main.Utils.Minecraft.Chat.ChatUtil;
 import com.dsp.main.Utils.TimerUtil;
-import com.mojang.datafixers.types.Func;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.MouseHandler;
 import net.minecraft.client.gui.GuiGraphics;
@@ -36,12 +30,10 @@ import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.neoforge.client.event.*;
 import org.lwjgl.glfw.GLFW;
 
-import java.util.Arrays;
-import java.util.Objects;
-import java.util.Timer;
-import java.util.TimerTask;
+import java.util.*;
 import java.util.concurrent.CopyOnWriteArrayList;
 
+import static com.dsp.main.Functions.Misc.ClientSetting.cfgASave;
 import static com.dsp.main.Functions.Render.HudElement.snapGride;
 import static com.dsp.main.Main.isDetect;
 
@@ -52,6 +44,7 @@ public class Api {
     public static CopyOnWriteArrayList<Module> Functions = new CopyOnWriteArrayList<>();
     private boolean isCfgLoaded = false;
     public static boolean isResetingSprint = false;
+    public static boolean isSlowBypass = false;
     public static NotificationManager notificationManager = new NotificationManager();
 
     private static final Timer autoSaveTimer = new Timer(true);
@@ -60,7 +53,7 @@ public class Api {
         autoSaveTimer.schedule(new TimerTask() {
             @Override
             public void run() {
-                if (isDetect) return;
+                if (isDetect || !cfgASave.isEnabled()) return;
                 CfgManager.saveCfg("autoload");
                 DragManager.save();
             }
@@ -68,24 +61,23 @@ public class Api {
     }
 
     public static void Initialize() {
-        Functions.add(new AutoSprint());
-        //Functions.add(new Test());
-        Functions.add(new HudElement());
-        Functions.add(new NoRender());
-        Functions.add(new AutoLeave());
-        Functions.add(new TriggerBot());
-        Functions.add(new ClickActions());
-        Functions.add(new UnHook());
-        Functions.add(new NoDelay());
-        Functions.add(new AntiAttack());
-        Functions.add(new NoPush());
-        Functions.add(new ItemScroller());
-        Functions.add(new FastExp());
-        Functions.add(new AutoAccept());
-        Functions.add(new AimAssistant());
-        Functions.add(new BoxEsp());
-        Functions.add(new AntiBot());
-        Functions.add(new Notifications());
+        Collections.addAll(Functions,
+                // Misc
+                new AutoLeave(), new AntiAttack(), new AutoAccept(), new UnHook(), new ItemScroller(), new AutoRespawn(),
+                new ItemSwapFix(), new AutoAuch(), new AutoJoiner(), new ClientSetting(),
+                // Combat
+                new Aura(), new TriggerBot(), new AimAssistant(), new AntiBot(), new AutoGApple(), new HitBox(), new AutoWeapon(),
+                new AutoFlipFireball(), new AutoSwap(), new AutoTotem(),
+
+                //Movement
+                new AutoSprint(), new NoSlow(), new Speed(), new ScreenWalk(),
+
+                // Player
+                new ClickActions(), new NoDelay(), new NoPush(), new FastExp(), new FreelookModule(), new ElytraHelper(),
+
+                // Render
+                new HudElement(), new NoRender(), new Notifications(), new NameTagsModule()
+        );
     }
 
     public static boolean isEnabled(String name) {
@@ -176,8 +168,11 @@ public class Api {
         }
     }
     @SubscribeEvent
-    public void OnTickEvent(ClientTickEvent.Pre event) {
-
+    public void OnTickEvent(OnUpdate event) {
+        if (mc.player == null) return;
+        if (!(mc.player.input instanceof KeyboardInputHook)) {
+            mc.player.input = new KeyboardInputHook(mc.options);
+        }
     }
 
     @SubscribeEvent
@@ -214,7 +209,14 @@ public class Api {
             event.setForwardImpulse(0.0f);
             event.setSprintTriggerTime(5);
             mc.player.setSprinting(false);
-            TimerUtil.sleepVoid(() -> isResetingSprint = false, 10);
+            TimerUtil.sleepVoid(() -> isResetingSprint = false, 40);
+        }
+        if (isSlowBypass) {
+            event.setLeftImpulse(0.0f);
+            event.setForwardImpulse(0.0f);
+            event.setSprintTriggerTime(5);
+            mc.player.setSprinting(false);
+            TimerUtil.sleepVoid(() -> isSlowBypass = false, 150);
         }
     }
 }
