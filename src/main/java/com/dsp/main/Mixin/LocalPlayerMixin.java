@@ -2,9 +2,9 @@ package com.dsp.main.Mixin;
 
 import com.dsp.main.Api;
 import com.dsp.main.Functions.Player.NoPush;
-import com.dsp.main.Managers.Event.SlowWalkingEvent;
-import com.dsp.main.Managers.Event.UpdateInputEvent;
-import com.dsp.main.Managers.Other.LocalPlayerAccessor;
+import com.dsp.main.Core.Event.SlowWalkingEvent;
+import com.dsp.main.Core.Event.UpdateInputEvent;
+import com.dsp.main.Core.Other.LocalPlayerAccessor;
 import net.minecraft.client.player.Input;
 import net.minecraft.client.player.LocalPlayer;
 import net.neoforged.api.distmarker.Dist;
@@ -16,7 +16,10 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
+import static com.dsp.main.Api.mc;
+import static com.dsp.main.Functions.Player.LockSlot.isSlotLocked;
 import static com.dsp.main.Main.isDetect;
 
 @OnlyIn(Dist.CLIENT)
@@ -98,6 +101,16 @@ public class LocalPlayerMixin {
             }
         } else {
             this.input.leftImpulse = value;
+        }
+    }
+    @Inject(
+            method = "drop",
+            at = @At("HEAD"),
+            cancellable = true
+    )
+    public void dowod(boolean fullStack, CallbackInfoReturnable<Boolean> ci) {
+        if (isSlotLocked(mc.player.getInventory().selected)) {
+            ci.cancel();
         }
     }
 }

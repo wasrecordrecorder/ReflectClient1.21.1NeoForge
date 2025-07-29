@@ -1,14 +1,8 @@
 package com.dsp.main.Utils.Minecraft.Client;
 
-import com.dsp.main.Managers.Event.MoveInputEvent;
-import com.dsp.main.Utils.Minecraft.Chat.ChatUtil;
+import com.dsp.main.Core.Event.MoveInputEvent;
 import net.minecraft.client.Minecraft;
 import net.minecraft.util.Mth;
-import net.minecraft.world.entity.LivingEntity;
-import net.minecraft.world.phys.Vec3;
-import net.neoforged.neoforge.client.event.MovementInputUpdateEvent;
-
-import java.awt.event.InputEvent;
 
 public class MoveUtil {
     private static final Minecraft mc = Minecraft.getInstance();
@@ -148,34 +142,6 @@ public class MoveUtil {
         }
         event.setForward(closestForward);
         event.setStrafe(closestStrafe);
-        event.setCanceled(true);
-    }
-    public static void fixMovementFocus(MoveInputEvent event, LivingEntity target) {
-        if (mc.player == null || target == null) return;
-        Vec3 playerPos = mc.player.getEyePosition();
-        Vec3 targetPos = target.position().add(0, target.getBbHeight() * 0.5, 0);
-        double deltaX = targetPos.x - playerPos.x;
-        double deltaZ = targetPos.z - playerPos.z;
-        float targetYaw = (float) Math.toDegrees(Math.atan2(deltaZ, deltaX)) - 90F;
-        targetYaw = Mth.wrapDegrees(targetYaw);
-        float forward = event.getForward();
-        float strafe = event.getStrafe();
-        if (forward == 0 && strafe == 0) return;
-        float inputMagnitude = (float) Math.sqrt(forward * forward + strafe * strafe);
-        if (inputMagnitude == 0) return;
-        float playerYaw = mc.player.isFallFlying() ? mc.player.getYRot() : mc.player.getYRot();
-        double inputAngle = Mth.wrapDegrees(Math.toDegrees(direction(playerYaw, forward, strafe)));
-        float deltaYaw = (float) Mth.wrapDegrees(targetYaw - inputAngle);
-        double radDeltaYaw = Math.toRadians(deltaYaw);
-        float newForward = (float) (inputMagnitude * Math.cos(radDeltaYaw));
-        float newStrafe = (float) (inputMagnitude * Math.sin(radDeltaYaw));
-        float maxComponent = Math.max(Math.abs(newForward), Math.abs(newStrafe));
-        if (maxComponent > 1.0F) {
-            newForward /= maxComponent;
-            newStrafe /= maxComponent;
-        }
-        event.setForward(newForward);
-        event.setStrafe(newStrafe);
         event.setCanceled(true);
     }
 }

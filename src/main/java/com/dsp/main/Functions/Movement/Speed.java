@@ -1,10 +1,10 @@
 package com.dsp.main.Functions.Movement;
 
-import com.dsp.main.Managers.Event.ClientPacketReceiveEvent;
-import com.dsp.main.Managers.Event.OnUpdate;
-import com.dsp.main.Managers.FreeLook;
+import com.dsp.main.Core.Event.ClientPacketReceiveEvent;
+import com.dsp.main.Core.Event.OnUpdate;
+import com.dsp.main.Core.Other.FreeLook;
 import com.dsp.main.Module;
-import com.dsp.main.UI.ClickGui.Settings.Mode;
+import com.dsp.main.UI.ClickGui.Dropdown.Settings.Mode;
 import com.dsp.main.Utils.Minecraft.Client.InvUtil;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
@@ -13,12 +13,8 @@ import net.minecraft.network.protocol.common.ServerboundKeepAlivePacket;
 import net.minecraft.network.protocol.game.ServerboundPlayerActionPacket;
 import net.minecraft.network.protocol.game.ServerboundSetCarriedItemPacket;
 import net.minecraft.network.protocol.game.ServerboundUseItemOnPacket;
-import net.minecraft.stats.Stats;
 import net.minecraft.world.InteractionHand;
-import net.minecraft.world.effect.MobEffect;
-import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.effect.MobEffects;
-import net.minecraft.world.entity.Mob;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.Vec3;

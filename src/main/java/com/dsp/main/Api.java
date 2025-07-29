@@ -1,39 +1,43 @@
 package com.dsp.main;
 
+import com.dsp.main.Core.Sound.SoundRegister;
 import com.dsp.main.Functions.Combat.*;
 import com.dsp.main.Functions.Combat.Aura.Aura;
 import com.dsp.main.Functions.Misc.*;
 import com.dsp.main.Functions.Movement.*;
 import com.dsp.main.Functions.Player.*;
 import com.dsp.main.Functions.Render.*;
-import com.dsp.main.Managers.ConfigSystem.CfgManager;
-import com.dsp.main.Managers.Event.OnUpdate;
-import com.dsp.main.Managers.Event.UpdateInputEvent;
-import com.dsp.main.Managers.Other.KeyboardInputHook;
-import com.dsp.main.UI.ClickGui.ClickGuiScreen;
-import com.dsp.main.Functions.Movement.Test;
+import com.dsp.main.Core.ConfigSystem.CfgManager;
+import com.dsp.main.Core.Event.OnUpdate;
+import com.dsp.main.Core.Event.UpdateInputEvent;
+import com.dsp.main.Core.Other.Hooks.KeyboardInputHook;
+import com.dsp.main.UI.ClickGui.Dropdown.ClickGuiScreen;
 import com.dsp.main.Functions.Movement.AutoSprint;
-import com.dsp.main.UI.ClickGui.Settings.BindCheckBox;
-import com.dsp.main.UI.ClickGui.Settings.Setting;
+import com.dsp.main.UI.ClickGui.Dropdown.Settings.BindCheckBox;
+import com.dsp.main.UI.ClickGui.Dropdown.Settings.Setting;
 import com.dsp.main.UI.Draggable.DragElements.StaffList;
 import com.dsp.main.UI.Draggable.DragManager;
 import com.dsp.main.UI.Draggable.DraggableElement;
 import com.dsp.main.UI.MainMenu.MainMenuScreen;
-import com.dsp.main.Managers.Other.InventoryScreenHook;
+import com.dsp.main.Core.Other.Hooks.InventoryScreenHook;
 import com.dsp.main.UI.Notifications.NotificationManager;
 import com.dsp.main.Utils.TimerUtil;
+import net.minecraft.client.CameraType;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.MouseHandler;
 import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.sounds.SoundEvent;
+import net.minecraft.util.Mth;
 import net.neoforged.bus.api.EventPriority;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.neoforge.client.event.*;
+import net.neoforged.neoforge.event.entity.player.AttackEntityEvent;
 import org.lwjgl.glfw.GLFW;
 
 import java.util.*;
 import java.util.concurrent.CopyOnWriteArrayList;
 
-import static com.dsp.main.Functions.Misc.ClientSetting.cfgASave;
+import static com.dsp.main.Functions.Misc.ClientSetting.*;
 import static com.dsp.main.Functions.Render.HudElement.snapGride;
 import static com.dsp.main.Main.isDetect;
 
@@ -64,19 +68,23 @@ public class Api {
         Collections.addAll(Functions,
                 // Misc
                 new AutoLeave(), new AntiAttack(), new AutoAccept(), new UnHook(), new ItemScroller(), new AutoRespawn(),
-                new ItemSwapFix(), new AutoAuch(), new AutoJoiner(), new ClientSetting(),
+                new ItemSwapFix(), new AutoAuch(), new AutoJoiner(), new ClientSetting(), new FuntimeHelper(), new HolyworldHelper(),
+                new NoServerRot(), new SRPSpoof(), new SlowPacket(), new AuctionHelper(),
+
                 // Combat
                 new Aura(), new TriggerBot(), new AimAssistant(), new AntiBot(), new AutoGApple(), new HitBox(), new AutoWeapon(),
                 new AutoFlipFireball(), new AutoSwap(), new AutoTotem(),
 
                 //Movement
-                new AutoSprint(), new NoSlow(), new Speed(), new ScreenWalk(),
+                new AutoSprint(), new NoSlow(), new Speed(), new ScreenWalk(), new Scaffhold(), new ElytraRecast(),
 
                 // Player
                 new ClickActions(), new NoDelay(), new NoPush(), new FastExp(), new FreelookModule(), new ElytraHelper(),
+                new AutoSoup(), new SafeWalking(), /*new FreeCamera(),*/ new LockSlot(), new TapeMouse(), new ClanInvest(),
+                new ChestStealer(), new AntiAfk(),
 
                 // Render
-                new HudElement(), new NoRender(), new Notifications(), new NameTagsModule()
+                new HudElement(), new NoRender(), new Notifications(), new NameTagsModule(), new Predictions(), new Fullbright()
         );
     }
 
@@ -143,10 +151,9 @@ public class Api {
         MouseHandler mouseHandler = Minecraft.getInstance().mouseHandler;
         mouseX = mouseHandler.xpos() * Minecraft.getInstance().getWindow().getGuiScaledWidth() / Minecraft.getInstance().getWindow().getScreenWidth();
         mouseY = mouseHandler.ypos() * Minecraft.getInstance().getWindow().getGuiScaledHeight() / Minecraft.getInstance().getWindow().getScreenHeight();
-        if (DragManager.isAnyDragging() && snapGride.isEnabled()) {
-            DragManager.renderGrid(guiGraphics, mc.getWindow());
-        }
+        DragManager.renderGrid(guiGraphics, mc.getWindow());
         for (DraggableElement element : DragManager.draggables.values()) {
+            element.updateAnimation((float) deltaTime());
             element.onDraw((int) mouseX, (int) mouseY, Minecraft.getInstance().getWindow());
             element.render(guiGraphics);
         }
@@ -165,6 +172,22 @@ public class Api {
     public void onMouseRelease(ScreenEvent.MouseButtonReleased.Pre event) {
         for (DraggableElement element : DragManager.draggables.values()) {
             element.onRelease(event.getButton());
+        }
+    }
+    @SubscribeEvent
+    public void onAttack(AttackEntityEvent e) {
+        if (isDetect) return;
+        if (e.getTarget() == mc.player || !sound.isEnabled() || hitSound.isMode("None")) return;
+        SoundEvent selectedSound = switch (hitSound.getMode().toUpperCase()) {
+            case "BELL"     -> SoundRegister.BELL.get();
+            case "BONK"     -> SoundRegister.BONK.get();
+            case "CRIME"    -> SoundRegister.CRIME.get();
+            case "METALLIC" -> SoundRegister.METALLIC.get();
+            case "RUST"     -> SoundRegister.RUST.get();
+            default         -> null;
+        };
+        if (selectedSound != null) {
+            mc.player.playSound(selectedSound, 1.0F, 1.0F);
         }
     }
     @SubscribeEvent
@@ -218,5 +241,24 @@ public class Api {
             mc.player.setSprinting(false);
             TimerUtil.sleepVoid(() -> isSlowBypass = false, 150);
         }
+    }
+    public static float fast(float end, float start, float multiple) {
+        return (1 - Mth.clamp((float) (deltaTime() * multiple), 0, 1)) * end + Mth.clamp((float) (deltaTime() * multiple), 0, 1) * start;
+    }
+    private static double deltaTime() {
+        float fps = 60;
+        try {
+            fps = Integer.parseInt(Minecraft.getInstance().fpsString.split(" ")[0]);
+        }catch (Exception ignore){}
+        return fps > 0 ? (1.0000 / fps) : 1;
+    }
+    private static float animation = 0;
+    @SubscribeEvent
+    public void onEventContinuous(RenderFrameEvent.Pre e) {
+        if (mc.options.getCameraType() == CameraType.FIRST_PERSON) animation = fast(animation, 0f, 10);
+        else animation = fast(animation, 1f, 10);
+    }
+    public static double getDistance(double dis) {
+        return 1f + ((dis - 1f) * animation);
     }
 }

@@ -1,21 +1,13 @@
 package com.dsp.main.Functions.Render;
 
-import com.dsp.main.Managers.FrndSys.FriendManager;
 import com.dsp.main.Module;
-import com.dsp.main.UI.ClickGui.Settings.Mode;
-import com.dsp.main.UI.Themes.ThemesUtil;
-import com.dsp.main.Utils.Render.ColorUtil;
+import com.dsp.main.UI.ClickGui.Dropdown.Settings.Mode;
 import com.dsp.main.Utils.Render.DrawHelper;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.*;
 import net.minecraft.client.Camera;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.player.AbstractClientPlayer;
-import net.minecraft.client.renderer.GameRenderer;
-import net.minecraft.client.renderer.LevelRenderer;
-import net.minecraft.client.renderer.MultiBufferSource;
-import net.minecraft.client.renderer.RenderType;
 import net.minecraft.util.Mth;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.phys.AABB;
@@ -26,12 +18,10 @@ import org.joml.Matrix4f;
 import org.joml.Vector4f;
 
 import javax.annotation.Nullable;
-import java.awt.*;
 import java.util.List;
 
 import static com.dsp.main.Api.mc;
 import static com.dsp.main.Utils.Render.ColorUtil.getColor;
-import static com.dsp.main.Utils.Render.ColorUtil.getColor2;
 
 public class BoxEsp extends Module {
 

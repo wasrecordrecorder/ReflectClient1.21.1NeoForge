@@ -1,7 +1,7 @@
 package com.dsp.main.Functions.Misc;
 
 import com.dsp.main.Module;
-import com.dsp.main.UI.ClickGui.Settings.Input;
+import com.dsp.main.UI.ClickGui.Dropdown.Settings.Input;
 import com.dsp.main.Utils.Minecraft.Chat.ChatUtil;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.neoforge.client.event.ClientChatReceivedEvent;

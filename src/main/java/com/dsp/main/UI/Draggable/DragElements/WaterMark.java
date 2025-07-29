@@ -29,6 +29,9 @@ public class WaterMark extends DraggableElement {
     private static final int BASE_HEIGHT = 24;
     private static final int ICON_SIZE = 24;
     private static final int TEXT_HEIGHT = 10;
+    private float lastFps = 0f, lastPing = 0f;
+    private long lastUpdate = 0;
+    private static final long ANIM_MS = 170;
 
     public WaterMark(String name, float initialX, float initialY, boolean canBeDragged) {
         super(name, initialX, initialY, canBeDragged);
@@ -55,79 +58,64 @@ public class WaterMark extends DraggableElement {
 
     @Override
     public void render(GuiGraphics guiGraphics) {
-        if (HudElements.isOptionEnabled("Watermark") && Api.isEnabled("Hud")) {
-            String ping = getPing();
-            String username = mc.player != null ? mc.player.getName().getString() : "Unknown";
-            String fps = String.valueOf(mc.getFps());
+        if (!HudElements.isOptionEnabled("Watermark") || !Api.isEnabled("Hud")) return;
 
-            float usernameWidth = BIKO_FONT.get().getWidth(username, TEXT_HEIGHT);
-            float pingWidth = BIKO_FONT.get().getWidth(ping, TEXT_HEIGHT);
-            DrawShader.drawRoundBlur(new PoseStack(), xPos, yPos, ICON_SIZE, BASE_HEIGHT, 3, new Color(23, 29, 35, 255).getRGB(), 120, 0.4f);
-            DrawShader.drawRoundBlur(new PoseStack(), xPos + ICON_SIZE + 3, yPos + 3, getWidth() - ICON_SIZE - 3, BASE_HEIGHT - 5.5f, 3, new Color(23, 29, 35, 255).getRGB(), 120, 0.4f);
+        long now = System.currentTimeMillis();
+        float dt = Math.min((float)(now - lastUpdate) / ANIM_MS, 1f);
 
-            BuiltText ReflectLogo = Builder.text()
-                    .font(ICONS.get())
-                    .text("X")
-                    .color(ColorHelper.gradient(ThemesUtil.getCurrentStyle().getColor(1), ThemesUtil.getCurrentStyle().getColor(2), 20, 10))
-                    .size(18f)
-                    .thickness(0.05f)
-                    .build();
-            ReflectLogo.render(new Matrix4f(), xPos + 0.5f, yPos + 3);
+        int realFps = mc.getFps();
+        int realPing = Integer.parseInt(getPing());
 
-            BuiltText UserIcon = Builder.text()
-                    .font(ICONS.get())
-                    .text("A")
-                    .color(ColorHelper.gradient(ThemesUtil.getCurrentStyle().getColor(1), ThemesUtil.getCurrentStyle().getColor(2), 20, 10))
-                    .size(14f)
-                    .thickness(0.05f)
-                    .build();
-            UserIcon.render(new Matrix4f(), xPos + ICON_SIZE + 5, yPos + 5);
+        lastFps = lerp(lastFps, realFps, dt);
+        lastPing = lerp(lastPing, realPing, dt);
 
-            BuiltText UserText = Builder.text()
-                    .font(BIKO_FONT.get())
-                    .text(username)
-                    .color(Color.WHITE)
-                    .size(10f)
-                    .thickness(0.05f)
-                    .build();
-            UserText.render(new Matrix4f(), xPos + ICON_SIZE + 18, yPos + 7);
+        String fpsText   = String.valueOf(Math.round(lastFps));
+        String pingText  = String.valueOf(Math.round(lastPing));
+        String username  = mc.player != null ? mc.player.getName().getString() : "Unknown";
 
-            BuiltText PingIcon = Builder.text()
-                    .font(ICONS.get())
-                    .text("J")
-                    .color(ColorHelper.gradient(ThemesUtil.getCurrentStyle().getColor(1), ThemesUtil.getCurrentStyle().getColor(2), 20, 10))
-                    .size(12f)
-                    .thickness(0.05f)
-                    .build();
-            PingIcon.render(new Matrix4f(), xPos + ICON_SIZE + usernameWidth + 26, yPos + 6.5);
+        float usernameWidth = BIKO_FONT.get().getWidth(username, TEXT_HEIGHT);
+        float pingWidth     = BIKO_FONT.get().getWidth(pingText, TEXT_HEIGHT);
+        float fpsWidth      = BIKO_FONT.get().getWidth(fpsText, TEXT_HEIGHT);
 
-            BuiltText PingText = Builder.text()
-                    .font(BIKO_FONT.get())
-                    .text(ping)
-                    .color(Color.WHITE)
-                    .size(10f)
-                    .thickness(0.05f)
-                    .build();
-            PingText.render(new Matrix4f(), xPos + ICON_SIZE + usernameWidth + 41, yPos + 8);
+        DrawShader.drawRoundBlur(new PoseStack(), xPos, yPos, ICON_SIZE, BASE_HEIGHT, 3,
+                new Color(23, 29, 35, 255).getRGB(), 120, 0.4f);
 
-            BuiltText FpsIcon = Builder.text()
-                    .font(ICONS.get())
-                    .text("e")
-                    .color(ColorHelper.gradient(ThemesUtil.getCurrentStyle().getColor(1), ThemesUtil.getCurrentStyle().getColor(2), 20, 10))
-                    .size(12f)
-                    .thickness(0.05f)
-                    .build();
-            FpsIcon.render(new Matrix4f(), xPos + ICON_SIZE + usernameWidth + pingWidth + 48, yPos + 6);
+        DrawShader.drawRoundBlur(new PoseStack(), xPos + ICON_SIZE + 3, yPos + 3,
+                getWidth() - ICON_SIZE - 3, BASE_HEIGHT - 5.5f, 3,
+                new Color(23, 29, 35, 255).getRGB(), 120, 0.4f);
+        Builder.text().font(ICONS.get()).text("X")
+                .color(ColorHelper.gradient(ThemesUtil.getCurrentStyle().getColor(1),
+                        ThemesUtil.getCurrentStyle().getColor(2), 20, 10))
+                .size(18f).thickness(0.05f).build()
+                .render(new Matrix4f(), xPos + 0.5f, yPos + 3);
+        guiGraphics.enableScissor((int) (xPos + ICON_SIZE + 3), (int) (yPos + 3), (int) ((xPos + ICON_SIZE + 3) + getWidth() - ICON_SIZE - 3), (int) ((yPos + 3) + BASE_HEIGHT - 5.5f));
+        renderIconText(guiGraphics, "A", username, xPos + ICON_SIZE + 5, yPos + 6,
+                xPos + ICON_SIZE + 18, yPos + 7.5f);
 
-            BuiltText FpsText = Builder.text()
-                    .font(BIKO_FONT.get())
-                    .text(fps)
-                    .color(Color.WHITE)
-                    .size(10f)
-                    .thickness(0.05f)
-                    .build();
-            FpsText.render(new Matrix4f(), xPos + ICON_SIZE + usernameWidth + pingWidth + 61, yPos + 8);
-        }
+        renderIconText(guiGraphics, "J", pingText, xPos + ICON_SIZE + usernameWidth + 26, yPos + 6.5f,
+                xPos + ICON_SIZE + usernameWidth + 41, yPos + 8);
+
+        renderIconText(guiGraphics, "e", fpsText, xPos + ICON_SIZE + usernameWidth + pingWidth + 48, yPos + 6f,
+                xPos + ICON_SIZE + usernameWidth + pingWidth + 61, yPos + 8);
+        guiGraphics.disableScissor();
+        lastUpdate = now;
+    }
+
+    private void renderIconText(GuiGraphics g, String icon, String value,
+                                float iconX, float iconY, float textX, float textY) {
+        Builder.text().font(ICONS.get()).text(icon)
+                .color(ColorHelper.gradient(ThemesUtil.getCurrentStyle().getColor(1),
+                        ThemesUtil.getCurrentStyle().getColor(2), 20, 10))
+                .size(12f).thickness(0.05f).build()
+                .render(new Matrix4f(), iconX, iconY);
+
+        Builder.text().font(BIKO_FONT.get()).text(value)
+                .color(Color.WHITE).size(10f).thickness(0.05f).build()
+                .render(new Matrix4f(), textX, textY);
+    }
+
+    private float lerp(float a, float b, float t) {
+        return a + (b - a) * t;
     }
 
     private String getPing() {

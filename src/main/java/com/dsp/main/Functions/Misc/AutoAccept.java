@@ -1,9 +1,9 @@
 package com.dsp.main.Functions.Misc;
 
 
-import com.dsp.main.Managers.FrndSys.FriendManager;
+import com.dsp.main.Core.FrndSys.FriendManager;
 import com.dsp.main.Module;
-import com.dsp.main.UI.ClickGui.Settings.CheckBox;
+import com.dsp.main.UI.ClickGui.Dropdown.Settings.CheckBox;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.neoforge.client.event.ClientChatReceivedEvent;
 import static com.dsp.main.Api.mc;

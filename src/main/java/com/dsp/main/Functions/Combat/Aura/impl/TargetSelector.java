@@ -2,7 +2,7 @@ package com.dsp.main.Functions.Combat.Aura.impl;
 
 import com.dsp.main.Functions.Combat.AntiBot;
 import com.dsp.main.Functions.Combat.Aura.Aura;
-import com.dsp.main.Managers.FrndSys.FriendManager;
+import com.dsp.main.Core.FrndSys.FriendManager;
 import net.minecraft.client.Minecraft;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;

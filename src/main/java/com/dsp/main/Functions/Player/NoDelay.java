@@ -1,11 +1,10 @@
 package com.dsp.main.Functions.Player;
 
-import com.dsp.main.Managers.Event.OnUpdate;
+import com.dsp.main.Core.Event.OnUpdate;
 import com.dsp.main.Module;
-import com.dsp.main.UI.ClickGui.Settings.CheckBox;
-import com.dsp.main.UI.ClickGui.Settings.MultiCheckBox;
+import com.dsp.main.UI.ClickGui.Dropdown.Settings.CheckBox;
+import com.dsp.main.UI.ClickGui.Dropdown.Settings.MultiCheckBox;
 import net.neoforged.bus.api.SubscribeEvent;
-import net.neoforged.neoforge.client.event.ClientTickEvent;
 
 import java.util.Arrays;
 

@@ -1,13 +1,13 @@
 package com.dsp.main.Functions.Misc;
 
 import com.dsp.main.Api;
-import com.dsp.main.Managers.Event.ClientPacketSendEvent;
-import com.dsp.main.Managers.FrndSys.FriendManager;
-import com.dsp.main.Managers.Other.ServerboundInteractPacketAccessor;
+import com.dsp.main.Core.Event.ClientPacketSendEvent;
+import com.dsp.main.Core.FrndSys.FriendManager;
+import com.dsp.main.Core.Other.ServerboundInteractPacketAccessor;
 import com.dsp.main.Module;
-import com.dsp.main.UI.ClickGui.Settings.CheckBox;
-import com.dsp.main.UI.ClickGui.Settings.MultiCheckBox;
-import com.dsp.main.UI.ClickGui.Settings.Slider;
+import com.dsp.main.UI.ClickGui.Dropdown.Settings.CheckBox;
+import com.dsp.main.UI.ClickGui.Dropdown.Settings.MultiCheckBox;
+import com.dsp.main.UI.ClickGui.Dropdown.Settings.Slider;
 import net.minecraft.client.Minecraft;
 import net.minecraft.network.protocol.game.ServerboundInteractPacket;
 import net.minecraft.world.entity.Entity;

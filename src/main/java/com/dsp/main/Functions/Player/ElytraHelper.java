@@ -1,25 +1,20 @@
 package com.dsp.main.Functions.Player;
 
-import com.dsp.main.Managers.Event.OnUpdate;
+import com.dsp.main.Core.Event.OnUpdate;
 import com.dsp.main.Module;
-import com.dsp.main.UI.ClickGui.Settings.BindCheckBox;
-import com.dsp.main.UI.ClickGui.Settings.CheckBox;
-import com.dsp.main.UI.ClickGui.Settings.Slider;
-import com.dsp.main.Utils.Minecraft.Chat.ChatUtil;
+import com.dsp.main.UI.ClickGui.Dropdown.Settings.BindCheckBox;
+import com.dsp.main.UI.ClickGui.Dropdown.Settings.CheckBox;
+import com.dsp.main.UI.ClickGui.Dropdown.Settings.Slider;
 import com.dsp.main.Utils.Minecraft.Client.InvUtil;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.screens.Screen;
-import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 import net.minecraft.core.Holder;
 import net.minecraft.network.protocol.game.ServerboundPlayerCommandPacket;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.world.entity.EquipmentSlot;
-import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.item.ArmorItem;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
-import net.minecraft.world.InteractionHand;
 import net.minecraft.world.item.enchantment.Enchantment;
 import net.minecraft.world.item.enchantment.Enchantments;
 import net.neoforged.bus.api.SubscribeEvent;
@@ -62,13 +57,13 @@ public class ElytraHelper extends Module {
             }
             invUtil.moveItem(chestplateSlot, EquipmentSlot.CHEST.getIndex(4));
         } else if (currentChestItem instanceof ArmorItem && ((ArmorItem) currentChestItem).getEquipmentSlot() == EquipmentSlot.CHEST) {
-            int elytraSlot = invUtil.getSlotInInventory(Items.ELYTRA);
+            int elytraSlot = invUtil.getSlotInAllInventory(Items.ELYTRA);
             if (elytraSlot == -1) {
                 return;
             }
             invUtil.moveItem(elytraSlot, EquipmentSlot.CHEST.getIndex(4));
         } else {
-            int elytraSlot = invUtil.getSlotInInventory(Items.ELYTRA);
+            int elytraSlot = invUtil.getSlotInAllInventory(Items.ELYTRA);
             if (elytraSlot != -1) {
                 invUtil.moveItem(elytraSlot, EquipmentSlot.CHEST.getIndex(4));
             } else {
@@ -102,6 +97,7 @@ public class ElytraHelper extends Module {
                 currentTick--;
             } else {
                 currentTick = autoUseFireworkCdTicks.getValueInt() * 20;
+                if (InvUtil.getFireWorks() == -1) return;
                 performFireworkUse();
             }
         }
@@ -121,7 +117,7 @@ public class ElytraHelper extends Module {
                 }
             }
         }
-
+        if (bestSlot <= 8) return bestSlot + 36;
         return bestSlot;
     }
 

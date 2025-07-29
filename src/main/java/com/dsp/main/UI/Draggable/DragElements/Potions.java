@@ -121,6 +121,7 @@ public class Potions extends DraggableElement {
             int alpha = (int) (opacity * 255);
             DrawShader.drawRoundBlur(guiGraphics.pose(), xPos, yPos, currentWidth, currentHeight, ROUND_RADIUS,
                     new Color(23, 29, 35, alpha).getRGB(), 120, 0.4f);
+            guiGraphics.enableScissor((int) xPos, (int) yPos, (int) (xPos + currentWidth), (int) (yPos + currentHeight));
 
             float currentY = yPos + PADDING - 1;
             for (MobEffectInstance effect : effects) {
@@ -156,6 +157,7 @@ public class Potions extends DraggableElement {
 
                 currentY += TEXT_HEIGHT + 4;
             }
+            guiGraphics.disableScissor();
         }
     }
 

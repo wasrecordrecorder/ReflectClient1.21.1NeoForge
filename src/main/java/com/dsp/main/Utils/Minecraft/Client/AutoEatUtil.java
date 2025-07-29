@@ -1,6 +1,6 @@
 package com.dsp.main.Utils.Minecraft.Client;
 
-import com.dsp.main.Managers.Event.OnUpdate;
+import com.dsp.main.Core.Event.OnUpdate;
 import com.dsp.main.Utils.TimerUtil;
 import net.minecraft.client.Minecraft;
 import net.minecraft.core.component.DataComponents;
@@ -11,9 +11,7 @@ import net.minecraft.world.item.Items;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.InteractionHand;
-import net.neoforged.api.distmarker.Dist;
 import net.neoforged.bus.api.SubscribeEvent;
-import net.neoforged.neoforge.client.event.ClientTickEvent;
 import net.neoforged.neoforge.event.entity.living.LivingEntityUseItemEvent;
 
 import java.util.List;

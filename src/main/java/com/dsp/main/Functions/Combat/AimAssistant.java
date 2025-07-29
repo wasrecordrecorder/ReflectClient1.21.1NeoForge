@@ -1,10 +1,9 @@
 package com.dsp.main.Functions.Combat;
 
-import com.dsp.main.Managers.Event.OnUpdate;
-import com.dsp.main.Managers.FrndSys.FriendManager;
+import com.dsp.main.Core.FrndSys.FriendManager;
 import com.dsp.main.Module;
-import com.dsp.main.UI.ClickGui.Settings.CheckBox;
-import com.dsp.main.UI.ClickGui.Settings.Slider;
+import com.dsp.main.UI.ClickGui.Dropdown.Settings.CheckBox;
+import com.dsp.main.UI.ClickGui.Dropdown.Settings.Slider;
 import net.minecraft.util.Mth;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
@@ -14,11 +13,9 @@ import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.HitResult;
 import net.minecraft.world.phys.Vec3;
 import net.neoforged.bus.api.SubscribeEvent;
-import net.neoforged.neoforge.client.event.ClientTickEvent;
 import net.neoforged.neoforge.client.event.RenderFrameEvent;
 
 import java.util.Comparator;
-import java.util.List;
 
 import static com.dsp.main.Api.mc;
 

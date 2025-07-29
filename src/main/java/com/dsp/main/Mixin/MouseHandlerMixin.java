@@ -1,6 +1,6 @@
 package com.dsp.main.Mixin;
 
-import com.dsp.main.Managers.FreeLook;
+import com.dsp.main.Core.Other.FreeLook;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.MouseHandler;
 import net.minecraft.client.player.LocalPlayer;

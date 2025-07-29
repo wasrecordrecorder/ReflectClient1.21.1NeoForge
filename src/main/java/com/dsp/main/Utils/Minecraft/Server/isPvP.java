@@ -1,6 +1,6 @@
 package com.dsp.main.Utils.Minecraft.Server;
 
-import com.dsp.main.Mixin.BossHealthOverlayAccessor;
+import com.dsp.main.Mixin.Accesors.BossHealthOverlayAccessor;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.components.BossHealthOverlay;
 import net.minecraft.world.BossEvent;

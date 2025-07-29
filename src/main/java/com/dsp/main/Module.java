@@ -1,14 +1,17 @@
 package com.dsp.main;
 
-import com.dsp.main.UI.ClickGui.Settings.Setting;
+import com.dsp.main.Core.Sound.SoundRegister;
+import com.dsp.main.UI.ClickGui.Dropdown.Settings.Setting;
 import com.dsp.main.UI.Notifications.Notification;
 import com.dsp.main.UI.Notifications.NotificationManager;
+import net.minecraft.sounds.SoundEvent;
 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
 import static com.dsp.main.Api.*;
+import static com.dsp.main.Functions.Misc.ClientSetting.TogglSound;
 import static com.dsp.main.Functions.Render.Notifications.Option;
 import static com.dsp.main.Main.EVENT_BUS;
 import static com.dsp.main.Main.isDetect;
@@ -76,28 +79,14 @@ public abstract class Module {
         toggled = !toggled;
         if (toggled) {
             onEnable();
-            if (Api.isEnabled("ClientSounds")) {
-                if (mc.player != null) {
-//                    if (togglSound.isMode("1")) {
-//                        mc.player.playSound(SoundsUtil.Enable, volume.getValueFloat(), pitch.getValueFloat());
-//                    } else {
-//                        mc.player.playSound(SoundsUtil.On, volume.getValueFloat(), pitch.getValueFloat());
-//                    }
-                }
+            if (mc.player != null) {
+                if (TogglSound.isEnabled()) mc.player.playSound(SoundRegister.ON.get(), 1, 1);
             }
             if (Option.isOptionEnabled("Functions Toggle")) notificationManager.send(Notification.Type.INFO, getName() + " was Enabled !");
         } else {
             onDisable();
-
-
-            if (Api.isEnabled("ClientSounds")) {
-//                if (mc.player != null) {
-//                    if (togglSound.isMode("1")) {
-//                       mc.player.playSound(SoundsUtil.Disable, volume.getValueFloat() + 10, pitch.getValueFloat());
-//                    } else {
-//                        mc.player.playSound(SoundsUtil.Off, volume.getValueFloat() + 10, pitch.getValueFloat());
-//                    }
-//                }
+            if (mc.player != null) {
+                if (TogglSound.isEnabled()) mc.player.playSound(SoundRegister.OFF.get(), 1, 1);
             }
             if (Option.isOptionEnabled("Functions Toggle")) notificationManager.send(Notification.Type.INFO, getName() + " was Disabled !");
         }
@@ -109,7 +98,6 @@ public abstract class Module {
 
     public void setToggled(boolean toggled) {
         if (isDetect && toggled) {
-//            NotificationManager.show(new Notification(NotificationType.ERROR,  "Невозможно включить модуль!", 2));
             return;
         }
 
@@ -130,7 +118,7 @@ public abstract class Module {
     }
 
     public static void disableAllModules() {
-//        NotificationManager.show(new Notification(NotificationType.WARNING,  "Режим проверки активирован!", 2));
+        notificationManager.send(Notification.Type.ERROR, "Danger mode enabled, disabling all modules");
         for (Module module : Functions) {
             if (module.isEnabled()) {
                 module.setToggled(false);

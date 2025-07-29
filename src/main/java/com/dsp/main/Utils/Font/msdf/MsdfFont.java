@@ -69,7 +69,7 @@ public final class MsdfFont {
 
 			Map<Integer, Float> kerning = this.kernings.get(prevChar);
 			if (kerning != null) {
-				width += kerning.getOrDefault(_char, 0.0f) * size;
+				width += kerning.getOrDefault(_char, 0f) * size;
 			}
 
 			width += glyph.getWidth(size);

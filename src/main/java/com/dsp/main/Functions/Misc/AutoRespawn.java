@@ -1,6 +1,6 @@
 package com.dsp.main.Functions.Misc;
 
-import com.dsp.main.Managers.Event.OnUpdate;
+import com.dsp.main.Core.Event.OnUpdate;
 import com.dsp.main.Module;
 import net.neoforged.bus.api.SubscribeEvent;
 

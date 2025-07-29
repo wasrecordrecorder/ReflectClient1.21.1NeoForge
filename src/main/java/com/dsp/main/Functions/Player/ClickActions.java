@@ -1,11 +1,11 @@
 package com.dsp.main.Functions.Player;
 
-import com.dsp.main.Managers.Event.OnUpdate;
-import com.dsp.main.Managers.FreeLook;
-import com.dsp.main.Managers.FrndSys.FriendManager;
+import com.dsp.main.Core.Event.OnUpdate;
+import com.dsp.main.Core.Other.FreeLook;
+import com.dsp.main.Core.FrndSys.FriendManager;
 import com.dsp.main.Module;
-import com.dsp.main.UI.ClickGui.Settings.BindCheckBox;
-import com.dsp.main.UI.ClickGui.Settings.CheckBox;
+import com.dsp.main.UI.ClickGui.Dropdown.Settings.BindCheckBox;
+import com.dsp.main.UI.ClickGui.Dropdown.Settings.CheckBox;
 import com.dsp.main.Utils.Minecraft.Chat.ChatUtil;
 import com.dsp.main.Utils.Minecraft.Client.InvUtil;
 import net.minecraft.client.Minecraft;
@@ -15,12 +15,9 @@ import net.minecraft.world.item.Items;
 import net.minecraft.world.phys.EntityHitResult;
 import net.minecraft.world.phys.HitResult;
 import net.neoforged.bus.api.SubscribeEvent;
-import net.neoforged.neoforge.client.event.ClientTickEvent;
 
 import static com.dsp.main.Api.mc;
-import static com.dsp.main.Managers.FrndSys.FriendManager.*;
 import static com.dsp.main.Utils.Minecraft.Client.AutoEatUtil.eatItemFromInventory;
-import static com.dsp.main.Utils.Minecraft.Client.InventoryUtils.useItemFromInventory;
 
 public class ClickActions extends Module {
     public static CheckBox shiftBp = new CheckBox("Bypass", false);

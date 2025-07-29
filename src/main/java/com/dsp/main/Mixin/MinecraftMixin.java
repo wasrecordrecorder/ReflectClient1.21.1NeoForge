@@ -2,7 +2,7 @@ package com.dsp.main.Mixin;
 
 import com.dsp.main.Api;
 import com.dsp.main.Functions.Player.NoDelay;
-import com.dsp.main.Managers.Event.OnUpdate;
+import com.dsp.main.Core.Event.OnUpdate;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.world.item.BlockItem;
@@ -12,7 +12,6 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
-import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 

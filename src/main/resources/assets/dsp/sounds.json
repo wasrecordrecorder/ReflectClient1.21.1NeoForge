@@ -1,0 +1,12 @@
+{
+  "bell":    { "sounds": [ "dsp:bell" ] },
+  "bonk":    { "sounds": [ "dsp:bonk" ] },
+  "crime":   { "sounds": [ "dsp:crime" ] },
+  "disable": { "sounds": [ "dsp:disable" ] },
+  "enable":  { "sounds": [ "dsp:enable" ] },
+  "metallic":{ "sounds": [ "dsp:metallic" ] },
+  "off":     { "sounds": [ "dsp:off" ] },
+  "on":      { "sounds": [ "dsp:on" ] },
+  "rust":    { "sounds": [ "dsp:rust" ] },
+  "wasted":  { "sounds": [ "dsp:wasted" ] }
+}

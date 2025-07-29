@@ -33,9 +33,9 @@ public class Cooldowns extends DraggableElement {
     private static final int ROUND_RADIUS = 6;
     private static final int ICON_SIZE = 11;
     private static final long ANIMATION_DURATION_MS = 300;
+    private static final long FADE_DURATION_MS = 250;
     private static final float BAR_HEIGHT = 1.5f;
-    private static final float BAR_OFFSET_Y = 1.0f; // Отступ полоски от текста
-    private static final float BAR_ANIMATION_SPEED = 0.2f; // Скорость анимации полоски
+    private static final float BAR_OFFSET_Y = 1.0f;
 
     private float opacity = 0.0f;
     private float targetOpacity = 0.0f;
@@ -46,6 +46,9 @@ public class Cooldowns extends DraggableElement {
     private long animationStartTime = 0;
     private List<Item> lastItems = new ArrayList<>();
     private Map<Item, Float> currentBarWidths = new HashMap<>();
+    private Map<Item, Long> itemAppearTime = new HashMap<>();
+    private Map<Item, Long> itemRemoveTime = new HashMap<>();
+    private Map<Item, Float> itemOpacity = new HashMap<>();
 
     public Cooldowns(String name, float initialX, float initialY, boolean canBeDragged) {
         super(name, initialX, initialY, canBeDragged);
@@ -75,113 +78,125 @@ public class Cooldowns extends DraggableElement {
     @Override
     public float getWidth() {
         List<Item> itemsOnCooldown = getItemsOnCooldown();
-        if (itemsOnCooldown.isEmpty()) {
-            return 0;
-        }
+        if (itemsOnCooldown.isEmpty()) return 0;
         float maxItemNameWidth = itemsOnCooldown.stream()
                 .map(item -> RUS.get().getWidth(getFormattedName(new ItemStack(item)), TEXT_HEIGHT))
-                .max(Float::compare)
-                .orElse(0f);
+                .max(Float::compare).orElse(0f);
         return ICON_SIZE + maxItemNameWidth + SPACING + 2 * PADDING;
     }
 
     @Override
     public float getHeight() {
         List<Item> itemsOnCooldown = getItemsOnCooldown();
-        if (itemsOnCooldown.isEmpty()) {
-            return 0;
+        if (itemsOnCooldown.isEmpty()) return 0;
+        float total = 0f;
+        for (Item item : itemsOnCooldown) {
+            float io = itemOpacity.getOrDefault(item, 0f);
+            if (io > 0.01f) {
+                total += (TEXT_HEIGHT + BAR_HEIGHT + BAR_OFFSET_Y + 4) * io;
+            }
         }
-        return itemsOnCooldown.size() * (TEXT_HEIGHT + BAR_HEIGHT + BAR_OFFSET_Y + 4) + 3;
+        return total + 3;
     }
 
     @Override
     public void render(GuiGraphics guiGraphics) {
         if (mc.player == null || !HudElements.isOptionEnabled("Cooldowns") || !Api.isEnabled("Hud")) {
-            targetOpacity = 0.0f;
+            targetOpacity = 0f;
         } else {
             List<Item> itemsOnCooldown = getItemsOnCooldown();
+            long now = System.currentTimeMillis();
             if (itemsOnCooldown.isEmpty() && !isChatOpen()) {
-                targetOpacity = 0.0f;
+                targetOpacity = 0f;
             } else {
-                targetOpacity = 1.0f;
+                targetOpacity = 1f;
             }
             if (!itemsOnCooldown.equals(lastItems)) {
                 targetWidth = getWidth();
                 targetHeight = getHeight();
                 currentWidth = targetWidth;
                 currentHeight = targetHeight;
-                animationStartTime = System.currentTimeMillis();
+                animationStartTime = now;
                 lastItems = new ArrayList<>(itemsOnCooldown);
             }
-            long elapsed = System.currentTimeMillis() - animationStartTime;
-            float t = Math.min((float) elapsed / ANIMATION_DURATION_MS, 1.0f);
+            long elapsed = now - animationStartTime;
+            float t = Math.min((float) elapsed / ANIMATION_DURATION_MS, 1f);
             opacity = lerp(opacity, targetOpacity, t);
             currentWidth = lerp(currentWidth, targetWidth, t);
             currentHeight = lerp(currentHeight, targetHeight, t);
-            if (opacity <= 0.01f || currentWidth <= 0.01f || currentHeight <= 0.01f) {
-                return;
-            }
+            if (opacity <= 0.01f || currentWidth <= 0.01f || currentHeight <= 0.01f) return;
             int alpha = (int) (opacity * 255);
-            DrawShader.drawRoundBlur(guiGraphics.pose(), xPos, yPos, currentWidth, currentHeight, ROUND_RADIUS,
-                    new Color(23, 29, 35, alpha).getRGB(), 120, 0.4f);
+            DrawShader.drawRoundBlur(guiGraphics.pose(), xPos, yPos, currentWidth, currentHeight,
+                    ROUND_RADIUS, new Color(23, 29, 35, alpha).getRGB(), 120, 0.4f);
+            guiGraphics.enableScissor((int) xPos, (int) yPos,
+                    (int) (xPos + currentWidth), (int) (yPos + currentHeight));
             float currentY = yPos + PADDING - 1;
             for (Item item : itemsOnCooldown) {
-                Color textColorWithAlpha = new Color(255, 255, 255, alpha);
-
+                long appear = itemAppearTime.getOrDefault(item, 0L);
+                long remove = itemRemoveTime.getOrDefault(item, 0L);
+                float io = itemOpacity.getOrDefault(item, 0f);
+                if (itemsOnCooldown.contains(item)) {
+                    if (remove != 0) {
+                        remove = 0L;
+                        itemRemoveTime.remove(item);
+                    }
+                    if (appear == 0) {
+                        appear = now;
+                        itemAppearTime.put(item, appear);
+                    }
+                    long fadeElapsed = now - appear;
+                    io = Math.min((float) fadeElapsed / FADE_DURATION_MS, 1f);
+                } else {
+                    if (remove == 0) {
+                        remove = now;
+                        itemRemoveTime.put(item, remove);
+                    }
+                    long fadeElapsed = now - remove;
+                    io = 1f - Math.min((float) fadeElapsed / FADE_DURATION_MS, 1f);
+                }
+                itemOpacity.put(item, io);
+                if (io <= 0.01f) continue;
+                int itemAlpha = (int) (io * alpha);
+                Color textColorWithAlpha = new Color(255, 255, 255, itemAlpha);
                 if (item == Items.ENCHANTED_GOLDEN_APPLE) {
                     ResourceLocation itemTexture = ResourceLocation.fromNamespaceAndPath("dsp", "textures/item/golden_apple.png");
-                    DrawHelper.drawTexture(itemTexture, guiGraphics.pose().last().pose(), xPos + PADDING - 3, currentY - 2.5f, ICON_SIZE, ICON_SIZE);
-                } else if (item == Items.PLAYER_HEAD) {
+                    DrawHelper.drawTexture(itemTexture, guiGraphics.pose().last().pose(),
+                            xPos + PADDING - 3, currentY - 2.5f, ICON_SIZE, ICON_SIZE);
+                } else if (item == Items.PLAYER_HEAD || item == Items.AIR) {
                     ResourceLocation itemTexture = ResourceLocation.fromNamespaceAndPath("dsp", "textures/item/barrier.png");
-                    DrawHelper.drawTexture(itemTexture, guiGraphics.pose().last().pose(), xPos + PADDING - 3, currentY - 2.5f, ICON_SIZE, ICON_SIZE);
-                } else if (item == Items.AIR) {
-                    ResourceLocation itemTexture = ResourceLocation.fromNamespaceAndPath("dsp", "textures/item/barrier.png");
-                    DrawHelper.drawTexture(itemTexture, guiGraphics.pose().last().pose(), xPos + PADDING - 3, currentY - 2.5f, ICON_SIZE, ICON_SIZE);
+                    DrawHelper.drawTexture(itemTexture, guiGraphics.pose().last().pose(),
+                            xPos + PADDING - 3, currentY - 2.5f, ICON_SIZE, ICON_SIZE);
                 } else {
-                    ResourceLocation itemTexture = ResourceLocation.fromNamespaceAndPath("dsp", "textures/item/" + item.getDescriptionId().replace("item.minecraft.", "") + ".png");
-                    DrawHelper.drawTexture(itemTexture, guiGraphics.pose().last().pose(), xPos + PADDING - 3, currentY - 2.5f, ICON_SIZE, ICON_SIZE);
+                    ResourceLocation itemTexture = ResourceLocation.fromNamespaceAndPath("dsp",
+                            "textures/item/" + item.getDescriptionId().replace("item.minecraft.", "") + ".png");
+                    DrawHelper.drawTexture(itemTexture, guiGraphics.pose().last().pose(),
+                            xPos + PADDING - 3, currentY - 2.5f, ICON_SIZE, ICON_SIZE);
                 }
                 String itemName = getFormattedName(new ItemStack(item));
-                BuiltText itemText = Builder.text()
-                        .font(RUS.get())
-                        .text(itemName)
-                        .color(textColorWithAlpha)
-                        .size(TEXT_HEIGHT)
-                        .thickness(0.1f)
-                        .build();
+                BuiltText itemText = Builder.text().font(RUS.get()).text(itemName)
+                        .color(textColorWithAlpha).size(TEXT_HEIGHT).thickness(0.1f).build();
                 itemText.render(new Matrix4f(), xPos + PADDING + 9, currentY - 3.5f);
                 float maxBarWidth = currentWidth - ICON_SIZE - 2 * PADDING - 10;
-                DrawHelper.rectangle(
-                        guiGraphics.pose(),
-                        xPos + PADDING + ICON_SIZE,
-                        currentY + TEXT_HEIGHT + BAR_OFFSET_Y - 1,
-                        maxBarWidth,
-                        BAR_HEIGHT,
-                        1.0f,
-                        new Color(64, 64, 64, alpha).getRGB()
-                );
-
+                DrawHelper.rectangle(guiGraphics.pose(), xPos + PADDING + ICON_SIZE,
+                        currentY + TEXT_HEIGHT + BAR_OFFSET_Y - 1, maxBarWidth, BAR_HEIGHT, 1f,
+                        new Color(64, 64, 64, itemAlpha).getRGB());
                 float cooldownPercent = mc.player.getCooldowns().getCooldownPercent(item, 0);
-                float targetBarWidth = maxBarWidth * cooldownPercent; // Decreases from full to zero
+                float targetBarWidth = maxBarWidth * cooldownPercent;
                 float currentBarWidth = currentBarWidths.getOrDefault(item, targetBarWidth);
-                currentBarWidth = lerp(currentBarWidth, targetBarWidth, BAR_ANIMATION_SPEED);
+                currentBarWidth = lerp(currentBarWidth, targetBarWidth, 0.2f);
                 currentBarWidths.put(item, currentBarWidth);
-                Color lineColor = new Color(0, 243, 205, alpha);
                 if (cooldownPercent > 0) {
-                    DrawHelper.rectangle(
-                            guiGraphics.pose(),
-                            xPos + PADDING + ICON_SIZE,
-                            currentY + TEXT_HEIGHT + BAR_OFFSET_Y - 1,
-                            currentBarWidth,
-                            BAR_HEIGHT,
-                            1.0f,
-                            ColorHelper.gradient(ThemesUtil.getCurrentStyle().getColorLowSpeed(1), ThemesUtil.getCurrentStyle().getColorLowSpeed(2), 20, 10)
-                    );
+                    DrawHelper.rectangle(guiGraphics.pose(), xPos + PADDING + ICON_SIZE,
+                            currentY + TEXT_HEIGHT + BAR_OFFSET_Y - 1, currentBarWidth, BAR_HEIGHT, 1f,
+                            ColorHelper.gradient(ThemesUtil.getCurrentStyle().getColorLowSpeed(1),
+                                    ThemesUtil.getCurrentStyle().getColorLowSpeed(2), 20, 10));
                 }
-
-                currentY += TEXT_HEIGHT + BAR_HEIGHT + BAR_OFFSET_Y + 4;
+                currentY += ((TEXT_HEIGHT + BAR_HEIGHT + BAR_OFFSET_Y + 4) * io);
             }
-            currentBarWidths.keySet().removeIf(item -> !itemsOnCooldown.contains(item));
+            guiGraphics.disableScissor();
+            itemAppearTime.entrySet().removeIf(e -> !itemsOnCooldown.contains(e.getKey()));
+            itemRemoveTime.entrySet().removeIf(e -> !itemsOnCooldown.contains(e.getKey()));
+            itemOpacity.entrySet().removeIf(e -> !itemsOnCooldown.contains(e.getKey()) && e.getValue() <= 0.01f);
         }
     }
 
@@ -198,9 +213,7 @@ public class Cooldowns extends DraggableElement {
                 }
             }
             if (itemsOnCooldown.isEmpty() && isChatOpen()) {
-                Item fakeItem = Items.GOLDEN_HELMET;
-                itemsOnCooldown.add(fakeItem);
-                itemCooldowns.put(fakeItem, 0.5f);
+                itemsOnCooldown.add(Items.GOLDEN_HELMET);
             }
         }
         return itemsOnCooldown;

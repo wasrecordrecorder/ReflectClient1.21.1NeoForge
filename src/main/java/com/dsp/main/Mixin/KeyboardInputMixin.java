@@ -1,6 +1,6 @@
 package com.dsp.main.Mixin;
 
-import com.dsp.main.Managers.Event.MoveInputEvent;
+import com.dsp.main.Core.Event.MoveInputEvent;
 import net.minecraft.client.player.KeyboardInput;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.api.distmarker.OnlyIn;

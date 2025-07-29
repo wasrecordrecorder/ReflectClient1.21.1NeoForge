@@ -1,7 +1,7 @@
 package com.dsp.main.Mixin;
 
-import com.dsp.main.Managers.Event.ClientPacketReceiveEvent;
-import com.dsp.main.Managers.Event.ClientPacketSendEvent;
+import com.dsp.main.Core.Event.ClientPacketReceiveEvent;
+import com.dsp.main.Core.Event.ClientPacketSendEvent;
 import io.netty.channel.ChannelHandlerContext;
 import net.minecraft.network.Connection;
 import net.minecraft.network.protocol.Packet;

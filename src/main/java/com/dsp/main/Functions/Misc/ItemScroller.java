@@ -1,8 +1,8 @@
 package com.dsp.main.Functions.Misc;
 
-import com.dsp.main.Managers.Other.InventoryScreenHook;
+import com.dsp.main.Core.Other.Hooks.InventoryScreenHook;
 import com.dsp.main.Module;
-import com.dsp.main.UI.ClickGui.Settings.Slider;
+import com.dsp.main.UI.ClickGui.Dropdown.Settings.Slider;
 import com.dsp.main.Utils.TimerUtil;
 import net.minecraft.client.gui.screens.inventory.ContainerScreen;
 import net.minecraft.client.gui.screens.inventory.ShulkerBoxScreen;

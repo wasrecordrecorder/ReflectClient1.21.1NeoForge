@@ -40,9 +40,10 @@ public class ESPUtils implements Mine {
         boolean on = clip.x >= -1f && clip.x <= 1f && clip.y >= -1f && clip.y <= 1f;
         return new Vector3d(sx, sy, on ? 1.0 : 0.0);
     }
-
-
     public static Vector3d toScreen(Vector3d vec) {
+        return toScreen(vec.x, vec.y, vec.z);
+    }
+    public static Vector3d toScreen(Vec3 vec) {
         return toScreen(vec.x, vec.y, vec.z);
     }
     public static Vector3d toScreen(Vector3i vec) {

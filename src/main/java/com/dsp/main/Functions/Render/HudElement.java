@@ -1,18 +1,13 @@
 package com.dsp.main.Functions.Render;
 
-import com.dsp.main.Managers.Event.OnUpdate;
+import com.dsp.main.Core.Event.OnUpdate;
 import com.dsp.main.Module;
-import com.dsp.main.UI.ClickGui.Settings.CheckBox;
-import com.dsp.main.UI.ClickGui.Settings.MultiCheckBox;
-import com.dsp.main.UI.Themes.ThemesUtil;
-import com.dsp.main.Utils.Render.ColorUtil;
+import com.dsp.main.UI.ClickGui.Dropdown.Settings.CheckBox;
+import com.dsp.main.UI.ClickGui.Dropdown.Settings.MultiCheckBox;
 import net.neoforged.bus.api.SubscribeEvent;
-import net.neoforged.neoforge.client.event.ClientTickEvent;
 
 import java.awt.*;
 import java.util.Arrays;
-
-import static com.dsp.main.Api.mc;
 
 public class HudElement extends Module {
     public static int IconColor = Color.WHITE.getRGB();
@@ -23,7 +18,8 @@ public class HudElement extends Module {
             new CheckBox("Potions", false),
             new CheckBox("StaffList", false),
             new CheckBox("Keybinds", false),
-            new CheckBox("Cooldowns", false)
+            new CheckBox("Cooldowns", false),
+            new CheckBox("Inventory Hud", false)
     ));
     public static CheckBox snapGride = new CheckBox("Draw Snap Gride", false);
 

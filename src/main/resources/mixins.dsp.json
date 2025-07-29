@@ -9,7 +9,6 @@
     "defaultRequire": 1
   },
   "client": [
-    "BossHealthOverlayAccessor",
     "BossHealthOverlayMixin",
     "CameraMixin",
     "ChatComponentMixin",
@@ -25,10 +24,14 @@
     "MinecraftMixin",
     "MouseHandlerMixin",
     "MultiPlayerGameModeMixin",
+    "PlayerMixin",
     "PlayerRendererMixin",
     "PlayerTabOverlayMixin",
     "ScoreboardMixin",
     "ScreenEffectRendererMixin",
-    "ServerboundInteractPacketMixin"
+    "ServerboundInteractPacketMixin",
+    "Accesors.BossHealthOverlayAccessor",
+    "Accesors.LivingEntityAccessor",
+    "Accesors.MouseHandlerAccessor"
   ]
 }

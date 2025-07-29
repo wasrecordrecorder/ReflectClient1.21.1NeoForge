@@ -1,5 +1,6 @@
 package com.dsp.main.Utils.Minecraft.Client;
 
+import com.dsp.main.Core.Other.FreeLook;
 import com.dsp.main.Utils.Minecraft.Chat.ChatUtil;
 import com.dsp.main.Utils.Render.Mine;
 import com.dsp.main.Utils.TimerUtil;
@@ -16,21 +17,16 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.function.Predicate;
 import java.util.stream.IntStream;
 import net.minecraft.client.Minecraft;
-
-import net.minecraft.world.item.Item;
-import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.item.AxeItem;
-import net.minecraft.world.item.FireworkRocketItem;
+import net.minecraft.world.item.*;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.network.protocol.game.ServerboundContainerClickPacket;
 import net.minecraft.network.protocol.game.ServerboundUseItemPacket;
-
-import static com.dsp.main.Api.mc;
 import static com.dsp.main.Functions.Misc.ClientSetting.obhod;
 
 public class InvUtil implements Mine {
-    private final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
+    public final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
     private static final Minecraft mc = Minecraft.getInstance();
+    public static boolean requestFreeLook = false;
 
     public void moveItem(int from, int to) {
         if (from == to || from == -1)
@@ -58,9 +54,9 @@ public class InvUtil implements Mine {
     public void swapHand(int slotId, InteractionHand hand) {
         if (slotId == -1) return;
         int button = hand == InteractionHand.MAIN_HAND ? mc.player.getInventory().selected : 40;
-
-        //TimerUtil.sleepVoid(() -> clickSlotId(slotId, button, ClickType.SWAP, packet), 0);
         clickSlotId(slotId, button, ClickType.SWAP, obhod.isMode("Packet"));
+        //TimerUtil.sleepVoid(() -> clickSlotId(slotId, button, ClickType.SWAP, packet), 0);
+
         mc.player.getInventory().setChanged();
     }
 
@@ -187,7 +183,14 @@ public class InvUtil implements Mine {
     int secuCount = 0;
 
     public void useItem(InteractionHand hand, float yaw, float pitch) {
+
+        if (FreeLook.isFreeLookEnabled) {
+            requestFreeLook = true;
+            mc.player.setYRot(yaw);
+            mc.player.setXRot(pitch);
+        }
         mc.player.connection.send(new ServerboundUseItemPacket(hand,secuCount++,(int) yaw, pitch));
+        if (requestFreeLook) TimerUtil.sleepVoid(() -> requestFreeLook = false, 100);
     }
 
     public long noEmptyHotBarSlots() {
@@ -228,7 +231,7 @@ public class InvUtil implements Mine {
     }
 
     public static int getFireWorks() {
-        for (int i = 0; i < 9; i++) {
+        for (int i = 0; i < mc.player.getInventory().getContainerSize(); i++) {
             if (mc.player.getInventory().getItem(i).getItem() instanceof FireworkRocketItem) {
                 return i;
             }
@@ -256,9 +259,37 @@ public class InvUtil implements Mine {
     public int getSlotInAllInventory(Item item) {
         for (int i = 0; i < 45; i++) {
             if (mc.player.getInventory().getItem(i).getItem() == item) {
+                if (i <= 8) return i + 36;
                 return i;
             }
         }
         return -1;
+    }
+    public int getSlotWithExactStack(ItemStack target) {
+        for (int i = 0; i < mc.player.getInventory().getContainerSize(); i++) {
+            ItemStack stack = mc.player.getInventory().getItem(i);
+            if (ItemStack.isSameItemSameComponents(stack, target)
+                    && stack.getHoverName().equals(target.getHoverName())) {
+                if (i <= 8) return i + 36;
+                return i;
+            }
+        }
+        return -1;
+    }
+    public static boolean ValidateItem(ItemStack item) {
+        if (item.getItem() == Items.ENDER_EYE) return item.getHoverName().getString().contains("★");
+        if (item.getItem() == Items.NETHERITE_SCRAP) return item.getHoverName().getString().contains("★");
+        if (item.getItem() == Items.DRIED_KELP) return item.getHoverName().getString().contains("★");
+        if (item.getItem() == Items.SUGAR) return item.getHoverName().getString().contains("★");
+        if (item.getItem() == Items.PHANTOM_MEMBRANE) return item.getHoverName().getString().contains("★");
+        if (item.getItem() == Items.FIRE_CHARGE) return item.getHoverName().getString().contains("★");
+        if (item.getItem() == Items.SNOWBALL) return item.getHoverName().getString().contains("★");
+        if (item.getItem() == Items.PLAYER_HEAD) return item.getHoverName().getString().contains("★");
+        if (item.getItem() == Items.SPLASH_POTION) return item.getHoverName().getString().contains("★");
+        if (item.getItem() == Items.WIND_CHARGE) return item.getHoverName().getString().contains("★");
+        if (item.getItem() == Items.TRIPWIRE_HOOK) return item.getHoverName().getString().contains("★");
+        if (item.getItem() == Items.TIPPED_ARROW) return item.getHoverName().getString().contains("★");
+        if (item.getItem() == Items.TNT) return item.getHoverName().getString().contains("★");
+        return true;
     }
 }

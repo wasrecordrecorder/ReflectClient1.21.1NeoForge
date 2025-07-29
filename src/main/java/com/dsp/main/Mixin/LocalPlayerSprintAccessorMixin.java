@@ -1,6 +1,6 @@
 package com.dsp.main.Mixin;
 
-import com.dsp.main.Managers.Other.LocalPlayerAccessor;
+import com.dsp.main.Core.Other.LocalPlayerAccessor;
 import net.minecraft.client.player.LocalPlayer;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;

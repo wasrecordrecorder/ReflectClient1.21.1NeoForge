@@ -1,6 +1,6 @@
 package com.dsp.main.Functions.Misc;
 
-import com.dsp.main.Managers.Event.ClientPacketReceiveEvent;
+import com.dsp.main.Core.Event.ClientPacketReceiveEvent;
 import com.dsp.main.Module;
 import net.minecraft.network.protocol.game.ClientboundSetCarriedItemPacket;
 import net.minecraft.network.protocol.game.ServerboundSetCarriedItemPacket;

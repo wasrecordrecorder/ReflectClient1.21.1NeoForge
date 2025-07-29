@@ -1,11 +1,9 @@
 package com.dsp.main.Functions.Combat;
 
-import com.dsp.main.Managers.Event.OnUpdate;
+import com.dsp.main.Core.Event.OnUpdate;
 import com.dsp.main.Module;
-import com.dsp.main.UI.ClickGui.Settings.BindCheckBox;
-import com.dsp.main.UI.ClickGui.Settings.CheckBox;
-import com.dsp.main.UI.ClickGui.Settings.Mode;
-import com.dsp.main.Utils.Minecraft.Chat.ChatUtil;
+import com.dsp.main.UI.ClickGui.Dropdown.Settings.BindCheckBox;
+import com.dsp.main.UI.ClickGui.Dropdown.Settings.Mode;
 import com.dsp.main.Utils.Minecraft.Client.InvUtil;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.Items;
@@ -45,33 +43,49 @@ public class AutoSwap extends Module {
         Item twoItemType = ITEM_MAP.get(twoItem.getMode());
 
         if (firstItemType == twoItemType) return;
+        int targetSlot = -1;
 
         if (currentOffhandItem == firstItemType) {
-            int targetSlot = invUtil.getSlotInAllInventory(twoItemType);
-            if (targetSlot != -1) {
-                if (slowBypass.isEnabled()) isSlowBypass = true;
-                invUtil.swapHand(targetSlot, InteractionHand.OFF_HAND);
-            }
+            targetSlot = (twoItemType == Items.TOTEM_OF_UNDYING)
+                    ? getTotemSlotPrioritized()
+                    : invUtil.getSlotInAllInventory(twoItemType);
         } else if (currentOffhandItem == twoItemType) {
-            int targetSlot = invUtil.getSlotInAllInventory(firstItemType);
-            if (targetSlot != -1) {
-                if (slowBypass.isEnabled()) isSlowBypass = true;
-                invUtil.swapHand(targetSlot, InteractionHand.OFF_HAND);
-            }
+            targetSlot = (firstItemType == Items.TOTEM_OF_UNDYING)
+                    ? getTotemSlotPrioritized()
+                    : invUtil.getSlotInAllInventory(firstItemType);
         } else {
-            int targetSlot = invUtil.getSlotInAllInventory(firstItemType);
-            if (targetSlot != -1) {
-                if (slowBypass.isEnabled()) isSlowBypass = true;
-                invUtil.swapHand(targetSlot, InteractionHand.OFF_HAND);
-            } else {
-                targetSlot = invUtil.getSlotInAllInventory(twoItemType);
-                if (targetSlot != -1) {
-                    if (slowBypass.isEnabled()) isSlowBypass = true;
-                    invUtil.swapHand(targetSlot, InteractionHand.OFF_HAND);
+            targetSlot = (firstItemType == Items.TOTEM_OF_UNDYING)
+                    ? getTotemSlotPrioritized()
+                    : invUtil.getSlotInAllInventory(firstItemType);
+
+            if (targetSlot == -1) {
+                targetSlot = (twoItemType == Items.TOTEM_OF_UNDYING)
+                        ? getTotemSlotPrioritized()
+                        : invUtil.getSlotInAllInventory(twoItemType);
+            }
+        }
+
+        if (targetSlot != -1) {
+            if (slowBypass.isEnabled()) isSlowBypass = true;
+            invUtil.swapHand(targetSlot, InteractionHand.OFF_HAND);
+        }
+    }
+    static int getTotemSlotPrioritized() {
+        int enchantedTotem = -1;
+        int normalTotem = -1;
+        for (int i = 0; i < mc.player.getInventory().getContainerSize(); i++) {
+            var stack = mc.player.getInventory().getItem(i);
+            if (stack.getItem() == Items.TOTEM_OF_UNDYING) {
+                if (stack.isEnchanted()) {
+                    enchantedTotem = i <= 8 ? i + 36 : i;
+                } else if (normalTotem == -1) {
+                    normalTotem = i <= 8 ? i + 36 : i;
                 }
             }
         }
+        return enchantedTotem != -1 ? enchantedTotem : normalTotem;
     }
+
 
     @SubscribeEvent
     public void onUpdate(OnUpdate event) {

@@ -30,11 +30,9 @@ public class ThemesUtil {
         currentTheme = themes.get(14);
     }
 
-
     public void setCurrentStyle(Theme theme) {
         currentTheme = theme;
     }
-
 
     public static Theme getCurrentStyle() {
         return currentTheme;
@@ -47,6 +45,4 @@ public class ThemesUtil {
             }
         }
     }
-
-
 }

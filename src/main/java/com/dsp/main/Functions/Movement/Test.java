@@ -1,11 +1,10 @@
 package com.dsp.main.Functions.Movement;
 
-import com.dsp.main.Managers.Event.OnUpdate;
-import com.dsp.main.Managers.FreeLook;
-import com.dsp.main.UI.ClickGui.Settings.*;
+import com.dsp.main.Core.Event.OnUpdate;
+import com.dsp.main.Core.Other.FreeLook;
+import com.dsp.main.UI.ClickGui.Dropdown.Settings.*;
 import com.dsp.main.Module;
 import net.neoforged.bus.api.SubscribeEvent;
-import net.neoforged.neoforge.client.event.ClientTickEvent;
 
 import java.util.ArrayList;
 import java.util.List;

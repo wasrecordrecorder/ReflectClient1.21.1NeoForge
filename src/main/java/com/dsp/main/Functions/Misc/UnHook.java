@@ -1,9 +1,8 @@
 package com.dsp.main.Functions.Misc;
 
-import com.dsp.main.Managers.Event.OnUpdate;
+import com.dsp.main.Core.Event.OnUpdate;
 import com.dsp.main.Module;
 import net.neoforged.bus.api.SubscribeEvent;
-import net.neoforged.neoforge.client.event.ClientTickEvent;
 
 import static com.dsp.main.Api.mc;
 import static com.dsp.main.Main.isDetect;

@@ -1,10 +1,9 @@
 package com.dsp.main.Functions.Combat;
 
-import com.dsp.main.Managers.Event.OnUpdate;
-import com.dsp.main.Managers.FreeLook;
+import com.dsp.main.Core.Other.FreeLook;
 import com.dsp.main.Module;
-import com.dsp.main.UI.ClickGui.Settings.CheckBox;
-import com.dsp.main.UI.ClickGui.Settings.Slider;
+import com.dsp.main.UI.ClickGui.Dropdown.Settings.CheckBox;
+import com.dsp.main.UI.ClickGui.Dropdown.Settings.Slider;
 import com.dsp.main.Utils.TimerUtil;
 import net.minecraft.client.Minecraft;
 import net.minecraft.util.Mth;

@@ -16,7 +16,6 @@ public class Theme {
         this.colors = colors;
     }
 
-
     public int getColor(int index) {
         return ColorUtils.gradient(25,
                 index, colors);
@@ -26,7 +25,4 @@ public class Theme {
         return ColorUtils.gradient(50,
                 index, colors);
     }
-
-
-
 }

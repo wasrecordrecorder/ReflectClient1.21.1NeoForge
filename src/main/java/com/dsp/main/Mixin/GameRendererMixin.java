@@ -2,7 +2,7 @@ package com.dsp.main.Mixin;
 
 import com.dsp.main.Api;
 import com.dsp.main.Functions.Render.NoRender;
-import com.dsp.main.Managers.FreeLook;
+import com.dsp.main.Core.Other.FreeLook;
 import com.mojang.blaze3d.vertex.PoseStack;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.renderer.GameRenderer;

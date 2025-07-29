@@ -1,27 +1,22 @@
 package com.dsp.main.Functions.Render;
 
-import com.dsp.main.Managers.FrndSys.FriendManager;
+import com.dsp.main.Core.FrndSys.FriendManager;
 import com.dsp.main.Module;
-import com.dsp.main.UI.ClickGui.Settings.CheckBox;
-import com.dsp.main.UI.ClickGui.Settings.MultiCheckBox;
+import com.dsp.main.UI.ClickGui.Dropdown.Settings.CheckBox;
+import com.dsp.main.UI.ClickGui.Dropdown.Settings.MultiCheckBox;
 import com.dsp.main.UI.Themes.ThemesUtil;
 import com.dsp.main.Utils.Color.ColorHelper;
 import com.dsp.main.Utils.Font.builders.Builder;
 import com.dsp.main.Utils.Font.renderers.impl.BuiltText;
-import com.dsp.main.Utils.Minecraft.Chat.ChatUtil;
 import com.dsp.main.Utils.Render.DrawHelper;
 import com.dsp.main.Utils.Render.Other.ESPUtils;
 import com.dsp.main.Utils.Render.Other.EntityPos;
-import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
-import net.minecraft.network.chat.Component;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.AirItem;
-import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.item.Items;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.neoforge.client.event.RenderGuiEvent;
 import org.joml.Matrix4f;
@@ -44,9 +39,10 @@ public class NameTagsModule extends Module {
     private static CheckBox pltItems = new CheckBox("Render Player Items", false).setVisible(() -> Modi.isOptionEnabled("Players"));
     private static CheckBox drawDurab = new CheckBox("Draw Item Decorations", false).setVisible(() -> pltItems.isEnabled());
     private static float displayedHealthPercent = 0.0f;
+
     public NameTagsModule() {
         super("NameTags", 0, Category.RENDER, "Renders custom name tags above players");
-        addSettings(Modi,pltItems,drawDurab);
+        addSettings(Modi, pltItems, drawDurab);
     }
 
     @SubscribeEvent
@@ -61,7 +57,6 @@ public class NameTagsModule extends Module {
         if (Modi.isOptionEnabled("Items")) {
             renderitems(event);
         }
-
     }
 
     public void renderplayers(RenderGuiEvent event) {
@@ -86,7 +81,6 @@ public class NameTagsModule extends Module {
                     3f,
                     new Color(30, 30, 30, 220).getRGB()
             );
-            // ----
             float maxHealth = 20;
             if (getHealthFromScoreboard(ent)[0] > 20) {
                 maxHealth = getHealthFromScoreboard(ent)[0];
@@ -95,7 +89,6 @@ public class NameTagsModule extends Module {
             displayedHealthPercent += (targetHealthPercent - displayedHealthPercent) * 0.2f;
             DrawHelper.rectangle(event.getGuiGraphics().pose(), (float) vec.x - (width / 2) + 2, (float) (vec.y + BIKO_FONT.get().getMetrics().baselineHeight() * 7f + 5), width - 4, 2, 1, new Color(64, 64, 64, 255).getRGB());
             DrawHelper.rectangle(event.getGuiGraphics().pose(), (float) vec.x - (width / 2) + 2, (float) (vec.y + BIKO_FONT.get().getMetrics().baselineHeight() * 7f + 5), (width * displayedHealthPercent) - 4, 2, 1, healthBarColor);
-            //----
             BuiltText text = Builder.text()
                     .font(BIKO_FONT.get())
                     .text(name)
@@ -111,7 +104,7 @@ public class NameTagsModule extends Module {
                     .size(6f)
                     .thickness(0.05f)
                     .build();
-            hpText.render(new Matrix4f(event.getGuiGraphics().pose().last().pose()), (vec.x - width /2) + width, vec.y + BIKO_FONT.get().getMetrics().baselineHeight() * 7f);
+            hpText.render(new Matrix4f(event.getGuiGraphics().pose().last().pose()), (vec.x - width / 2) + width, vec.y + BIKO_FONT.get().getMetrics().baselineHeight() * 7f);
 
             if (isFriend) {
                 BuiltText friendText = Builder.text()
@@ -123,7 +116,6 @@ public class NameTagsModule extends Module {
                         .build();
                 friendText.render(new Matrix4f(event.getGuiGraphics().pose().last().pose()), (vec.x + width / 2) - (width + 10), vec.y + BIKO_FONT.get().getMetrics().baselineHeight() * 5f);
             }
-            //----
             float tagCenterX = (float) vec.x;
             float tagY       = (float) vec.y;
             if (pltItems.isEnabled()) {
@@ -170,7 +162,6 @@ public class NameTagsModule extends Module {
         }
         event.getGuiGraphics().pose().popPose();
     }
-
 
     public void renderitems(RenderGuiEvent event) {
         assert mc.level != null;

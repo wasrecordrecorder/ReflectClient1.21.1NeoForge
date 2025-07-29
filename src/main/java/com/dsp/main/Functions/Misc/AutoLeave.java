@@ -1,11 +1,10 @@
 package com.dsp.main.Functions.Misc;
 
-import com.dsp.main.Managers.Event.OnUpdate;
-import com.dsp.main.Managers.FrndSys.FriendManager;
+import com.dsp.main.Core.Event.OnUpdate;
+import com.dsp.main.Core.FrndSys.FriendManager;
 import com.dsp.main.Module;
-import com.dsp.main.UI.ClickGui.Settings.CheckBox;
-import com.dsp.main.UI.ClickGui.Settings.Mode;
-import com.dsp.main.Utils.Minecraft.Chat.ChatUtil;
+import com.dsp.main.UI.ClickGui.Dropdown.Settings.CheckBox;
+import com.dsp.main.UI.ClickGui.Dropdown.Settings.Mode;
 import com.dsp.main.Utils.Minecraft.Server.isPvP;
 import net.minecraft.client.gui.screens.inventory.ContainerScreen;
 import net.minecraft.client.player.AbstractClientPlayer;
@@ -13,7 +12,6 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.Slot;
 import net.neoforged.bus.api.SubscribeEvent;
-import net.neoforged.neoforge.client.event.ClientTickEvent;
 
 import java.util.List;
 

@@ -100,7 +100,7 @@ public class TargetHud extends DraggableElement {
 
     @Override
     public float getWidth() {
-        if (currentTarget == null) return MIN_WIDTH;
+        if (currentTarget == null || mc.player == null) return MIN_WIDTH;
         String nickname = currentTarget.getName().getString();
         float nicknameWidth = RUS.get().getWidth(nickname, TEXT_HEIGHT);
         if (nicknameWidth < MIN_WIDTH) {
@@ -179,7 +179,7 @@ public class TargetHud extends DraggableElement {
                 .smoothness(0.9f, 0.9f)
                 .build();
         border.render(new Matrix4f(guiGraphics.pose().last().pose()), xPos + PADDING - 1.5f, yPos + PADDING - 1.5f);
-        renderEntity(guiGraphics, xPos + PADDING, yPos + PADDING - 1.5f, (int)(MODEL_SIZE * sizeScale), currentTarget);
+        renderEntity(guiGraphics, xPos + PADDING, yPos + PADDING, (int)(MODEL_SIZE * sizeScale), currentTarget);
 
         float textX = xPos + PADDING + MODEL_SIZE + MODEL_PADDING;
         float textY = yPos + PADDING - 1.5f;

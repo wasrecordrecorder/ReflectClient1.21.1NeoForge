@@ -25,7 +25,7 @@ public class PlayerInfo extends DraggableElement {
     private static final int TEXT_HEIGHT = 10;
     private static final int PADDING = 5;
     private static final int GAP = 2;
-    private static final float ANIMATION_SPEED = 0.3f; // Controls animation smoothness (0.0 to 1.0)
+    private static final float ANIMATION_SPEED = 0.3f;
     private float currentYPos;
 
     public PlayerInfo(String name, float initialX, float initialY, boolean canBeDragged) {

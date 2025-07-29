@@ -2,6 +2,7 @@ plugins {
     id 'java-library'
     id 'maven-publish'
     id 'net.neoforged.gradle.userdev' version '7.0.189'
+    id 'com.gradleup.shadow' version '9.0.0-rc2'
 }
 
 tasks.named('wrapper', Wrapper).configure {
@@ -12,7 +13,8 @@ version = mod_version
 group = mod_group_id
 
 repositories {
-
+    mavenCentral()
+    flatDir { dirs 'libs' }
 }
 
 base {
@@ -32,7 +34,9 @@ runs {
         sourceSets.all {
             it.output.resourcesDir = it.output.classesDirs.files.iterator().next()
         }
-
+        dependencies {
+            runtime files('libs/java-discord-rpc-2.0.1-all.jar')
+        }
     }
 
     client {
@@ -59,7 +63,17 @@ configurations {
 
 dependencies {
     implementation "net.neoforged:neoforge:${neo_version}"
+    shadow files('libs/java-discord-rpc-2.0.1-all.jar')
 }
+shadowJar {
+    configurations = [project.configurations.shadow]
+    archiveClassifier.set('')
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+    exclude 'com/sun/jna/**'
+}
+tasks.build.dependsOn shadowJar
+jar.enabled = false
+
 tasks.withType(ProcessResources).configureEach {
     var replaceProperties = [
             minecraft_version      : minecraft_version,

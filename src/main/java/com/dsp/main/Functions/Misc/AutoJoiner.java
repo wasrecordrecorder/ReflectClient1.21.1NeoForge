@@ -1,15 +1,12 @@
 package com.dsp.main.Functions.Misc;
 
-import com.dsp.main.Managers.Event.OnUpdate;
+import com.dsp.main.Core.Event.OnUpdate;
 import com.dsp.main.Module;
-import com.dsp.main.UI.ClickGui.Settings.Input;
-import com.dsp.main.UI.ClickGui.Settings.Mode;
-import com.dsp.main.UI.ClickGui.Settings.Slider;
-import com.dsp.main.Utils.Minecraft.Chat.ChatUtil;
-import com.dsp.main.Utils.Minecraft.Client.InvUtil;
+import com.dsp.main.UI.ClickGui.Dropdown.Settings.Input;
+import com.dsp.main.UI.ClickGui.Dropdown.Settings.Mode;
+import com.dsp.main.UI.ClickGui.Dropdown.Settings.Slider;
 import com.dsp.main.Utils.Minecraft.Server.WhatServer;
 import com.dsp.main.Utils.TimerUtil;
-import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.network.chat.Component;
@@ -21,10 +18,8 @@ import net.minecraft.world.item.Items;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.neoforge.client.event.ClientChatReceivedEvent;
 import net.neoforged.neoforge.event.ServerChatEvent;
-import org.apache.logging.log4j.core.jmx.Server;
 
 import static com.dsp.main.Api.mc;
-import static com.dsp.main.Utils.Minecraft.Client.InvUtil.getSlotIDFromItem;
 
 public class AutoJoiner extends Module {
     private boolean isJoinedRwHub = false;

@@ -16,12 +16,18 @@ public abstract class DraggableElement {
     protected float startX, startY;
     @Expose
     protected boolean canBeDragged;
+    protected float animatedX;
+    protected float animatedY;
+    protected boolean hasAnimated;
 
     public DraggableElement(String name, float initialX, float initialY, boolean canBeDragged) {
         this.name = name;
         this.xPos = initialX;
         this.yPos = initialY;
         this.canBeDragged = canBeDragged;
+        this.animatedX = initialX;
+        this.animatedY = initialY;
+        this.hasAnimated = false;
     }
 
     public float getX() { return xPos; }
@@ -47,6 +53,8 @@ public abstract class DraggableElement {
             float[] snappedPos = DragManager.snapToGrid(rawX, rawY, getWidth(), getHeight(), maxX, maxY);
             xPos = Math.max(0, Math.min(snappedPos[0], maxX));
             yPos = Math.max(0, Math.min(snappedPos[1], maxY));
+            animatedX = xPos;
+            animatedY = yPos;
         }
     }
 
@@ -55,6 +63,8 @@ public abstract class DraggableElement {
             dragging = true;
             startX = (float) (mouseX - xPos);
             startY = (float) (mouseY - yPos);
+            animatedX = xPos;
+            animatedY = yPos;
         }
     }
 
@@ -75,4 +85,14 @@ public abstract class DraggableElement {
     }
 
     public abstract void render(GuiGraphics guiGraphics);
+
+    public void updateAnimation(float deltaTime) {
+        float speed = 12f;
+        animatedX = lerp(animatedX, getX(), deltaTime * speed);
+        animatedY = lerp(animatedY, getY(), deltaTime * speed);
+    }
+
+    private float lerp(float start, float end, float t) {
+        return start + (end - start) * t;
+    }
 }

@@ -1,11 +1,11 @@
 package com.dsp.main.Functions.Combat;
 
-import com.dsp.main.Managers.Event.OnUpdate;
-import com.dsp.main.Managers.FrndSys.FriendManager;
+import com.dsp.main.Core.Event.OnUpdate;
+import com.dsp.main.Core.FrndSys.FriendManager;
 import com.dsp.main.Module;
-import com.dsp.main.UI.ClickGui.Settings.CheckBox;
-import com.dsp.main.UI.ClickGui.Settings.MultiCheckBox;
-import com.dsp.main.UI.ClickGui.Settings.Slider;
+import com.dsp.main.UI.ClickGui.Dropdown.Settings.CheckBox;
+import com.dsp.main.UI.ClickGui.Dropdown.Settings.MultiCheckBox;
+import com.dsp.main.UI.ClickGui.Dropdown.Settings.Slider;
 import net.minecraft.client.Minecraft;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.entity.Entity;
@@ -14,12 +14,12 @@ import net.minecraft.world.entity.animal.Animal;
 import net.minecraft.world.entity.monster.Monster;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
 import net.minecraft.world.level.ClipContext;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.HitResult;
 import net.minecraft.world.phys.Vec3;
 import net.neoforged.bus.api.SubscribeEvent;
-import net.neoforged.neoforge.client.event.ClientTickEvent;
 
 import java.util.Arrays;
 import java.util.Comparator;
@@ -31,6 +31,10 @@ import static com.dsp.main.Utils.Minecraft.Client.ClientPlayerUtil.*;
 
 public class TriggerBot extends Module {
     private static Slider attackDistance = new Slider("Attack Distance", 1, 6, 3, 1);
+    private boolean isBreakingShield = false;
+    private int shieldBreakTicks = 0;
+    private ItemStack rememberedItem = ItemStack.EMPTY;
+
     public static MultiCheckBox Targets = new MultiCheckBox("Targets", Arrays.asList(
             new CheckBox("Friends", false),
             new CheckBox("Invisible", false),
@@ -42,7 +46,8 @@ public class TriggerBot extends Module {
     public static MultiCheckBox Options = new MultiCheckBox("Options", Arrays.asList(
             new CheckBox("Don't attack if using item", false),
             new CheckBox("Only Crit", false),
-            new CheckBox("Wall Check", false)
+            new CheckBox("Wall Check", false),
+            new CheckBox("Break Shield", false)
     ));
 
     public TriggerBot() {
@@ -166,6 +171,53 @@ public class TriggerBot extends Module {
             if (mc.gameMode != null) {
                 mc.gameMode.attack(player, target);
                 mc.player.swing(InteractionHand.MAIN_HAND);
+            }
+        }
+        if (Options.isOptionEnabled("Break Shield") && target instanceof Player targetPlayer) {
+            if (targetPlayer.isBlocking() && targetPlayer.isUsingItem()) {
+                int axeSlot = -1;
+                for (int i = 0; i < 9; i++) {
+                    ItemStack stack = mc.player.getInventory().getItem(i);
+                    if (stack.getItem() == Items.NETHERITE_AXE ||
+                            stack.getItem() == Items.DIAMOND_AXE   ||
+                            stack.getItem() == Items.IRON_AXE      ||
+                            stack.getItem() == Items.GOLDEN_AXE    ||
+                            stack.getItem() == Items.STONE_AXE     ||
+                            stack.getItem() == Items.WOODEN_AXE) {
+                        axeSlot = i;
+                        break;
+                    }
+                }
+
+                if (!isBreakingShield && axeSlot != -1) {
+                    rememberedItem = mc.player.getMainHandItem().copy();
+                    mc.player.getInventory().selected = axeSlot;
+                    isBreakingShield = true;
+                    shieldBreakTicks = 0;
+                }
+
+                if (isBreakingShield) {
+                    if (shieldBreakTicks >= 2) {
+                        if (mc.gameMode != null) {
+                            mc.gameMode.attack(mc.player, target);
+                            mc.player.swing(InteractionHand.MAIN_HAND);
+                        }
+                        shieldBreakTicks = 0;
+                    } else {
+                        shieldBreakTicks++;
+                    }
+                    return;
+                }
+
+            } else if (isBreakingShield) {
+                for (int i = 0; i < 9; i++) {
+                    if (ItemStack.matches(mc.player.getInventory().getItem(i), rememberedItem)) {
+                        mc.player.getInventory().selected = i;
+                        break;
+                    }
+                }
+                isBreakingShield = false;
+                shieldBreakTicks = 0;
             }
         }
     }

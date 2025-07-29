@@ -8,6 +8,9 @@ import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonWriter;
 import com.mojang.blaze3d.platform.Window;
 import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.util.Mth;
+
+import java.awt.*;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -18,10 +21,14 @@ import static com.dsp.main.Functions.Render.HudElement.snapGride;
 
 public class DragManager {
     public static HashMap<String, DraggableElement> draggables = new HashMap<>();
+    private static final int DIM_COLOR = new Color(0,0,0, 220).getRGB();
+    private static float dimAlpha = 0f;
     private static final float GRID_SIZE = 20.0f;
     private static final float SNAP_THRESHOLD = 5.0f;
     private static final int GRID_COLOR = 0xCCFFFFFF;
-
+    private static float gridAlpha = 0f;
+    private static boolean wasDragging = false;
+    private static final float GRID_FADE_SPEED = 0.05f;
     private static final Path CONFIG_DIR = Paths.get(System.getenv("APPDATA"), "Some");
     private static final Path DRAG_DATA = CONFIG_DIR.resolve("dragg.rfcl");
     private static final Gson GSON = new GsonBuilder()
@@ -94,18 +101,49 @@ public class DragManager {
     }
 
     public static void renderGrid(GuiGraphics guiGraphics, Window window) {
-        if (!isAnyDragging() || !snapGride.isEnabled()) {
-            return;
+        boolean isDragging = isAnyDragging();
+
+        if (isDragging) {
+            wasDragging = true;
         }
 
-        int width = window.getGuiScaledWidth();
+        if (!isDragging && wasDragging) {
+            gridAlpha  -= GRID_FADE_SPEED;
+            dimAlpha   -= GRID_FADE_SPEED;
+            if (gridAlpha <= 0f) {
+                gridAlpha = 0f;
+                dimAlpha  = 0f;
+                wasDragging = false;
+            }
+        } else if (isDragging) {
+            gridAlpha += GRID_FADE_SPEED;
+            dimAlpha  += GRID_FADE_SPEED;
+        }
+
+        gridAlpha = Mth.clamp(gridAlpha, 0f, 1f);
+        dimAlpha  = Mth.clamp(dimAlpha,  0f, 0.5f);
+        if (dimAlpha > 0.01f) {
+            int w = window.getGuiScaledWidth();
+            int h = window.getGuiScaledHeight();
+            int c = fastColor(DIM_COLOR, dimAlpha);
+            guiGraphics.fill(0, 0, w, h, c);
+        }
+        if (gridAlpha <= 0.01f || !snapGride.isEnabled()) return;
+
+        int width  = window.getGuiScaledWidth();
         int height = window.getGuiScaledHeight();
+        int color  = fastColor(GRID_COLOR, gridAlpha);
+
         for (float x = 0; x <= width; x += GRID_SIZE) {
-            guiGraphics.vLine((int)x, 0, height, GRID_COLOR);
+            guiGraphics.vLine((int)x, 0, height, color);
         }
         for (float y = 0; y <= height; y += GRID_SIZE) {
-            guiGraphics.hLine(0, width, (int)y, GRID_COLOR);
+            guiGraphics.hLine(0, width, (int)y, color);
         }
+    }
+    private static int fastColor(int argb, float alpha) {
+        int a = (int)(alpha * 255) << 24;
+        return a | (argb & 0x00FFFFFF);
     }
 
     public static float[] snapToGrid(float x, float y, float width, float height, float maxX, float maxY) {
@@ -210,6 +248,7 @@ public class DragManager {
                 case "Cooldowns" -> new Cooldowns(name, xPos, yPos, canBeDragged);
                 case "TargetHud" -> new TargetHud(name, xPos, yPos, canBeDragged);
                 case "StaffList" -> new StaffList(name, xPos, yPos, canBeDragged);
+                case "InventoryHud" -> new InventoryHud(name, xPos, yPos, canBeDragged);
                 default -> null;
             };
         }

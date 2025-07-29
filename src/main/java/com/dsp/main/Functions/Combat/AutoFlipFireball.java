@@ -1,10 +1,10 @@
 package com.dsp.main.Functions.Combat;
 
-import com.dsp.main.Managers.Event.MoveInputEvent;
-import com.dsp.main.Managers.FreeLook;
+import com.dsp.main.Core.Event.MoveInputEvent;
+import com.dsp.main.Core.Other.FreeLook;
 import com.dsp.main.Module;
-import com.dsp.main.UI.ClickGui.Settings.CheckBox;
-import com.dsp.main.UI.ClickGui.Settings.Slider;
+import com.dsp.main.UI.ClickGui.Dropdown.Settings.CheckBox;
+import com.dsp.main.UI.ClickGui.Dropdown.Settings.Slider;
 import com.dsp.main.Utils.Minecraft.Client.MoveUtil;
 import com.dsp.main.Utils.TimerUtil;
 import net.minecraft.client.Minecraft;
@@ -17,8 +17,9 @@ import net.minecraft.world.phys.Vec3;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.neoforge.client.event.RenderFrameEvent;
 
-import static com.dsp.main.Managers.FreeLook.enableFreeLook;
-import static com.dsp.main.Managers.FreeLook.getCameraYaw;
+import static com.dsp.main.Core.Other.FreeLook.enableFreeLook;
+import static com.dsp.main.Core.Other.FreeLook.getCameraYaw;
+import static com.dsp.main.Utils.Minecraft.Client.InvUtil.requestFreeLook;
 
 public class AutoFlipFireball extends Module {
     private static Fireball closestFireball = null;
@@ -56,7 +57,7 @@ public class AutoFlipFireball extends Module {
                 closestFireball = fireball;
             }
         }
-        if (closestFireball == null) return;
+        if (closestFireball == null || requestFreeLook) return;
 
         if (rot.isEnabled()) {
             isFlippingFireball = true;
