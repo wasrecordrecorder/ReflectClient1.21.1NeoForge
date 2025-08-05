@@ -109,7 +109,7 @@ public class LocalPlayerMixin {
             cancellable = true
     )
     public void dowod(boolean fullStack, CallbackInfoReturnable<Boolean> ci) {
-        if (isSlotLocked(mc.player.getInventory().selected)) {
+        if (isSlotLocked(mc.player.getInventory().selected) && Api.isEnabled("Lock Slot")) {
             ci.cancel();
         }
     }

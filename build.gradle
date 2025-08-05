@@ -36,6 +36,7 @@ runs {
         }
         dependencies {
             runtime files('libs/java-discord-rpc-2.0.1-all.jar')
+            runtime files('libs/baritone-api-neoforge-1.11.2.jar')
         }
     }
 
@@ -63,13 +64,20 @@ configurations {
 
 dependencies {
     implementation "net.neoforged:neoforge:${neo_version}"
+    implementation "ai.catboost:catboost-prediction:1.2.8"
+    shadow "ai.catboost:catboost-prediction:1.2.8"
+    shadow files('libs/baritone-api-neoforge-1.11.2.jar')
     shadow files('libs/java-discord-rpc-2.0.1-all.jar')
 }
 shadowJar {
     configurations = [project.configurations.shadow]
     archiveClassifier.set('')
     duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+    exclude 'baritone/launch/BaritoneForgeModXD.class'
     exclude 'com/sun/jna/**'
+    exclude 'javax/annotation/**'
+    exclude 'org/slf4j/**'
+    exclude 'META-INF/maven/com.google.code.findbugs/**'
 }
 tasks.build.dependsOn shadowJar
 jar.enabled = false

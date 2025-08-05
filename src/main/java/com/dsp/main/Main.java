@@ -1,5 +1,6 @@
 package com.dsp.main;
 
+import baritone.api.BaritoneAPI;
 import com.dsp.main.Core.ChatManager.ChatManager;
 import com.dsp.main.Core.Discord.DiscordRPC;
 import com.dsp.main.Core.Other.FreeLook;
@@ -15,6 +16,9 @@ import net.neoforged.fml.common.Mod;
 import net.neoforged.neoforge.common.NeoForge;
 import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
+import ai.catboost.CatBoostModel;
+
+import static com.dsp.main.Api.mc;
 
 @Mod(Main.MODID)
 public class Main {
@@ -39,7 +43,7 @@ public class Main {
         DragManager.addDraggable(new StaffList("StaffList", 100 ,180, true));
         DragManager.addDraggable(new InventoryHud("InventoryHud", 100, 200, true));
         DragManager.init();
-
+        BaritoneAPI.getProvider().createBaritone(mc);
         DiscordRPC.startDiscordRPC();
 
         // Utils event Bus
