@@ -12,10 +12,7 @@ import org.lwjgl.opengl.GL30;
 public class BlurShader extends Shader {
     private final Uniform uSize;
     private final Uniform uLocation;
-    private final Uniform topLeftRadius;
-    private final Uniform topRightRadius;
-    private final Uniform bottomRightRadius;
-    private final Uniform bottomLeftRadius;
+    private final Uniform radius;
     private final Uniform inputResolution;
     private final Uniform brightness;
     private final Uniform quality;
@@ -31,47 +28,29 @@ public class BlurShader extends Shader {
         this.color1 = uniform("color1");
         this.uSize = uniform("uSize");
         this.uLocation = uniform("uLocation");
-        this.topLeftRadius = uniform("topLeftRadius");
-        this.topRightRadius = uniform("topRightRadius");
-        this.bottomRightRadius = uniform("bottomRightRadius");
-        this.bottomLeftRadius = uniform("bottomLeftRadius");
+        this.radius = uniform("radius");
         this.window = Minecraft.getInstance().getWindow();
         this.input = new TextureTarget(window.getWidth(), window.getHeight(), false, Minecraft.ON_OSX);
+
     }
 
     public static void setupBuffer(RenderTarget frameBuffer) {
-        if (frameBuffer.width != Minecraft.getInstance().getMainRenderTarget().width || frameBuffer.height != Minecraft.getInstance().getMainRenderTarget().height) {
+        if (frameBuffer.width != Minecraft.getInstance().getMainRenderTarget().width || frameBuffer.height != (Minecraft.getInstance().getMainRenderTarget().height)) {
             frameBuffer.resize(Minecraft.getInstance().getMainRenderTarget().width, Minecraft.getInstance().getMainRenderTarget().height, Minecraft.ON_OSX);
         } else {
             frameBuffer.clear(Minecraft.ON_OSX);
         }
+
     }
 
-    public void setParameters(float x, float y, float width, float height, float radius, int color, float blurStrength, float blurOpacity) {
+    public void setParameters(float f, float f2, float f3, float f4, float f5, int color, float f6, float f7) {
         setupBuffer(input);
-        float guiScale = (float) window.getGuiScale();
-        topLeftRadius.set(radius * guiScale);
-        topRightRadius.set(radius * guiScale);
-        bottomRightRadius.set(radius * guiScale);
-        bottomLeftRadius.set(radius * guiScale);
-        uLocation.set(x * guiScale, -y * guiScale + (float) window.getGuiScaledHeight() * guiScale - height * guiScale);
-        uSize.set(width * guiScale, height * guiScale);
-        brightness.set(blurOpacity);
-        quality.set(blurStrength);
-        color1.set(ColorUtil.r(color), ColorUtil.g(color), ColorUtil.b(color), ColorUtil.a(color));
-    }
-
-    public void setParameters(float x, float y, float width, float height, float topLeftRadiusValue, float topRightRadiusValue, float bottomRightRadiusValue, float bottomLeftRadiusValue, int color, float blurStrength, float blurOpacity) {
-        setupBuffer(input);
-        float guiScale = (float) window.getGuiScale();
-        topLeftRadius.set(topLeftRadiusValue * guiScale);
-        topRightRadius.set(topRightRadiusValue * guiScale);
-        bottomRightRadius.set(bottomRightRadiusValue * guiScale);
-        bottomLeftRadius.set(bottomLeftRadiusValue * guiScale);
-        uLocation.set(x * guiScale, -y * guiScale + (float) window.getGuiScaledHeight() * guiScale - height * guiScale);
-        uSize.set(width * guiScale, height * guiScale);
-        brightness.set(blurOpacity);
-        quality.set(blurStrength);
+        float f8 = (float) window.getGuiScale();
+        radius.set(f5 * f8);
+        uLocation.set(f * f8, -f2 * f8 + (float) window.getGuiScaledHeight() * f8 - f4 * f8);
+        uSize.set(f3 * f8, f4 * f8);
+        brightness.set(f7);
+        quality.set(f6);
         color1.set(ColorUtil.r(color), ColorUtil.g(color), ColorUtil.b(color), ColorUtil.a(color));
     }
 

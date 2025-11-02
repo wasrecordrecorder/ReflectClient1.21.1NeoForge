@@ -18,7 +18,7 @@ public class ClientPlayerUtil {
                 || mc.player.isPassenger();
         boolean onGround = mc.player.onGround();
         float attackStrength = mc.player.getAttackStrengthScale(1.0f);
-        return !cancelReason && attackStrength >= 0.92 && !onGround && mc.player.fallDistance > 0;
+        return !cancelReason && attackStrength >= 0.85 && !onGround && mc.player.fallDistance > 0;
     }
     public static boolean isMoving() {
         Vec2 vector2f = mc.player.input.getMoveVector();

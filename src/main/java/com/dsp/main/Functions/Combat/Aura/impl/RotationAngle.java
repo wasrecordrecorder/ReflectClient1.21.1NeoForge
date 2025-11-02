@@ -6,6 +6,7 @@ import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
+import org.joml.Vector2f;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -14,6 +15,14 @@ import static com.dsp.main.Api.mc;
 
 public abstract class RotationAngle {
     private static final Map<String, RotationAngle> REGISTRY = new HashMap<>();
+    protected Vector2f rotation;
+    public float getYaw() {
+        return rotation.x;
+    }
+
+    public float getPitch() {
+        return rotation.y;
+    }
     public static void registerRotation(String name, RotationAngle rotation) {
         REGISTRY.put(name, rotation);
     }

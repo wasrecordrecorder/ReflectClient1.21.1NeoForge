@@ -58,6 +58,7 @@ public class Frame {
     private long animationStart = -1;
     private int startX;
     private int startY;
+    private float closeOffsetY = 0f;
 
     public Frame(int x, int y, int height, Module.Category category, int index, float scaleFactor) {
         this.scaleFactor = scaleFactor;
@@ -110,12 +111,12 @@ public class Frame {
         float currentProgress = prevEased + (eased - prevEased) * partialTicks;
 
         currentX = (int) overshootLerp(startX, finalX, currentProgress);
-        currentY = (int) overshootLerp(startY, finalY, currentProgress);
+        currentY = (int) overshootLerp(startY, finalY + closeOffsetY, currentProgress);
 
-        /* ---------- Scroll animation ---------- */
         scrollOffset = lerp(scrollOffset, targetScrollOffset, SCROLL_ANIMATION_SPEED * partialTicks);
 
-        /* ---------- Render components ---------- */
+        validateScrollOffset();
+
         renderFrameBackground(guiGraphics);
         renderTitle(guiGraphics);
         renderButtons(guiGraphics, mouseX, mouseY, partialTicks);
@@ -131,7 +132,7 @@ public class Frame {
                 currentY,
                 (int) (width + 4 * scaleFactor),
                 (int) (frameHeight + 4 * scaleFactor),
-                ROUNDING * scaleFactor,
+                (ROUNDING - 2) * scaleFactor,
                 new Color(5, 15, 25).hashCode(),
                 90,
                 0.6f);
@@ -245,6 +246,27 @@ public class Frame {
                 0.7f
         );
     }
+
+    public void validateScrollOffset() {
+        List<Button> visibleButtons = visible();
+        int totalContentHeight = visibleButtons.stream()
+                .mapToInt(b -> (int) (b.getHeightWithComponents() + BUTTON_PADDING * scaleFactor))
+                .sum() - (int) (BUTTON_PADDING * scaleFactor);
+        int visibleContentHeight = Math.min(totalContentHeight, (int) (maxVisibleHeight - 5 * scaleFactor));
+        int maxScrollOffset = Math.max(0, totalContentHeight - visibleContentHeight);
+
+        if (targetScrollOffset > maxScrollOffset) {
+            targetScrollOffset = maxScrollOffset;
+        }
+        if (scrollOffset > maxScrollOffset) {
+            scrollOffset = maxScrollOffset;
+        }
+        if (totalContentHeight <= visibleContentHeight) {
+            targetScrollOffset = 0;
+            scrollOffset = 0;
+        }
+    }
+
     private List<Button> visible() {
         return buttons.stream()
                 .filter(b -> b.getModule().getName().toLowerCase()
@@ -307,7 +329,8 @@ public class Frame {
     }
 
     private float lerp(float start, float end, float t) {
-        return start + t * (end - start);
+        t = Math.min(1F, t * 2.5F);
+        return start + (end - start) * t;
     }
 
     public int getX() { return currentX; }
@@ -321,11 +344,17 @@ public class Frame {
 
     public void setSearchQuery(String query) {
         this.searchQuery = query;
+        validateScrollOffset();
     }
+
     private float overshootLerp(float start, float end, float t) {
         t = Math.max(0, Math.min(1, t));
         t = t * t * t * (t * (t * 6 - 15) + 10);
         float overshoot = (t - 1) * (t - 1) * ((OVERSHOOT_TENSION + 1) * (t - 1) + OVERSHOOT_TENSION) + 1;
         return start + (end - start) * overshoot;
+    }
+
+    public void setCloseOffsetY(float offset) {
+        this.closeOffsetY = offset;
     }
 }

@@ -15,8 +15,8 @@ import org.joml.Matrix4f;
 import org.lwjgl.glfw.GLFW;
 
 import java.awt.Color;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
+import java.util.stream.Collectors;
 
 import static com.dsp.main.Api.mc;
 import static com.dsp.main.Main.BIKO_FONT;
@@ -26,13 +26,19 @@ public class ClickGuiScreen extends Screen {
     private static final List<Frame> categoryFrames = new ArrayList<>();
     private static float scaleFactor = 1f;
     private static String searchQuery = "";
-    private boolean isSearchActive = true;
+    private boolean searchEnabled = false;
     private ThemesFrame themesFrame = null;
     private boolean isThemesFrameVisible = false;
 
-    // --- closing animation ---
     private long closeStart = -1;
-    private float closePartialTicks = 0f;
+    private boolean closing = false;
+    private List<Integer> framesCloseOrder = new ArrayList<>();
+    private Map<Integer, Long> frameCloseStart = new HashMap<>();
+    private static final long FRAME_CLOSE_INTERVAL = 80L;
+    private static final long FRAME_ANIM_DURATION = 150L;
+    private float searchAnimProgress = 0f;
+    private boolean searchVisible = false;
+    private static final float SEARCH_ANIM_SPEED = 0.15f;
 
     public ClickGuiScreen() {
         super(Component.literal("ClickGUI"));
@@ -73,62 +79,85 @@ public class ClickGuiScreen extends Screen {
 
     @Override
     public void onClose() {
-        if (closeStart == -1) {
-            closeStart = System.currentTimeMillis();
+        if (!closing) {
+            closing = true;
+            framesCloseOrder.clear();
+            for (int i = 0; i < categoryFrames.size(); i++) framesCloseOrder.add(i);
+            Collections.shuffle(framesCloseOrder);
+            long now = System.currentTimeMillis();
+            for (int i = 0; i < framesCloseOrder.size(); i++) {
+                frameCloseStart.put(framesCloseOrder.get(i), now + i * FRAME_CLOSE_INTERVAL);
+            }
+            searchVisible = false;
         }
     }
 
     @Override
     public void render(@NotNull GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTicks) {
-        // ----- closing animation bookkeeping -----
-        if (closeStart != -1) {
-            closePartialTicks = (System.currentTimeMillis() - closeStart + partialTicks * 50f) / 200f;
-            if (closePartialTicks >= 1f) {
-                closeStart = -1;
-                closePartialTicks = 0f;
+        if (closing) {
+            boolean allDone = true;
+            long now = System.currentTimeMillis();
+            for (int i = 0; i < categoryFrames.size(); i++) {
+                Frame f = categoryFrames.get(i);
+                Long start = frameCloseStart.get(i);
+                if (start != null) {
+                    float animProgress = (now - start) / (float) FRAME_ANIM_DURATION;
+                    if (animProgress < 1f) {
+                        allDone = false;
+                        animProgress = Math.max(0, Math.min(animProgress, 1f));
+                        f.setCloseOffsetY(-animProgress * 600f);
+                    } else {
+                        f.setCloseOffsetY(-600f);
+                    }
+                }
+            }
+            if (allDone) {
                 super.onClose();
                 mc.setScreen(null);
                 return;
             }
         }
 
-        // ----- apply transform -----
-        guiGraphics.pose().pushPose();
-        float scale = closeStart == -1 ? 1f : 1f - closePartialTicks;
-
-        int cx = mc.getWindow().getGuiScaledWidth() / 2;
-        int cy = mc.getWindow().getGuiScaledHeight() / 2;
-
-        guiGraphics.pose().translate(cx, cy, 0);
-        guiGraphics.pose().scale(scale, scale, 1f);
-        guiGraphics.pose().translate(-cx, -cy, 0);
-        int screenW = mc.getWindow().getGuiScaledWidth();
-        int screenH = mc.getWindow().getGuiScaledHeight();
-
-        int clipW = (int) (screenW * scale);
-        int clipH = (int) (screenH * scale);
-        int clipX = (screenW - clipW) / 2;
-        int clipY = (screenH - clipH) / 2;
-
-        guiGraphics.enableScissor(clipX, clipY, clipX + clipW, clipY + clipH);
-
-        // ----- existing rendering -----
         this.renderBlurredBackground(partialTicks);
-        int shadowColor = 0x80000000;
-        DrawHelper.rectangle(guiGraphics.pose(), 0, 0, mc.getWindow().getGuiScaledWidth(), mc.getWindow().getGuiScaledHeight(), 0, shadowColor);
+        DrawHelper.rectangle(guiGraphics.pose(), 0, 0,
+                mc.getWindow().getGuiScaledWidth(),
+                mc.getWindow().getGuiScaledHeight(), 0, 0x80000000);
+
         renderThemesButton(guiGraphics, mouseX, mouseY);
-        renderSearchField(guiGraphics);
+        if (searchVisible) {
+            searchAnimProgress += SEARCH_ANIM_SPEED;
+            if (searchAnimProgress > 1f) searchAnimProgress = 1f;
+        } else {
+            searchAnimProgress -= SEARCH_ANIM_SPEED;
+            if (searchAnimProgress < 0f) searchAnimProgress = 0f;
+        }
+        if (searchAnimProgress > 0.01f) {
+            renderSearchField(guiGraphics);
+        }
 
         for (Frame frame : categoryFrames) {
             frame.setSearchQuery(searchQuery);
             frame.render(guiGraphics, mouseX, mouseY, partialTicks);
         }
-        if (isThemesFrameVisible) {
-            themesFrame.render(guiGraphics, mouseX, mouseY, partialTicks);
-        }
+        if (isThemesFrameVisible) themesFrame.render(guiGraphics, mouseX, mouseY, partialTicks);
+        BuiltText text = Builder.text()
+                .font(BIKO_FONT.get())
+                .text("Press 'Ctrl + F' to enable search")
+                .color(Color.WHITE)
+                .size(7f)
+                .thickness(0.05f)
+                .build();
+        BuiltText text1 = Builder.text()
+                .font(BIKO_FONT.get())
+                .text("Press Enter to enable the module you are looking for")
+                .color(Color.WHITE)
+                .size(7f)
+                .thickness(0.05f)
+                .build();
+
+        text.render(new Matrix4f(), 10, 10);
+        text1.render(new Matrix4f(), 10, 20);
         super.render(guiGraphics, mouseX, mouseY, partialTicks);
-        guiGraphics.disableScissor();
-        guiGraphics.pose().popPose();
     }
 
     private void renderThemesButton(GuiGraphics guiGraphics, int mouseX, int mouseY) {
@@ -152,41 +181,47 @@ public class ClickGuiScreen extends Screen {
 
     private void renderSearchField(GuiGraphics guiGraphics) {
         int screenWidth = mc.getWindow().getGuiScaledWidth();
-        int searchFieldWidth = (int) (200 * scaleFactor);
-        int searchFieldHeight = (int) (20 * scaleFactor);
+        int searchFieldWidth = (int) (200 * scaleFactor * searchAnimProgress);
+        int searchFieldHeight = (int) (20 * scaleFactor * searchAnimProgress);
         int searchFieldX = (screenWidth - searchFieldWidth) / 2;
         int searchFieldY = (int) (30 * scaleFactor);
-        DrawShader.drawRoundBlur(guiGraphics.pose(), searchFieldX, searchFieldY, searchFieldWidth, searchFieldHeight, 6 * scaleFactor, new Color(5, 15, 45).hashCode(), 90, 0.6f);
-        if (searchQuery.isEmpty()) {
-            BuiltText searchText = Builder.text()
-                    .font(BIKO_FONT.get())
-                    .text("Search")
-                    .color(new Color(150, 150, 150).getRGB())
-                    .size(9f * scaleFactor)
-                    .thickness(0.05f)
-                    .build();
-            searchText.render(new Matrix4f(), searchFieldX + (int) (5 * scaleFactor), searchFieldY + 1 + (int) (5 * scaleFactor));
-        } else {
-            BuiltText queryText = Builder.text()
-                    .font(BIKO_FONT.get())
-                    .text(searchQuery)
-                    .color(Color.WHITE.getRGB())
-                    .size(9f * scaleFactor)
-                    .thickness(0.05f)
-                    .build();
-            queryText.render(new Matrix4f(), searchFieldX + (int) (5 * scaleFactor), searchFieldY + 1 + (int) (5 * scaleFactor));
-        }
+        int alpha = (int) (255 * searchAnimProgress);
+        Color bgColor = new Color(5, 15, 45, alpha);
 
-        BuiltText icon = Builder.text()
-                .font(ICONS.get())
-                .text("k")
-                .color(Color.WHITE.getRGB())
-                .size(10f * scaleFactor)
-                .thickness(0.05f)
-                .build();
-        int iconX = searchFieldX + searchFieldWidth - (int) (15 * scaleFactor);
-        int iconY = searchFieldY + (int) (5 * scaleFactor);
-        icon.render(new Matrix4f(), iconX, iconY);
+        DrawShader.drawRoundBlur(guiGraphics.pose(), searchFieldX, searchFieldY, searchFieldWidth, searchFieldHeight, 6 * scaleFactor, bgColor.getRGB(), 90, 0.6f);
+
+        if (searchAnimProgress > 0.6f) {
+            if (searchQuery.isEmpty()) {
+                BuiltText searchText = Builder.text()
+                        .font(BIKO_FONT.get())
+                        .text("Search")
+                        .color(new Color(150, 150, 150, alpha).getRGB())
+                        .size(9f * scaleFactor)
+                        .thickness(0.05f)
+                        .build();
+                searchText.render(new Matrix4f(), searchFieldX + (int) (5 * scaleFactor), searchFieldY + 1 + (int) (5 * scaleFactor));
+            } else {
+                BuiltText queryText = Builder.text()
+                        .font(BIKO_FONT.get())
+                        .text(searchQuery)
+                        .color(new Color(255, 255, 255, alpha).getRGB())
+                        .size(9f * scaleFactor)
+                        .thickness(0.05f)
+                        .build();
+                queryText.render(new Matrix4f(), searchFieldX + (int) (5 * scaleFactor), searchFieldY + 1 + (int) (5 * scaleFactor));
+            }
+
+            BuiltText icon = Builder.text()
+                    .font(ICONS.get())
+                    .text("k")
+                    .color(new Color(255, 255, 255, alpha).getRGB())
+                    .size(10f * scaleFactor)
+                    .thickness(0.05f)
+                    .build();
+            int iconX = searchFieldX + searchFieldWidth - (int) (15 * scaleFactor);
+            int iconY = searchFieldY + (int) (5 * scaleFactor);
+            icon.render(new Matrix4f(), iconX, iconY);
+        }
     }
 
     @Override
@@ -258,13 +293,37 @@ public class ClickGuiScreen extends Screen {
                 .flatMap(f -> f.getButtons().stream())
                 .flatMap(b -> b.getComponents().stream())
                 .anyMatch(com.dsp.main.UI.ClickGui.Dropdown.Components.Component::isInputActive);
-        isSearchActive = !anyBindingActive && !anyInputActive;
 
-        if (isSearchActive) {
+        if (!searchEnabled && keyCode == GLFW.GLFW_KEY_F && (modifiers & GLFW.GLFW_MOD_CONTROL) != 0) {
+            searchEnabled = true;
+            searchVisible = true;
+            searchQuery = "";
+            return true;
+        }
+
+        if (searchEnabled) {
+            if (keyCode == GLFW.GLFW_KEY_ENTER) {
+                List<Button> visible = categoryFrames.stream()
+                        .flatMap(f -> f.getButtons().stream())
+                        .filter(b -> b.getModule().getName().toLowerCase().contains(searchQuery.toLowerCase()))
+                        .collect(Collectors.toList());
+                if (visible.size() == 1) {
+                    visible.get(0).getModule().toggle();
+                }
+                searchEnabled = false;
+                searchVisible = false;
+                searchQuery = "";
+                return true;
+            }
             if (keyCode == GLFW.GLFW_KEY_BACKSPACE) {
                 if (!searchQuery.isEmpty()) {
                     searchQuery = searchQuery.substring(0, searchQuery.length() - 1);
+                    if (searchQuery.isEmpty()) {
+                        searchEnabled = false;
+                        searchVisible = false;
+                    }
                 }
+                return true;
             } else {
                 char typedChar = getCharFromKey(keyCode);
                 if (typedChar != 0) {

@@ -4,28 +4,17 @@ import com.mojang.blaze3d.platform.Window;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.*;
 import com.mojang.math.Axis;
-import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.GameRenderer;
-import net.minecraft.client.renderer.MultiBufferSource;
-import net.minecraft.client.renderer.RenderType;
-import net.minecraft.core.BlockPos;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.Mth;
-import net.minecraft.world.entity.Pose;
 import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.phys.AABB;
-import net.minecraft.world.phys.Vec3;
 import org.joml.*;
-import org.lwjgl.opengl.GL11;
-
 
 import java.awt.*;
-import java.lang.Math;
 import java.util.Objects;
 
 public class DrawHelper implements Mine {
     static Shader RECTANGLE_SHADER = Shader.create("rectangle", DefaultVertexFormat.POSITION_TEX);
-
 
     public static void scale(PoseStack ms, float posX, float posY, float width, float height, float scale, Runnable runnable) {
         float centerX = posX + width / 2;
@@ -53,12 +42,10 @@ public class DrawHelper implements Mine {
         float centerX = posX + width / 2;
         float centerY = posY + height / 2;
 
-        // ms.pushPose();
         ms.translate(centerX, centerY, 0);
         ms.scale(scale, scale, scale);
         ms.translate(-centerX, -centerY, 0);
         runnable.run();
-        //ms.popPose();
     }
 
     public static void rotate(Matrix4f ms, float posX, float posY, float width, float height, float angleDegrees, Runnable runnable) {
@@ -127,7 +114,6 @@ public class DrawHelper implements Mine {
         Matrix4f model = matrices.last().pose();
         BufferBuilder bufferBuilder = tessellator.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION);
 
-
         bufferBuilder.addVertex(model, x, y, 0);
         bufferBuilder.addVertex(model, x, y + height, 0);
         bufferBuilder.addVertex(model, x + width, y + height, 0);
@@ -190,7 +176,6 @@ public class DrawHelper implements Mine {
         Matrix4f model = matrices.last().pose();
         BufferBuilder bufferBuilder = tessellator.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION);
 
-
         bufferBuilder.addVertex(model, x, y, 0);
         bufferBuilder.addVertex(model, x, y + height, 0);
         bufferBuilder.addVertex(model, x + width, y + height, 0);
@@ -202,8 +187,6 @@ public class DrawHelper implements Mine {
 
         RenderSystem.disableBlend();
     }
-
-
 
     public static void drawTexture(ResourceLocation resourceLocation, Matrix4f matrix4f, float x, float y, float width, float height) {
         RenderSystem.setShaderTexture(0, resourceLocation);
@@ -220,8 +203,6 @@ public class DrawHelper implements Mine {
         bufferBuilder.addVertex(matrix, x + width, y, 0).setUv(1.0F, 0.0F);
         BufferUploader.drawWithShader(bufferBuilder.buildOrThrow());
     }
-
-
 
     public static void drawHead(PoseStack ms, Player player, float x, float y, float width, float height) {
         ResourceLocation texture = Objects.requireNonNull((Objects.requireNonNull(mc.getConnection())).getPlayerInfo(player.getUUID())).getSkin().texture();
@@ -293,7 +274,6 @@ public class DrawHelper implements Mine {
         Matrix4f model = matrices.last().pose();
         BufferBuilder bufferBuilder = tessellator.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION);
 
-
         bufferBuilder.addVertex(model, x, y, 0);
         bufferBuilder.addVertex(model, x, y + height, 0);
         bufferBuilder.addVertex(model, x + width, y + height, 0);
@@ -306,22 +286,14 @@ public class DrawHelper implements Mine {
         RenderSystem.disableBlend();
     }
 
-
-    public static int reAlphaInt(final int color,
-                                 final int alpha) {
+    public static int reAlphaInt(final int color, final int alpha) {
         return (Mth.clamp(alpha, 0, 255) << 24) | (color & 16777215);
     }
 
-
-
-    public static boolean isInRegion(final double mouseX,
-                                     final double mouseY,
-                                     final float x,
-                                     final float y,
-                                     final float width,
-                                     final float height) {
+    public static boolean isInRegion(final double mouseX, final double mouseY, final float x, final float y, final float width, final float height) {
         return mouseX >= x && mouseX <= x + width && mouseY >= y && mouseY <= y + height;
     }
+
     private static final float LINE_WIDTH = 1.0f;
 
     public static void drawBox(PoseStack matrixStack, double x, double y, double z, double height, Color color) {
@@ -338,7 +310,7 @@ public class DrawHelper implements Mine {
 
         Tesselator tessellator = Tesselator.getInstance();
         BufferBuilder bufferBuilder = tessellator.begin(VertexFormat.Mode.LINES, DefaultVertexFormat.POSITION_COLOR);
-        // Bottom face
+
         bufferBuilder.addVertex((float) x, (float) y, (float) z).setColor(r, g, b, a);
         bufferBuilder.addVertex((float) (x + 1), (float) y, (float) z).setColor(r, g, b, a);
 
@@ -351,7 +323,6 @@ public class DrawHelper implements Mine {
         bufferBuilder.addVertex((float) x, (float) y, (float) (z + 1)).setColor(r, g, b, a);
         bufferBuilder.addVertex((float) x, (float) y, (float) z).setColor(r, g, b, a);
 
-        // Top face
         double topY = y + height;
         bufferBuilder.addVertex((float) x, (float) topY, (float) z).setColor(r, g, b, a);
         bufferBuilder.addVertex((float) (x + 1), (float) topY, (float) z).setColor(r, g, b, a);
@@ -365,7 +336,6 @@ public class DrawHelper implements Mine {
         bufferBuilder.addVertex((float) x, (float) topY, (float) (z + 1)).setColor(r, g, b, a);
         bufferBuilder.addVertex((float) x, (float) topY, (float) z).setColor(r, g, b, a);
 
-        // Vertical edges
         bufferBuilder.addVertex((float) x, (float) y, (float) z).setColor(r, g, b, a);
         bufferBuilder.addVertex((float) x, (float) topY, (float) z).setColor(r, g, b, a);
 
@@ -432,12 +402,15 @@ public class DrawHelper implements Mine {
         float f2 = (float) (color & 255) / 255.0F;
 
         Tesselator tessellator = Tesselator.getInstance();
+        RenderSystem.enableBlend();
+        RenderSystem.setShader(GameRenderer::getPositionColorShader);
         BufferBuilder bufferbuilder = tessellator.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_COLOR);
         bufferbuilder.addVertex((float) left, (float) bottom, 0.0F).setColor(f, f1, f2, f3);
         bufferbuilder.addVertex((float) right, (float) bottom, 0.0F).setColor(f, f1, f2, f3);
         bufferbuilder.addVertex((float) right, (float) top, 0.0F).setColor(f, f1, f2, f3);
         bufferbuilder.addVertex((float) left, (float) top, 0.0F).setColor(f, f1, f2, f3);
         BufferUploader.drawWithShader(bufferbuilder.buildOrThrow());
+        RenderSystem.disableBlend();
     }
 
     public static void drawMCHorizontalBuilding(PoseStack matrixStack, double x, double y, double width, double height, int start, int end) {
@@ -451,12 +424,15 @@ public class DrawHelper implements Mine {
         float f7 = (float) (end & 255) / 255.0F;
 
         Tesselator tessellator = Tesselator.getInstance();
+        RenderSystem.enableBlend();
+        RenderSystem.setShader(GameRenderer::getPositionColorShader);
         BufferBuilder bufferbuilder = tessellator.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_COLOR);
         bufferbuilder.addVertex((float) x, (float) height, 0f).setColor(f1, f2, f3, f);
         bufferbuilder.addVertex((float) width, (float) height, 0f).setColor(f5, f6, f7, f4);
         bufferbuilder.addVertex((float) width, (float) y, 0f).setColor(f5, f6, f7, f4);
         bufferbuilder.addVertex((float) x, (float) y, 0f).setColor(f1, f2, f3, f);
         BufferUploader.drawWithShader(bufferbuilder.buildOrThrow());
+        RenderSystem.disableBlend();
     }
 
     public static void drawMCVerticalBuilding(PoseStack matrixStack, double x, double y, double width, double height, int start, int end) {
@@ -470,11 +446,14 @@ public class DrawHelper implements Mine {
         float f7 = (float) (end & 255) / 255.0F;
 
         Tesselator tessellator = Tesselator.getInstance();
+        RenderSystem.enableBlend();
+        RenderSystem.setShader(GameRenderer::getPositionColorShader);
         BufferBuilder bufferbuilder = tessellator.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_COLOR);
         bufferbuilder.addVertex((float) x, (float) height, 0f).setColor(f1, f2, f3, f);
         bufferbuilder.addVertex((float) width, (float) height, 0f).setColor(f1, f2, f3, f);
         bufferbuilder.addVertex((float) width, (float) y, 0f).setColor(f5, f6, f7, f4);
         bufferbuilder.addVertex((float) x, (float) y, 0f).setColor(f5, f6, f7, f4);
         BufferUploader.drawWithShader(bufferbuilder.buildOrThrow());
+        RenderSystem.disableBlend();
     }
 }

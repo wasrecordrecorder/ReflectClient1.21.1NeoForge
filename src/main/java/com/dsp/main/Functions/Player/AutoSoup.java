@@ -5,6 +5,7 @@ import com.dsp.main.Module;
 import com.dsp.main.UI.ClickGui.Dropdown.Settings.Slider;
 import com.dsp.main.Utils.Minecraft.Client.InvUtil;
 import net.minecraft.world.InteractionHand;
+import net.minecraft.world.item.BookItem;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.item.SwordItem;
 import net.minecraft.world.item.BowItem;
@@ -24,6 +25,9 @@ public class AutoSoup extends Module {
     @SubscribeEvent
     public void OnUpdate(OnUpdate event) {
         if (mc.player == null || mc.level == null) return;
+        if (mc.player.getMainHandItem().getItem() == Items.BOWL) {
+            mc.player.drop(true);
+        }
         if ((mc.player.getHealth() + mc.player.getAbsorptionAmount()) <= health.getValueInt()) {
             for (int i = 0; i < 9; i++) {
                 if (mc.player.getInventory().getItem(i).getItem() == Items.MUSHROOM_STEW) {
@@ -37,7 +41,8 @@ public class AutoSoup extends Module {
                 if (mc.player.getInventory().getItem(i).getItem() == Items.MUSHROOM_STEW) {
                     for (int hotbarSlot = 0; hotbarSlot < 9; hotbarSlot++) {
                         if (!(mc.player.getInventory().getItem(hotbarSlot).getItem() instanceof SwordItem) &&
-                                !(mc.player.getInventory().getItem(hotbarSlot).getItem() instanceof BowItem)) {
+                                !(mc.player.getInventory().getItem(hotbarSlot).getItem() instanceof BowItem) &&
+                                !(mc.player.getInventory().getItem(hotbarSlot).getItem() instanceof BookItem)) {
                             invUtil.moveItem(i, hotbarSlot + 36);
                             mc.player.getInventory().selected = hotbarSlot;
                             mc.gameMode.useItem(mc.player, InteractionHand.MAIN_HAND);

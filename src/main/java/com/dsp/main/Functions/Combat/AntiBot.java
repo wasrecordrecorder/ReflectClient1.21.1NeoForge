@@ -18,14 +18,15 @@ public class AntiBot extends Module {
 
     private static final Minecraft minecraft = Minecraft.getInstance();
     private final Set<UUID> bots = new HashSet<>();
-    private final Map<UUID, Integer> joinTicks = new HashMap<>(); // Tracks ticks since player joined
-    private final Map<UUID, Integer> botSuspicionCount = new HashMap<>(); // Tracks consecutive bot detections
+    private final Map<UUID, Integer> joinTicks = new HashMap<>();
+    private final Map<UUID, Integer> botSuspicionCount = new HashMap<>();
     private static final int PING_CHECK_DELAY = 1200;
-    private static final int SUSPICION_THRESHOLD = 4; // Require 3 consecutive detections to confirm bot
-    private static final double MOTION_THRESHOLD = 9.0; // Adjusted for sprinting (~0.1 blocks/tick squared)
+    private static final int SUSPICION_THRESHOLD = 4;
+    private static final double MOTION_THRESHOLD = 9.0;
 
     private final MultiCheckBox options;
     private static AntiBot INSTANCE;
+
     public AntiBot() {
         super("AntiBot", 0, Category.COMBAT, "Detect and filter fake players");
 
@@ -38,6 +39,19 @@ public class AntiBot extends Module {
         INSTANCE = this;
         addSettings(options);
     }
+
+    @Override
+    public void onDisable() {
+        super.onDisable();
+        clearBotData();
+    }
+
+    private void clearBotData() {
+        bots.clear();
+        joinTicks.clear();
+        botSuspicionCount.clear();
+    }
+
     public static boolean isBot(UUID uuid) {
         return INSTANCE != null && INSTANCE.bots.contains(uuid);
     }
@@ -48,24 +62,20 @@ public class AntiBot extends Module {
 
         List<Player> toRemove = new ArrayList<>();
         for (Player player : mc.level.players()) {
-            if (player == mc.player) continue;
+            if (player == null || player == mc.player) continue;
             joinTicks.put(player.getUUID(), joinTicks.getOrDefault(player.getUUID(), 0) + 1);
         }
 
         for (Player player : mc.level.players()) {
-            if (player == mc.player || bots.contains(player.getUUID())) continue;
+            if (player == null || player == mc.player || bots.contains(player.getUUID())) continue;
 
             String reason = checkBot(player);
             if (reason != null) {
                 int suspicionCount = botSuspicionCount.getOrDefault(player.getUUID(), 0) + 1;
                 botSuspicionCount.put(player.getUUID(), suspicionCount);
 
-                //ChatUtil.sendMessage("[AntiBot] Suspected bot: " + player.getName().getString() +
-                //        " | Reason: " + reason + " | Suspicion Count: " + suspicionCount);
-
                 if (suspicionCount >= SUSPICION_THRESHOLD) {
                     bots.add(player.getUUID());
-                    //ChatUtil.sendMessage("[AntiBot] Confirmed bot: " + player.getName().getString());
 
                     if (isEnabled("Auto Remove")) {
                         toRemove.add(player);
@@ -75,19 +85,28 @@ public class AntiBot extends Module {
                 botSuspicionCount.remove(player.getUUID());
             }
         }
+
         for (Player bot : toRemove) {
-            mc.level.removeEntity(bot.getId(), Entity.RemovalReason.UNLOADED_WITH_PLAYER);
-            //ChatUtil.sendMessage("[AntiBot] Removed bot: " + bot.getName().getString());
+            if (bot != null && mc.level != null) {
+                mc.level.removeEntity(bot.getId(), Entity.RemovalReason.UNLOADED_WITH_PLAYER);
+            }
         }
+
         joinTicks.keySet().removeIf(uuid -> mc.level.getPlayerByUUID(uuid) == null);
     }
 
     private String checkBot(Player p) {
+        if (p == null) return null;
+
         if (isEnabled("UUID Check")) {
-            UUID offline = UUID.nameUUIDFromBytes(("OfflinePlayer:" + p.getName().getString())
-                    .getBytes(StandardCharsets.UTF_8));
-            if (!p.getUUID().equals(offline)) {
-                return "UUID Check failed";
+            try {
+                UUID offline = UUID.nameUUIDFromBytes(("OfflinePlayer:" + p.getName().getString())
+                        .getBytes(StandardCharsets.UTF_8));
+                if (!p.getUUID().equals(offline)) {
+                    return "UUID Check failed";
+                }
+            } catch (Exception e) {
+                return null;
             }
         }
 
@@ -96,6 +115,9 @@ public class AntiBot extends Module {
             if (ticksSinceJoin < PING_CHECK_DELAY) {
                 return null;
             }
+
+            if (mc.getConnection() == null) return null;
+
             int ping = Optional.ofNullable(mc.getConnection().getPlayerInfo(p.getUUID()))
                     .map(info -> info.getLatency())
                     .orElse(-999);
@@ -120,6 +142,8 @@ public class AntiBot extends Module {
     }
 
     private boolean isEnabled(String name) {
-        return options.getOptions().stream().anyMatch(box -> box.getName().equals(name) && box.isEnabled());
+        if (options == null || options.getOptions() == null) return false;
+        return options.getOptions().stream()
+                .anyMatch(box -> box != null && name.equals(box.getName()) && box.isEnabled());
     }
 }

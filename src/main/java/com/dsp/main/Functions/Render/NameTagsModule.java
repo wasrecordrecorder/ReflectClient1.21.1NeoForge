@@ -47,10 +47,8 @@ public class NameTagsModule extends Module {
 
     @SubscribeEvent
     public void onRenderLevelStage(RenderGuiEvent.Post event) {
-        if (mc.level == null || mc.player == null) {
-            System.out.println("World or player is null, skipping render");
-            return;
-        }
+        if (mc.level == null || mc.player == null) return;
+
         if (Modi.isOptionEnabled("Players")) {
             renderplayers(event);
         }
@@ -59,135 +57,205 @@ public class NameTagsModule extends Module {
         }
     }
 
+    private float calculateDynamicYOffset(Entity entity, float baseHeight) {
+        if (mc.player == null) return baseHeight + 0.35f;
+
+        float distance = mc.player.distanceTo(entity);
+        float baseOffset = 0.2f;
+
+        float distanceFactor = (float) Math.pow(distance, 0.72) * 0.12f;
+
+        return baseHeight + baseOffset + distanceFactor;
+    }
+
     public void renderplayers(RenderGuiEvent event) {
+        if (mc.level == null || mc.player == null) return;
+
+        float partialTick = event.getPartialTick().getGameTimeDeltaPartialTick(false);
+
         for (Player ent : mc.level.players()) {
-            if (mc.player.equals(ent)) continue;
-            boolean isFriend = FriendManager.isFriend(ent.getName().getString());
-            Vector3d entPos = EntityPos.get(ent, 2.5f, event.getPartialTick().getRealtimeDeltaTicks());
-            Vector3d vec = ESPUtils.toScreen(entPos);
-            if (vec.z == 0) continue;
-            String name = ent.getScoreboardName();
+            if (ent == null || mc.player.equals(ent)) continue;
 
-            float width = BIKO_FONT.get().getWidth(name, 8f);
-            int healthBarColor = isFriend
-                    ? ColorHelper.gradient(new Color(0, 255, 0).getRGB(), new Color(0, 100, 0).getRGB(), 20, 10)
-                    : ColorHelper.gradient(ThemesUtil.getCurrentStyle().getColorLowSpeed(1), ThemesUtil.getCurrentStyle().getColorLowSpeed(2), 20, 10);
-            DrawHelper.rectangle(
-                    event.getGuiGraphics().pose(),
-                    (float) vec.x - (width / 2),
-                    (float) vec.y,
-                    width,
-                    BIKO_FONT.get().getMetrics().baselineHeight() * 7f + 10,
-                    3f,
-                    new Color(30, 30, 30, 220).getRGB()
-            );
-            float maxHealth = 20;
-            if (getHealthFromScoreboard(ent)[0] > 20) {
-                maxHealth = getHealthFromScoreboard(ent)[0];
-            }
-            float targetHealthPercent = getHealthFromScoreboard(ent)[0] / maxHealth;
-            displayedHealthPercent += (targetHealthPercent - displayedHealthPercent) * 0.2f;
-            DrawHelper.rectangle(event.getGuiGraphics().pose(), (float) vec.x - (width / 2) + 2, (float) (vec.y + BIKO_FONT.get().getMetrics().baselineHeight() * 7f + 5), width - 4, 2, 1, new Color(64, 64, 64, 255).getRGB());
-            DrawHelper.rectangle(event.getGuiGraphics().pose(), (float) vec.x - (width / 2) + 2, (float) (vec.y + BIKO_FONT.get().getMetrics().baselineHeight() * 7f + 5), (width * displayedHealthPercent) - 4, 2, 1, healthBarColor);
-            BuiltText text = Builder.text()
-                    .font(BIKO_FONT.get())
-                    .text(name)
-                    .color(Color.WHITE)
-                    .size(7f)
-                    .thickness(0.05f)
-                    .build();
-            text.render(new Matrix4f(event.getGuiGraphics().pose().last().pose()), vec.x - (width / 2) + 1, vec.y + 2);
-            BuiltText hpText = Builder.text()
-                    .font(BIKO_FONT.get())
-                    .text(String.valueOf(getHealthFromScoreboard(ent)[0]))
-                    .color(Color.GRAY)
-                    .size(6f)
-                    .thickness(0.05f)
-                    .build();
-            hpText.render(new Matrix4f(event.getGuiGraphics().pose().last().pose()), (vec.x - width / 2) + width, vec.y + BIKO_FONT.get().getMetrics().baselineHeight() * 7f);
+            try {
+                boolean isFriend = FriendManager.isFriend(ent.getName().getString());
+                float dynamicYOffset = calculateDynamicYOffset(ent, ent.getBbHeight());
+                Vector3d entPos = EntityPos.get(ent, dynamicYOffset, partialTick);
+                if (entPos == null) continue;
 
-            if (isFriend) {
-                BuiltText friendText = Builder.text()
+                Vector3d vec = ESPUtils.toScreen(entPos);
+                if (vec == null || vec.z == 0) continue;
+
+                String name = ent.getScoreboardName();
+                if (name == null) continue;
+
+                float width = BIKO_FONT.get().getWidth(name, 5.5f);
+                int healthBarColor = isFriend
+                        ? ColorHelper.gradient(new Color(0, 255, 0).getRGB(), new Color(0, 100, 0).getRGB(), 20, 10)
+                        : ColorHelper.gradient(ThemesUtil.getCurrentStyle().getColorLowSpeed(1), ThemesUtil.getCurrentStyle().getColorLowSpeed(2), 20, 10);
+
+                DrawHelper.rectangle(
+                        event.getGuiGraphics().pose(),
+                        (float) vec.x - (width / 2),
+                        (float) vec.y,
+                        width,
+                        BIKO_FONT.get().getMetrics().baselineHeight() * 5f + 6,
+                        2f,
+                        new Color(30, 30, 30, 220).getRGB()
+                );
+
+                float[] healthData = getHealthFromScoreboard(ent);
+                if (healthData == null || healthData.length == 0) continue;
+
+                float maxHealth = healthData[0] > 20 ? healthData[0] : 20;
+                float targetHealthPercent = healthData[0] / maxHealth;
+                displayedHealthPercent += (targetHealthPercent - displayedHealthPercent) * 0.2f;
+
+                DrawHelper.rectangle(
+                        event.getGuiGraphics().pose(),
+                        (float) vec.x - (width / 2) + 1.5f,
+                        (float) (vec.y + BIKO_FONT.get().getMetrics().baselineHeight() * 5f + 3),
+                        width - 3,
+                        1.5f,
+                        0.5f,
+                        new Color(64, 64, 64, 255).getRGB()
+                );
+
+                DrawHelper.rectangle(
+                        event.getGuiGraphics().pose(),
+                        (float) vec.x - (width / 2) + 1.5f,
+                        (float) (vec.y + BIKO_FONT.get().getMetrics().baselineHeight() * 5f + 3),
+                        (width * displayedHealthPercent) - 3,
+                        1.5f,
+                        0.5f,
+                        healthBarColor
+                );
+
+                BuiltText text = Builder.text()
                         .font(BIKO_FONT.get())
-                        .text("F ")
-                        .color(new Color(0, 255, 0))
-                        .size(8f)
+                        .text(name)
+                        .color(Color.WHITE)
+                        .size(5.5f)
                         .thickness(0.05f)
                         .build();
-                friendText.render(new Matrix4f(event.getGuiGraphics().pose().last().pose()), (vec.x + width / 2) - (width + 10), vec.y + BIKO_FONT.get().getMetrics().baselineHeight() * 5f);
-            }
-            float tagCenterX = (float) vec.x;
-            float tagY       = (float) vec.y;
-            if (pltItems.isEnabled()) {
-                renderPlayerItems(event, tagCenterX, tagY, ent);
-            }
+                text.render(new Matrix4f(event.getGuiGraphics().pose().last().pose()), vec.x - (width / 2) + 1, vec.y + 1.5f);
+
+                BuiltText hpText = Builder.text()
+                        .font(BIKO_FONT.get())
+                        .text(String.valueOf((int)healthData[0]))
+                        .color(Color.GRAY)
+                        .size(4.5f)
+                        .thickness(0.05f)
+                        .build();
+                hpText.render(new Matrix4f(event.getGuiGraphics().pose().last().pose()), (vec.x - width / 2) + width - 1, vec.y + BIKO_FONT.get().getMetrics().baselineHeight() * 5f - 1);
+
+                if (isFriend) {
+                    BuiltText friendText = Builder.text()
+                            .font(BIKO_FONT.get())
+                            .text("F")
+                            .color(new Color(0, 255, 0))
+                            .size(5.5f)
+                            .thickness(0.05f)
+                            .build();
+                    friendText.render(new Matrix4f(event.getGuiGraphics().pose().last().pose()), (vec.x - width / 2) -4, vec.y + BIKO_FONT.get().getMetrics().baselineHeight() * 3.5f);
+                }
+
+                float tagCenterX = (float) vec.x;
+                float tagY = (float) vec.y;
+                if (pltItems.isEnabled()) {
+                    renderPlayerItems(event, tagCenterX, tagY, ent);
+                }
+            } catch (Exception ignored) {}
         }
     }
 
     public void renderPlayerItems(RenderGuiEvent event, float tagCenterX, float tagY, Player player) {
-        List<ItemStack> stacks = new ArrayList<>();
-        stacks.add(player.getMainHandItem());
-        player.getArmorSlots().forEach(stacks::add);
-        stacks.add(player.getOffhandItem());
-        stacks.removeIf(s -> s.getItem() instanceof AirItem);
+        if (player == null) return;
 
-        if (stacks.isEmpty()) return;
+        try {
+            List<ItemStack> stacks = new ArrayList<>();
+            ItemStack mainHand = player.getMainHandItem();
+            ItemStack offHand = player.getOffhandItem();
 
-        final float scale = 0.65f;
-        final float iconSize = 16f;
-        final float padding = 2f;
+            if (mainHand != null) stacks.add(mainHand);
+            player.getArmorSlots().forEach(s -> {if (s != null) stacks.add(s);});
+            if (offHand != null) stacks.add(offHand);
+            stacks.removeIf(s -> s == null || s.getItem() instanceof AirItem);
 
-        float totalWidth = stacks.size() * (iconSize * scale)
-                + (stacks.size() - 1) * padding;
-        float startX = tagCenterX - totalWidth / 2f;
-        float startY = tagY - (iconSize * scale) - 4f;
-        DrawHelper.rectangle(
-                event.getGuiGraphics().pose(),
-                startX - 2f,
-                startY - 2f,
-                totalWidth + 4f,
-                iconSize * scale + 4f,
-                3f,
-                new Color(30, 30, 30, 180).getRGB()
-        );
-        event.getGuiGraphics().pose().pushPose();
-        event.getGuiGraphics().pose().translate(startX, startY, 0);
-        event.getGuiGraphics().pose().scale(scale, scale, 1f);
+            if (stacks.isEmpty()) return;
 
-        float offset = 0;
-        for (ItemStack stack : stacks) {
-            event.getGuiGraphics().renderItem(stack, (int)(offset / scale), 0);
-            if (drawDurab.isEnabled()) event.getGuiGraphics().renderItemDecorations(mc.font, stack, (int)(offset / scale), 1);
-            offset += iconSize * scale + padding;
-        }
-        event.getGuiGraphics().pose().popPose();
+            final float scale = 0.5f;
+            final float iconSize = 16f;
+            final float padding = 1.5f;
+
+            float totalWidth = stacks.size() * (iconSize * scale) + (stacks.size() - 1) * padding;
+            float startX = tagCenterX - totalWidth / 2f;
+            float startY = tagY - (iconSize * scale) - 3f;
+
+            DrawHelper.rectangle(
+                    event.getGuiGraphics().pose(),
+                    startX - 1.5f,
+                    startY - 1.5f,
+                    totalWidth + 3f,
+                    iconSize * scale + 3f,
+                    2f,
+                    new Color(30, 30, 30, 180).getRGB()
+            );
+
+            event.getGuiGraphics().pose().pushPose();
+            event.getGuiGraphics().pose().translate(startX, startY, 0);
+            event.getGuiGraphics().pose().scale(scale, scale, 1f);
+
+            float offset = 0;
+            for (ItemStack stack : stacks) {
+                event.getGuiGraphics().renderItem(stack, (int)(offset / scale), 0);
+                if (drawDurab.isEnabled()) {
+                    event.getGuiGraphics().renderItemDecorations(mc.font, stack, (int)(offset / scale), 0);
+                }
+                offset += iconSize * scale + padding;
+            }
+            event.getGuiGraphics().pose().popPose();
+        } catch (Exception ignored) {}
     }
 
     public void renderitems(RenderGuiEvent event) {
-        assert mc.level != null;
-        for (Entity ent : mc.level.getEntities((Entity) null, mc.player.getBoundingBox().inflate(128.0), e -> true)) {
-            if (ent instanceof ItemEntity) {
-                Vector3d vec = ESPUtils.toScreen(EntityPos.get(ent, 0.9f, event.getPartialTick().getRealtimeDeltaTicks()));
-                if (vec.z == 0) continue;
-                String name = ent.getName().getString();
-                assert mc.player != null;
-                String full = " " + name + " [" + (int) ent.distanceTo(mc.player) + "M] ";
-                float width = BIKO_FONT.get().getWidth(full, 8f);
-                float height = BIKO_FONT.get().getMetrics().baselineHeight() * 8f + 5;
+        if (mc.level == null || mc.player == null) return;
 
-                event.getGuiGraphics().pose().pushPose();
-                event.getGuiGraphics().pose().translate(vec.x - (width / 2), vec.y, 0);
-                DrawHelper.rectangle(event.getGuiGraphics().pose(), 0, 0, width, height, 0.5f, new Color(30, 30, 30, 150).getRGB());
-                BuiltText text = Builder.text()
-                        .font(BIKO_FONT.get())
-                        .text(full)
-                        .color(new Color(143, 83, 83).getRGB())
-                        .size(8f)
-                        .thickness(0.05f)
-                        .build();
-                text.render(new Matrix4f(event.getGuiGraphics().pose().last().pose()), 0, 2f);
-                event.getGuiGraphics().pose().popPose();
+        float partialTick = event.getPartialTick().getGameTimeDeltaPartialTick(false);
+
+        try {
+            for (Entity ent : mc.level.getEntities((Entity) null, mc.player.getBoundingBox().inflate(128.0), e -> e instanceof ItemEntity)) {
+                if (ent == null) continue;
+
+                try {
+                    float dynamicYOffset = calculateDynamicYOffset(ent, ent.getBbHeight());
+                    Vector3d entPos = EntityPos.get(ent, dynamicYOffset, partialTick);
+                    if (entPos == null) continue;
+
+                    Vector3d vec = ESPUtils.toScreen(entPos);
+                    if (vec == null || vec.z == 0) continue;
+
+                    String name = ent.getName().getString();
+                    if (name == null) continue;
+
+                    String full = " " + name + " [" + (int) ent.distanceTo(mc.player) + "M] ";
+                    float width = BIKO_FONT.get().getWidth(full, 5.5f);
+                    float height = BIKO_FONT.get().getMetrics().baselineHeight() * 5.5f + 3;
+
+                    event.getGuiGraphics().pose().pushPose();
+                    event.getGuiGraphics().pose().translate(vec.x - (width / 2), vec.y, 0);
+                    DrawHelper.rectangle(event.getGuiGraphics().pose(), 0, 0, width, height, 1.5f, new Color(30, 30, 30, 150).getRGB());
+
+                    BuiltText text = Builder.text()
+                            .font(BIKO_FONT.get())
+                            .text(full)
+                            .color(new Color(143, 83, 83).getRGB())
+                            .size(5.5f)
+                            .thickness(0.05f)
+                            .build();
+                    text.render(new Matrix4f(event.getGuiGraphics().pose().last().pose()), 0, 1.5f);
+                    event.getGuiGraphics().pose().popPose();
+                } catch (Exception ignored) {}
             }
-        }
+        } catch (Exception ignored) {}
     }
 }

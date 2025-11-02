@@ -1,6 +1,5 @@
 package com.dsp.main;
 
-import baritone.api.BaritoneAPI;
 import com.dsp.main.Core.ChatManager.ChatManager;
 import com.dsp.main.Core.Discord.DiscordRPC;
 import com.dsp.main.Core.Other.FreeLook;
@@ -8,6 +7,8 @@ import com.dsp.main.Core.Sound.SoundRegister;
 import com.dsp.main.UI.Draggable.DragElements.*;
 import com.dsp.main.UI.Draggable.DragManager;
 import com.dsp.main.UI.Themes.ThemesUtil;
+import com.dsp.main.Utils.AI.AssetLoad;
+import com.dsp.main.Utils.Engine.Particle.EngineSetup;
 import com.dsp.main.Utils.Font.msdf.MsdfFont;
 import com.dsp.main.Utils.Minecraft.Client.AutoEatUtil;
 import net.neoforged.bus.EventBus;
@@ -16,9 +17,6 @@ import net.neoforged.fml.common.Mod;
 import net.neoforged.neoforge.common.NeoForge;
 import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
-import ai.catboost.CatBoostModel;
-
-import static com.dsp.main.Api.mc;
 
 @Mod(Main.MODID)
 public class Main {
@@ -43,9 +41,8 @@ public class Main {
         DragManager.addDraggable(new StaffList("StaffList", 100 ,180, true));
         DragManager.addDraggable(new InventoryHud("InventoryHud", 100, 200, true));
         DragManager.init();
-        BaritoneAPI.getProvider().createBaritone(mc);
         DiscordRPC.startDiscordRPC();
-
+        AssetLoad.LoadAsset();
         // Utils event Bus
         SoundRegister.SOUND_EVENTS.register(BusRegister);
         EVENT_BUS.register(new Api());

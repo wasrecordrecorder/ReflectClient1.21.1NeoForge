@@ -2,6 +2,7 @@ package com.dsp.main.Core.ChatManager;
 
 
 import com.dsp.main.Core.Event.OnUpdate;
+import com.dsp.main.Functions.Combat.Aura.impl.Rotation.UniversalRotation;
 import com.dsp.main.Utils.Minecraft.Chat.ChatUtil;
 import net.minecraft.client.multiplayer.ServerData;
 import net.neoforged.bus.api.EventPriority;
@@ -9,11 +10,15 @@ import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.neoforge.client.event.ClientChatEvent;
 import net.neoforged.neoforge.event.ServerChatEvent;
 
+import static com.dsp.main.Api.getCustomConfigDir;
 import static com.dsp.main.Main.isDetect;
 import static com.dsp.main.Api.mc;
 import static com.dsp.main.Core.ConfigSystem.CfgManager.*;
 import static com.dsp.main.Core.FrndSys.FriendManager.*;
 
+import java.awt.*;
+import java.io.File;
+import java.nio.file.Path;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -30,6 +35,9 @@ public class ChatManager {
         String[] args = msg.split(" ");
         if (msg.startsWith(".") && !msg.startsWith(".staff")) {
             event.setCanceled(true);
+        }
+        if (msg.startsWith(".test")) {
+            ChatUtil.sendMessage(String.valueOf(UniversalRotation.isUsingAI()));
         }
         if (msg.equalsIgnoreCase(".gps off")) {
             //Triangles.canWork = false;
@@ -107,10 +115,20 @@ public class ChatManager {
             }
         } else if (msg.startsWith(".cfg dir")) {
             try {
-                Runtime.getRuntime().exec("explorer \"" + CONFIG_DIR + "\"");
-                ChatUtil.sendMessage("Папка с конфигурациями открыта.");
+                Path configPath = getCustomConfigDir();
+                File directoryToOpen = configPath.toFile();
+
+                if (Desktop.isDesktopSupported() && directoryToOpen.exists()) {
+                    Desktop.getDesktop().open(directoryToOpen);
+                    ChatUtil.sendMessage("Папка с конфигурациями открыта.");
+                } else {
+                    String reason = !directoryToOpen.exists() ? "папка не найдена" : "функция не поддерживается системой";
+                    ChatUtil.sendMessage("Не удалось открыть папку: " + reason + ".");
+                    ChatUtil.sendMessage("Путь: " + directoryToOpen.getAbsolutePath());
+                }
             } catch (Exception ex) {
-                ChatUtil.sendMessage("Не удалось открыть папку с конфигурациями: " + ex.getMessage());
+                ChatUtil.sendMessage("Произошла ошибка при открытии папки: " + ex.getMessage());
+                ex.printStackTrace();
             }
             event.setCanceled(true);
         } else if (msg.startsWith(".cfg list")) {

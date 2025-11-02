@@ -11,6 +11,7 @@ import com.dsp.main.Core.ConfigSystem.CfgManager;
 import com.dsp.main.Core.Event.OnUpdate;
 import com.dsp.main.Core.Event.UpdateInputEvent;
 import com.dsp.main.Core.Other.Hooks.KeyboardInputHook;
+import com.dsp.main.UI.ClickGui.CsWindow.MainScreen;
 import com.dsp.main.UI.ClickGui.Dropdown.ClickGuiScreen;
 import com.dsp.main.Functions.Movement.AutoSprint;
 import com.dsp.main.UI.ClickGui.Dropdown.Settings.BindCheckBox;
@@ -21,6 +22,7 @@ import com.dsp.main.UI.Draggable.DraggableElement;
 import com.dsp.main.UI.MainMenu.MainMenuScreen;
 import com.dsp.main.Core.Other.Hooks.InventoryScreenHook;
 import com.dsp.main.UI.Notifications.NotificationManager;
+import com.dsp.main.Utils.Engine.Particle.SinusoidEngine;
 import com.dsp.main.Utils.TimerUtil;
 import net.minecraft.client.CameraType;
 import net.minecraft.client.Minecraft;
@@ -34,6 +36,8 @@ import net.neoforged.neoforge.client.event.*;
 import net.neoforged.neoforge.event.entity.player.AttackEntityEvent;
 import org.lwjgl.glfw.GLFW;
 
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.*;
 import java.util.concurrent.CopyOnWriteArrayList;
 
@@ -50,6 +54,9 @@ public class Api {
     public static boolean isResetingSprint = false;
     public static boolean isSlowBypass = false;
     public static NotificationManager notificationManager = new NotificationManager();
+    public static float partialTickAp;
+    private static Path customConfigDirCache;
+    private static Path dragDataCache;
 
     private static final Timer autoSaveTimer = new Timer(true);
 
@@ -73,7 +80,7 @@ public class Api {
 
                 // Combat
                 new Aura(), new TriggerBot(), new AimAssistant(), new AntiBot(), new AutoGApple(), new HitBox(), new AutoWeapon(),
-                new AutoFlipFireball(), new AutoSwap(), new AutoTotem(),
+                new AutoFlipFireball(), new AutoSwap(), new AutoTotem(), new BreachSwap(), new AimTrainer(),
 
                 //Movement
                 new AutoSprint(), new NoSlow(), new Speed(), new ScreenWalk(), new Scaffhold(), new ElytraRecast(),
@@ -84,7 +91,8 @@ public class Api {
                 new ChestStealer(), new AntiAfk(),
 
                 // Render
-                new HudElement(), new NoRender(), new Notifications(), new NameTagsModule(), new Predictions(), new Fullbright()
+                new HudElement(), new NoRender(), new Notifications(), new NameTagsModule(), new Predictions(), new Fullbright(),
+                new Snow(), new BoxEsp()
         );
     }
 
@@ -122,7 +130,11 @@ public class Api {
                 }
             }
             if (e.getKey() == GLFW.GLFW_KEY_RIGHT_SHIFT && mc.screen == null) {
-                mc.setScreen(new ClickGuiScreen());
+                if (ClickGuiType.isMode("Dropdown")) {
+                    mc.setScreen(new ClickGuiScreen());
+                } else {
+                    mc.setScreen(new MainScreen());
+                }
             }
         }
     }
@@ -148,6 +160,7 @@ public class Api {
     @SubscribeEvent(priority = EventPriority.HIGHEST)
     public void onRenderGui(RenderGuiEvent.Pre event) {
         GuiGraphics guiGraphics = event.getGuiGraphics();
+        partialTickAp = event.getPartialTick().getGameTimeDeltaTicks();
         MouseHandler mouseHandler = Minecraft.getInstance().mouseHandler;
         mouseX = mouseHandler.xpos() * Minecraft.getInstance().getWindow().getGuiScaledWidth() / Minecraft.getInstance().getWindow().getScreenWidth();
         mouseY = mouseHandler.ypos() * Minecraft.getInstance().getWindow().getGuiScaledHeight() / Minecraft.getInstance().getWindow().getScreenHeight();
@@ -252,11 +265,35 @@ public class Api {
         }catch (Exception ignore){}
         return fps > 0 ? (1.0000 / fps) : 1;
     }
+    public static Path getCrossPlatformAppDataFolder() {
+        String os = System.getProperty("os.name").toLowerCase();
+        if (os.contains("win")) {
+            return Paths.get(System.getenv("APPDATA"));
+        } else if (os.contains("mac")) {
+            return Paths.get(System.getProperty("user.home"), "Library", "Application Support");
+        } else {
+            return Paths.get(System.getProperty("user.home"));
+        }
+    }
+    public static Path getCustomConfigDir() {
+        if (customConfigDirCache == null) {
+            Path baseDir = getCrossPlatformAppDataFolder();
+            String os = System.getProperty("os.name").toLowerCase();
+            if (os.contains("win")) {
+                customConfigDirCache = baseDir.resolve("Some");
+            } else {
+                customConfigDirCache = baseDir.resolve(".Some");
+            }
+        }
+        return customConfigDirCache;
+    }
     private static float animation = 0;
     @SubscribeEvent
     public void onEventContinuous(RenderFrameEvent.Pre e) {
+        if (mc.player == null) return;
         if (mc.options.getCameraType() == CameraType.FIRST_PERSON) animation = fast(animation, 0f, 10);
         else animation = fast(animation, 1f, 10);
+        SinusoidEngine.tickAll(mc.level);
     }
     public static double getDistance(double dis) {
         return 1f + ((dis - 1f) * animation);

@@ -14,9 +14,9 @@ import java.awt.*;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.HashMap;
 
+import static com.dsp.main.Api.getCustomConfigDir;
 import static com.dsp.main.Functions.Render.HudElement.snapGride;
 
 public class DragManager {
@@ -29,7 +29,7 @@ public class DragManager {
     private static float gridAlpha = 0f;
     private static boolean wasDragging = false;
     private static final float GRID_FADE_SPEED = 0.05f;
-    private static final Path CONFIG_DIR = Paths.get(System.getenv("APPDATA"), "Some");
+    private static final Path CONFIG_DIR = getCustomConfigDir();
     private static final Path DRAG_DATA = CONFIG_DIR.resolve("dragg.rfcl");
     private static final Gson GSON = new GsonBuilder()
             .setPrettyPrinting()

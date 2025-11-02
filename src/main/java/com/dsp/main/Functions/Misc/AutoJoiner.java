@@ -150,12 +150,14 @@ public class AutoJoiner extends Module {
     @SubscribeEvent
     public void onChat(ClientChatReceivedEvent event) {
         String msg = event.getMessage().getString();
-        if (msg.contains("! Внимание !") && msg.contains("Чтобы ваш Аккаунт был в БЕЗОПАСНОСТИ!") && WhatServer.isFt() && !anarchy.getValue().isEmpty()) {
-            mc.player.connection.sendCommand("an" + anarchy.getValue());
-        } else if ((msg.contains("Добро пожаловать на FunTime.su") || msg.contains("Наши сообщества здесь /links") || msg.contains("Наш официальный сайт FunTime.su")) && WhatServer.isFt() && !anarchy.getValue().isEmpty()) {
-            mc.player.connection.sendCommand("an" + anarchy.getValue());
-        } else if ((msg.contains("Наш Телеграм t.me/funtime") && WhatServer.isFt() && !anarchy.getValue().isEmpty())) {
-            mc.player.connection.sendCommand("an" + anarchy.getValue());
+        if (server.isMode("Funtime")) {
+            if (msg.contains("! Внимание !") && msg.contains("Чтобы ваш Аккаунт был в БЕЗОПАСНОСТИ!") && WhatServer.isFt() && !anarchy.getValue().isEmpty()) {
+                mc.player.connection.sendCommand("an" + anarchy.getValue());
+            } else if ((msg.contains("Добро пожаловать на FunTime.su") || msg.contains("Наши сообщества здесь /links") || msg.contains("Наш официальный сайт FunTime.su")) && WhatServer.isFt() && !anarchy.getValue().isEmpty()) {
+                mc.player.connection.sendCommand("an" + anarchy.getValue());
+            } else if ((msg.contains("Наш Телеграм t.me/funtime") && WhatServer.isFt() && !anarchy.getValue().isEmpty())) {
+                mc.player.connection.sendCommand("an" + anarchy.getValue());
+            }
         }
         if (msg.contains("Добро пожаловать на сервер ReallyWorld!")) {
             isJoinedRwHub = true;

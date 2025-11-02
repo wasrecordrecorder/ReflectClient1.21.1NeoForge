@@ -39,16 +39,9 @@ public class Aura extends Module {
     public final Slider fov;
     public final Slider snapSpeed;
     public final Slider aimRange = new Slider("Aim Range", 1F, 9F, 6F, 1F);
-    public final CheckBox onlyCrits = new CheckBox("Only Crits", true).setVisible(() -> !attackType.isMode("1.8"));
-    public final MultiCheckBox checks = new MultiCheckBox("Other", Arrays.asList(
-            new CheckBox("Don't hit when you eat", false),
-            new CheckBox("Hit only weapon", false),
-            new CheckBox("Disable after death", true),
-            new CheckBox("Move correction", true),
-            new CheckBox("Disabling shield", false),
-            new CheckBox("Break Shield", false)
-    ));
-    public final Mode MoveCorrectionMode = new Mode("Correction Mode", "Free", "Focus").setVisible(() -> checks.isOptionEnabled("Move correction"));
+    public final CheckBox onlyCrits;
+    public final MultiCheckBox checks;
+    public final Mode MoveCorrectionMode;
     public final Mode sortMode = new Mode("Sort Mode", "Adapt", "Distance", "Health");
     public final CheckBox throughWalls = new CheckBox("Trough Walls", true);
     public final MultiCheckBox targets = new MultiCheckBox("Targets", Arrays.asList(
@@ -69,11 +62,29 @@ public class Aura extends Module {
         RotationAngle.registerRotation("Fast", new AdaptiveRotation());
         RotationAngle.registerRotation("Snap", new SnapFullRotation());
         RotationAngle.registerRotation("Fov Snap", new SnapRotationFov());
+        RotationAngle.registerRotation("Universal", new UniversalRotation());
         componentMode = new Mode("Rotation Type", RotationAngle.getRotationNames());
         fov = new Slider("Aura Fov", 40, 120, 60, 5).setVisible(() -> componentMode.getMode().contains("Fov Snap"));
         snapSpeed = new Slider("Snap Speed", 5, 150, 50, 5).setVisible(() -> componentMode.getMode().contains("Snap"));
+
+        checks = new MultiCheckBox("Other", Arrays.asList(
+                new CheckBox("Don't hit when you eat", false),
+                new CheckBox("Hit only weapon", false),
+                new CheckBox("Disable after death", true),
+                new CheckBox("Move correction", true),
+                new CheckBox("Disabling shield", false),
+                new CheckBox("Break Shield", false),
+                new CheckBox("Smart Crits", false)
+        ));
+
+        onlyCrits = new CheckBox("Only Crits", true).setVisible(() ->
+                !attackType.isMode("1.8") && !checks.isOptionEnabled("Smart Crits")
+        );
+
+        MoveCorrectionMode = new Mode("Correction Mode", "Free", "Focus").setVisible(() -> checks.isOptionEnabled("Move correction"));
+
         addSettings(componentMode, attackType, resetSprintMode, OneAndEitCd, attackRange,
-                aimRange,fov,snapSpeed, onlyCrits, checks, MoveCorrectionMode, sortMode, throughWalls, targets
+                aimRange, fov, snapSpeed, onlyCrits, checks, MoveCorrectionMode, sortMode, throughWalls, targets
         );
     }
 
@@ -97,7 +108,7 @@ public class Aura extends Module {
         if (Target != null && (mc.player.distanceTo(Target) > aimRange.getValue() || !Target.isAlive())) {
             Target = null;
         }
-        if (mc.player.getHealth() <= 0) {
+        if (checks.isOptionEnabled("Disable after death") && mc.player.getHealth() <= 0) {
             this.toggle();
         }
     }
@@ -121,7 +132,7 @@ public class Aura extends Module {
 
     @SubscribeEvent
     public void onUpdate(OnUpdate event) {
-        if (!(Target == null) && !(mc.player == null) && !componentMode.getMode().contains("Snap")) {
+        if (Target != null && mc.player != null && !componentMode.getMode().contains("Snap")) {
             AttackHandler.update(this, true);
         }
     }

@@ -21,6 +21,8 @@ import net.minecraft.world.item.*;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.network.protocol.game.ServerboundContainerClickPacket;
 import net.minecraft.network.protocol.game.ServerboundUseItemPacket;
+
+import static com.dsp.main.Functions.Misc.ClientSetting.legitUse;
 import static com.dsp.main.Functions.Misc.ClientSetting.obhod;
 
 public class InvUtil implements Mine {
@@ -153,7 +155,11 @@ public class InvUtil implements Mine {
     public void findItemAndThrow(Slot slot, float yaw, float pitch) {
         swapHand(slot, InteractionHand.MAIN_HAND);
         useItem(InteractionHand.MAIN_HAND, yaw, pitch);
-        swapHand(slot, InteractionHand.MAIN_HAND);
+        if (legitUse.isEnabled()) {
+            TimerUtil.sleepVoid(() -> swapHand(slot, InteractionHand.MAIN_HAND), 80);
+        } else {
+            swapHand(slot, InteractionHand.MAIN_HAND);
+        }
     }
 
     public void clickSlot(Slot slot, int button, ClickType clickType, boolean packet) {

@@ -1,9 +1,9 @@
 package com.dsp.main.UI.ClickGui.Dropdown;
 
+import com.dsp.main.Module;
 import com.dsp.main.UI.ClickGui.Dropdown.Components.*;
 import com.dsp.main.UI.ClickGui.Dropdown.Components.Component;
 import com.dsp.main.UI.ClickGui.Dropdown.Settings.*;
-import com.dsp.main.Module;
 import com.dsp.main.UI.Themes.ThemesUtil;
 import com.dsp.main.Utils.Color.ColorHelper;
 import com.dsp.main.Utils.Font.builders.Builder;
@@ -29,7 +29,7 @@ import static com.dsp.main.Main.ICONS;
 
 public class Button {
     private static final int PADDING = 3;
-    private static final float ROUNDING = 4.0f;
+    private static final float ROUNDING = 5.0f;
     private static final int COMPONENT_PADDING = 2;
     private static final float ANIMATION_DURATION = 200.0f;
 
@@ -45,6 +45,7 @@ public class Button {
     private boolean lastExtendedState = false;
     private final List<Component> components = new ArrayList<>();
     private final float scaleFactor;
+    private Frame parentFrame;
 
     public Button(Module module, int x, int y, int width, int height, Frame parent, float scaleFactor) {
         this.module = module;
@@ -53,6 +54,7 @@ public class Button {
         this.width = (int) (width * scaleFactor);
         this.height = (int) (height * scaleFactor);
         this.scaleFactor = scaleFactor;
+        this.parentFrame = parent;
 
         initComponents();
     }
@@ -63,6 +65,8 @@ public class Button {
                 components.add(new CheckBoxComponent((CheckBox) setting, this, scaleFactor));
             else if (setting instanceof BindCheckBox)
                 components.add(new BindCheckBoxComponent(setting, this, scaleFactor));
+            else if (setting instanceof ButtonSetting)
+                components.add(new ButtonComponent(setting, this, scaleFactor));
             else if (setting instanceof Mode)
                 components.add(new ModeComponent((Mode) setting, this, scaleFactor));
             else if (setting instanceof Slider)
@@ -79,6 +83,9 @@ public class Button {
         if (extended != lastExtendedState) {
             animationStartTime = System.currentTimeMillis();
             lastExtendedState = extended;
+            if (parentFrame != null) {
+                parentFrame.validateScrollOffset();
+            }
         }
         float targetProgress = extended ? 1.0f : 0.0f;
         if (animationStartTime > 0) {
@@ -99,9 +106,9 @@ public class Button {
         int b = baseBgColor.getBlue();
         int a = baseBgColor.getAlpha();
         if (isHovered(mouseX, mouseY)) {
-            r = Math.min(255, r + 20);
-            g = Math.min(255, g + 20);
-            b = Math.min(255, b + 20);
+            r = Math.min(255, r);
+            g = Math.min(255, g);
+            b = Math.min(255, b);
         }
         int bgColor = (a << 24) | (r << 16) | (g << 8) | b;
         DrawShader.drawRoundBlur(poseStack, x, y, width, height, ROUNDING * scaleFactor, bgColor, 90, 0.7f);
@@ -114,18 +121,19 @@ public class Button {
             Color neonWhite2 = ColorHelper.twoColorEffect(new Color(r, g, b, a), Color.DARK_GRAY, 255);
             borderColorState = new QuadColorState(neonWhite1, neonWhite2, neonWhite1, neonWhite2);
         }
-        BuiltBorder border = Builder.border()
-                .size(new SizeState(width, height))
-                .color(borderColorState)
-                .radius(new QuadRadiusState(2f * scaleFactor, 2f * scaleFactor, 2f * scaleFactor, 2f * scaleFactor))
-                .thickness(0.01f)
-                .smoothness(0.5f, 1f)
-                .build();
-        border.render(new Matrix4f(), x, y);
+        if (module.isEnabled()) {
+            BuiltBorder border = Builder.border()
+                    .size(new SizeState(width, height))
+                    .color(borderColorState)
+                    .radius(new QuadRadiusState(3f * scaleFactor, 3f * scaleFactor, 3f * scaleFactor, 3f * scaleFactor))
+                    .thickness(0.01f)
+                    .smoothness(0.5f, 0.9f)
+                    .build();
+            border.render(new Matrix4f(), x, y);
+        }
+
         int textColor;
-        if (isHovered(mouseX, mouseY)) {
-            textColor = new Color(230, 230, 230, (int) (255 * 0.7)).getRGB();
-        } else if (module.isEnabled()) {
+        if (module.isEnabled()) {
             textColor = new Color(255, 255, 255, 255).getRGB();
         } else {
             textColor = new Color(200, 200, 200, (int) (255 * 0.7)).getRGB();
@@ -200,7 +208,12 @@ public class Button {
         }
         if (isHovered(mx, my)) {
             if (button == 0) module.toggle();
-            else if (button == 1 && !module.getSettings().isEmpty()) extended = !extended;
+            else if (button == 1 && !module.getSettings().isEmpty()) {
+                extended = !extended;
+                if (parentFrame != null) {
+                    parentFrame.validateScrollOffset();
+                }
+            }
             else if (button == 2) binding = !binding;
             return true;
         }

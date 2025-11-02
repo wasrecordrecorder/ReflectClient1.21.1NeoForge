@@ -2,8 +2,11 @@ package com.dsp.main.Mixin;
 
 import com.dsp.main.Api;
 import com.dsp.main.Functions.Combat.Aura.Aura;
+import com.dsp.main.Functions.Combat.BreachSwap;
 import com.dsp.main.Functions.Player.NoDelay;
 import com.dsp.main.Main;
+import com.dsp.main.Utils.Minecraft.Client.InvUtil;
+import com.dsp.main.Utils.TimerUtil;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.MultiPlayerGameMode;
 import net.minecraft.client.player.LocalPlayer;
@@ -17,6 +20,9 @@ import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
+import net.minecraft.world.item.MaceItem;
+import net.minecraft.world.item.SwordItem;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.Vec2;
@@ -31,6 +37,8 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 import static com.dsp.main.Api.isResetingSprint;
 import static com.dsp.main.Api.mc;
 import static com.dsp.main.Functions.Combat.Aura.Aura.resetSprintMode;
+import static com.dsp.main.Functions.Combat.BreachSwap.hasEverything;
+import static com.dsp.main.Functions.Combat.BreachSwap.invUtilForBreach;
 import static com.dsp.main.Main.isDetect;
 import static com.dsp.main.Utils.Minecraft.Client.ClientPlayerUtil.hasEnoughImpulseToStartSprinting;
 import static com.dsp.main.Utils.Minecraft.Client.ClientPlayerUtil.isMoving;
@@ -40,6 +48,7 @@ import static com.dsp.main.Utils.Minecraft.Server.WhatServer.*;
 public abstract class MultiPlayerGameModeMixin {
     @Shadow
     private int destroyDelay;
+
 
 
     @Inject(
@@ -67,6 +76,21 @@ public abstract class MultiPlayerGameModeMixin {
             isResetingSprint = true;
             mc.getConnection().send(new ServerboundPlayerCommandPacket(mc.player, ServerboundPlayerCommandPacket.Action.STOP_SPRINTING));
         }
+        if (Api.isEnabled("BreachSwap")) {
+            if (BreachSwap.hasEverything() && !mc.player.onGround()) {
+                int swordId = findSwordSlot(mc.player);
+                int maceId = findMaceSlot(mc.player);
+                if (swordId <= 8) {
+                    swordId = swordId + 36;
+                }
+                if (maceId <= 8) {
+                    maceId = maceId + 36;
+                }
+                if (mc.player.getInventory().selected == swordId) {
+                    invUtilForBreach.swapHand(maceId, InteractionHand.MAIN_HAND);
+                }
+            }
+        }
     }
     @Inject(
             method = "attack",
@@ -76,7 +100,24 @@ public abstract class MultiPlayerGameModeMixin {
         if (!mc.player.isSprinting() && (isFt() || isRw() || isAm() || isSp() || isHw() || isFs() || resetSprintMode.isMode("Packet") || resetSprintMode.isMode("Packet + Slow") || resetSprintMode.isMode("Legit + Packet"))) {
             mc.player.setSprinting(true);
             if (hasEnoughImpulseToStartSprinting() && mc.player.getFoodData().getFoodLevel() >= 3.5F && !mc.player.isUsingItem()) {
-                mc.getConnection().send(new ServerboundPlayerCommandPacket(mc.player, ServerboundPlayerCommandPacket.Action.START_SPRINTING));
+                TimerUtil.sleepVoid(() -> mc.getConnection().send(new ServerboundPlayerCommandPacket(mc.player, ServerboundPlayerCommandPacket.Action.START_SPRINTING)), 80);
+            }
+        }
+        if (Api.isEnabled("BreachSwap")) {
+            System.out.println(hasEverything());
+            if (BreachSwap.hasEverything()) {
+                int swordId = findSwordSlot(mc.player);
+                int maceId = findMaceSlot(mc.player);
+                if (swordId <= 8) {
+                    swordId = swordId + 36;
+                }
+                if (maceId <= 8) {
+                    maceId = maceId + 36;
+                }
+                if (mc.player.getInventory().selected == maceId) {
+                    int finalSwordId = swordId;
+                    TimerUtil.sleepVoid(() ->invUtilForBreach.swapHand(finalSwordId, InteractionHand.MAIN_HAND), 150);
+                }
             }
         }
     }
@@ -85,5 +126,19 @@ public abstract class MultiPlayerGameModeMixin {
         if (!isDetect && Api.isEnabled("NoDelay") && NoDelay.Options.isOptionEnabled("Break Block")) {
             destroyDelay = 0;
         }
+    }
+    private int findSwordSlot(Player p) {
+        for (int i = 0; i < 9; i++) {
+            ItemStack s = p.getInventory().getItem(i);
+            if (!s.isEmpty() && s.getItem() instanceof SwordItem) return i;
+        }
+        return -1;
+    }
+    private int findMaceSlot(Player p) {
+        for (int i = 0; i < 9; i++) {
+            ItemStack s = p.getInventory().getItem(i);
+            if (!s.isEmpty() && s.getItem() instanceof MaceItem) return i;
+        }
+        return -1;
     }
 }

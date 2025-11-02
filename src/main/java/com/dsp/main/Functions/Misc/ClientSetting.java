@@ -16,16 +16,18 @@ import static com.dsp.main.Api.mc;
 
 public class ClientSetting extends Module {
     public static Mode obhod = new Mode("Inventory Mode", "Packet", "Legit");
+    public static Mode ClickGuiType = new Mode("ClickGui Type", "Dropdown", "CsGui");
     public static CheckBox slowBypass = new CheckBox("Slow Bypass", false);
     public static CheckBox cfgASave = new CheckBox("Auto Save Cfg", true);
+    public static CheckBox legitUse = new CheckBox("Legit Use Items", false);
 
     public static CheckBox sound = new CheckBox("Client Sounds", false);
     public static CheckBox TogglSound = new CheckBox("Module Toggle Sound", false).setVisible(() -> sound.isEnabled());
     public static Mode hitSound = new Mode("Hit Sound", "None", "Bell", "Bonk", "Crime", "Metallic", "Rust").setVisible(() -> sound.isEnabled());
     public ClientSetting() {
         super("Client Settings", 0, Category.MISC, "You can setup this client");
-        addSettings(obhod, slowBypass, cfgASave,
-        sound, TogglSound, hitSound);
+        addSettings(obhod, slowBypass, legitUse, cfgASave,
+        sound, TogglSound, hitSound, ClickGuiType);
     }
     @SubscribeEvent
     public void onUpdate(OnUpdate event) {

@@ -28,6 +28,7 @@ import java.util.*;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
+import static com.dsp.main.Api.getCustomConfigDir;
 import static com.dsp.main.Api.mc;
 import static com.dsp.main.Functions.Render.HudElement.HudElements;
 import static com.dsp.main.Functions.Render.HudElement.IconColor;
@@ -40,7 +41,7 @@ public class StaffList extends DraggableElement {
     private static final int ROUND_RADIUS = 5;
     private static final int ICON_SIZE = 11;
     private static final long ANIMATION_DURATION_MS = 300;
-    private static final Path CONFIG_DIR = Paths.get(System.getenv("APPDATA"), "Some");
+    private static final Path CONFIG_DIR = getCustomConfigDir();
     private static final Path STAFF_DATA = CONFIG_DIR.resolve("staff.rfcl");
     private static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();
     private static final Pattern NICKNAME_PATTERN = Pattern.compile("^[a-zA-Z0-9_]{3,16}$");
