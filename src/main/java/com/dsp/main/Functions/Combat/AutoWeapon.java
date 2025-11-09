@@ -2,7 +2,6 @@ package com.dsp.main.Functions.Combat;
 
 import com.dsp.main.Module;
 import com.dsp.main.Utils.TimerUtil;
-import com.mojang.datafixers.util.Pair;
 import net.minecraft.core.Holder;
 import net.minecraft.core.Registry;
 import net.minecraft.core.RegistryAccess;
@@ -21,7 +20,6 @@ import java.util.*;
 import static com.dsp.main.Api.isSlowBypass;
 import static com.dsp.main.Api.mc;
 import static com.dsp.main.Functions.Misc.ClientSetting.slowBypass;
-import static net.minecraft.world.item.Tiers.*;
 
 public class AutoWeapon extends Module {
     public AutoWeapon() {
@@ -34,33 +32,32 @@ public class AutoWeapon extends Module {
 
         int bestSlot = findBestWeaponSlot(target);
         if (bestSlot >= 0) {
-            if (bestSlot <= 8 ) {
+            if (bestSlot <= 8) {
                 mc.player.getInventory().selected = bestSlot;
             } else {
                 if (slowBypass.isEnabled()) isSlowBypass = true;
-                mc.gameMode.handlePickItem(bestSlot);
+
+                mc.gameMode.handleInventoryButtonClick(mc.player.containerMenu.containerId, bestSlot);
+
                 TimerUtil.sleepVoid(() -> {
                     int xui = findBestWeaponSlot(target);
-                    if (xui <= 8 ) {
+                    if (xui <= 8) {
                         mc.player.getInventory().selected = xui;
                     }
-                } , 30);
-                {
+                }, 30);
+
                 int xui = findBestWeaponSlot(target);
-                if (xui <= 8 ) {
+                if (xui <= 8) {
                     mc.player.getInventory().selected = xui;
                 }
-                }
             }
-
         }
-
     }
 
     public static int findBestWeaponSlot(LivingEntity target) {
         Map<Integer, Float> weaponScores = new HashMap<>();
-
         Player player = mc.player;
+
         if (player == null) return -1;
 
         for (int slot = 0; slot < player.getInventory().getContainerSize(); slot++) {
@@ -87,46 +84,23 @@ public class AutoWeapon extends Module {
 
         float score = 0f;
 
-        // 1) Считаем базовый уровень по тиру
-        if (item instanceof TieredItem tieredItem) {
-            Tier tier = tieredItem.getTier();
-            score += switch (tier) {
-                case NETHERITE -> 5;
-                case DIAMOND    -> 4;
-                case IRON       -> 3;
-                case STONE      -> 2;
-                case WOOD       -> 1;
-                default         -> 0;
-            };
-        }
+        if (mc.level == null) return score;
+
         RegistryAccess ra = mc.level.registryAccess();
-        Registry<Enchantment> enchantRegistry = ra.registryOrThrow(Registries.ENCHANTMENT);
-        Holder<Enchantment> sharpnessHolder = enchantRegistry.getHolderOrThrow(Enchantments.SHARPNESS);
-        score += EnchantmentHelper.getItemEnchantmentLevel(sharpnessHolder, stack) * 1.6f;
+        Registry<Enchantment> enchantRegistry = ra.lookup(Registries.ENCHANTMENT).orElse(null);
 
-        Holder<Enchantment> smiteHolder = enchantRegistry.getHolderOrThrow(Enchantments.SMITE);
-        score += EnchantmentHelper.getItemEnchantmentLevel(smiteHolder, stack) * 0.7f;
+        if (enchantRegistry == null) return score;
 
-        Holder<Enchantment> baneHolder = enchantRegistry.getHolderOrThrow(Enchantments.BANE_OF_ARTHROPODS);
-        score += EnchantmentHelper.getItemEnchantmentLevel(baneHolder, stack) * 0.7f;
+        score += getEnchantLevel(enchantRegistry, stack, Enchantments.SHARPNESS) * 1.6f;
+        score += getEnchantLevel(enchantRegistry, stack, Enchantments.SMITE) * 0.7f;
+        score += getEnchantLevel(enchantRegistry, stack, Enchantments.BANE_OF_ARTHROPODS) * 0.7f;
+        score += getEnchantLevel(enchantRegistry, stack, Enchantments.FIRE_ASPECT) * 0.2f;
+        score += getEnchantLevel(enchantRegistry, stack, Enchantments.KNOCKBACK) * 0.5f;
+        score += getEnchantLevel(enchantRegistry, stack, Enchantments.LOOTING) * 0.7f;
+        score += getEnchantLevel(enchantRegistry, stack, Enchantments.IMPALING) * 1.2f;
+        score += getEnchantLevel(enchantRegistry, stack, Enchantments.LOYALTY) * 0.5f;
+        score += getEnchantLevel(enchantRegistry, stack, Enchantments.CHANNELING) * 0.3f;
 
-        Holder<Enchantment> fireHolder = enchantRegistry.getHolderOrThrow(Enchantments.FIRE_ASPECT);
-        score += EnchantmentHelper.getItemEnchantmentLevel(fireHolder, stack) * 0.2f;
-
-        Holder<Enchantment> kbHolder = enchantRegistry.getHolderOrThrow(Enchantments.KNOCKBACK);
-        score += EnchantmentHelper.getItemEnchantmentLevel(kbHolder, stack) * 0.5f;
-
-        Holder<Enchantment> lootHolder = enchantRegistry.getHolderOrThrow(Enchantments.LOOTING);
-        score += EnchantmentHelper.getItemEnchantmentLevel(lootHolder, stack) * 0.7f;
-
-        Holder<Enchantment> impaleHolder = enchantRegistry.getHolderOrThrow(Enchantments.IMPALING);
-        score += EnchantmentHelper.getItemEnchantmentLevel(impaleHolder, stack) * 1.2f;
-
-        Holder<Enchantment> loyaltyHolder = enchantRegistry.getHolderOrThrow(Enchantments.LOYALTY);
-        score += EnchantmentHelper.getItemEnchantmentLevel(loyaltyHolder, stack) * 0.5f;
-
-        Holder<Enchantment> channelHolder = enchantRegistry.getHolderOrThrow(Enchantments.CHANNELING);
-        score += EnchantmentHelper.getItemEnchantmentLevel(channelHolder, stack) * 0.3f;
         if (stack.isDamaged()) {
             float durabilityRatio = 1f - (stack.getDamageValue() / (float) stack.getMaxDamage());
             score *= durabilityRatio;
@@ -135,4 +109,24 @@ public class AutoWeapon extends Module {
         return score;
     }
 
+    private static float getTierScore(String tierName) {
+        return switch (tierName.toLowerCase()) {
+            case "netherite" -> 5f;
+            case "diamond" -> 4f;
+            case "iron" -> 3f;
+            case "stone" -> 2f;
+            case "wood", "wooden" -> 1f;
+            default -> 0f;
+        };
+    }
+
+    private static int getEnchantLevel(Registry<Enchantment> registry, ItemStack stack, net.minecraft.resources.ResourceKey<Enchantment> enchantmentKey) {
+        try {
+            Holder.Reference<Enchantment> holder = registry.get(enchantmentKey).orElse(null);
+            if (holder == null) return 0;
+            return EnchantmentHelper.getItemEnchantmentLevel(holder, stack);
+        } catch (Exception e) {
+            return 0;
+        }
+    }
 }

@@ -28,13 +28,14 @@ public class AutoEatUtil {
     private static long lastUsedTime = 0L;
     private static int foundSlot = -1;
     private static final long COOLDOWN_MS = 1000L;
+    private static InvUtil invUtil = new InvUtil();
 
     public static void eatItemFromInventory(Item itemToUse) {
         long now = System.currentTimeMillis();
         if (eating || now - lastUsedTime < COOLDOWN_MS || mc.player == null || mc.level == null) {
             return;
         }
-        if (mc.player.getCooldowns().isOnCooldown(itemToUse)) {
+        if (mc.player.getCooldowns().isOnCooldown(new ItemStack(itemToUse))) {
             return;
         }
         eating = false;
@@ -73,7 +74,7 @@ public class AutoEatUtil {
             player.getInventory().selected = eatSlot;
         } else {
             eatSlot = foundSlot;
-            mc.gameMode.handlePickItem(foundSlot);
+            invUtil.swapHand(foundSlot, InteractionHand.MAIN_HAND);
         }
         player.swing(InteractionHand.MAIN_HAND);
         mc.options.keyUse.setDown(true);
@@ -97,7 +98,7 @@ public class AutoEatUtil {
         mc.options.keyUse.setDown(false);
         if (shiftBp.isEnabled()) isSlowBypass = true;
         if (foundSlot > 8) {
-            mc.gameMode.handlePickItem(foundSlot);
+            invUtil.swapHand(foundSlot, InteractionHand.MAIN_HAND);
         }
 
         if (mc.player != null) {

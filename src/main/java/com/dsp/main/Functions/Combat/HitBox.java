@@ -20,6 +20,7 @@ import java.util.UUID;
 import java.util.logging.Logger;
 
 public class HitBox extends Module {
+    private static final String FREELOOK_REQUEST_ID = "HitBox";
     private static final Logger LOGGER = Logger.getLogger("HitBox");
     private static final Slider size = new Slider("Size", 0.1, 2, 0.5, 0.1);
     private static final CheckBox bypass = new CheckBox("Use Bypass", false);
@@ -34,13 +35,12 @@ public class HitBox extends Module {
     @Override
     public void onEnable() {
         super.onEnable();
-        //mc.getEntityRenderDispatcher().setRenderHitBoxes(true);
     }
 
     @Override
     public void onDisable() {
         super.onDisable();
-        //mc.getEntityRenderDispatcher().setRenderHitBoxes(false);
+        FreeLook.releaseFreeLook(FREELOOK_REQUEST_ID);
         if (mc.level != null) {
             for (Player player : mc.level.players()) {
                 if (player != mc.player) {
@@ -75,10 +75,11 @@ public class HitBox extends Module {
             }
         }
     }
+
     @SubscribeEvent
     public void onAttack(AttackEntityEvent e) {
         if (mc.player == null || !bypass.isEnabled() || !(e.getTarget() instanceof Player)) return;
-        if (!FreeLook.isFreeLookEnabled) FreeLook.enableFreeLook();
+        FreeLook.requestFreeLook(FREELOOK_REQUEST_ID);
         Player target = (Player) e.getTarget();
         if (target == mc.player) return;
         Vec3 playerPos = mc.player.getEyePosition();
@@ -99,10 +100,6 @@ public class HitBox extends Module {
                 mc.player.setXRot(FreeLook.getCameraPitch());
             }
         }, 50);
-        TimerUtil.sleepVoid(() -> {
-            if (mc.player != null) {
-                if (FreeLook.isFreeLookEnabled) FreeLook.disableFreeLook();
-            }
-        }, 60);
+        TimerUtil.sleepVoid(() -> FreeLook.releaseFreeLook(FREELOOK_REQUEST_ID), 60);
     }
 }

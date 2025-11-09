@@ -4,6 +4,7 @@ import com.dsp.main.Core.Event.OnUpdate;
 import com.dsp.main.Mixin.Accesors.LivingEntityAccessor;
 import com.dsp.main.Module;
 import com.dsp.main.UI.ClickGui.Dropdown.Settings.*;
+import com.dsp.main.Utils.Minecraft.Client.ClientFallDistance;
 import com.dsp.main.Utils.Minecraft.Client.InvUtil;
 import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.boss.enderdragon.EndCrystal;
@@ -28,7 +29,7 @@ public class AutoTotem extends Module {
             new CheckBox("Dynamite", false),
             new CheckBox("Fall Distance", false)
     ));
-    private static Slider health = new Slider("Health", 1, 20, 6, 1).setVisible(() -> Checks.isOptionEnabled("Health"));
+    public static Slider health = new Slider("Health", 1, 20, 6, 1).setVisible(() -> Checks.isOptionEnabled("Health"));
     private static CheckBox saveEnchantedTotem = new CheckBox("Save Talismans", false);
     private static CheckBox SwapBack = new CheckBox("Swap Item Back", false);
 
@@ -168,7 +169,7 @@ public class AutoTotem extends Module {
             }
         }
         if (Checks.isOptionEnabled("Fall Distance")) {
-            float fallDistance = mc.player.fallDistance;
+            float fallDistance = ClientFallDistance.get();
             if (fallDistance > 3.0f) {
                 float damage = ((LivingEntityAccessor)(Object)mc.player).callCalculateFallDamage(fallDistance, 1.0f);;
                 if (damage >= (currentHealth - 3)) {

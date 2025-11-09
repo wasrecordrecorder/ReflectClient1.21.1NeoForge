@@ -10,7 +10,6 @@ import com.dsp.main.Utils.Font.builders.states.SizeState;
 import com.dsp.main.Utils.Font.renderers.impl.BuiltBorder;
 import com.dsp.main.Utils.Font.renderers.impl.BuiltText;
 import com.dsp.main.Utils.Render.Blur.DrawShader;
-import com.dsp.main.Utils.Render.DrawHelper;
 import net.minecraft.client.gui.GuiGraphics;
 import org.joml.Matrix4f;
 import org.lwjgl.glfw.GLFW;
@@ -109,7 +108,7 @@ public class InputComponent extends Component {
                 if (text.length() > 0) {
                     text.deleteCharAt(text.length() - 1);
                 }
-            } else if (keyCode == GLFW.GLFW_KEY_ENTER) {
+            } else if (keyCode == GLFW.GLFW_KEY_ENTER || keyCode == GLFW.GLFW_KEY_ESCAPE) {
                 typing = false;
             }
             textSetting.setValue(text.toString());
@@ -122,6 +121,10 @@ public class InputComponent extends Component {
 
     public void setText(String text) {
         this.text = new StringBuilder(text);
+    }
+
+    public void deactivate() {
+        typing = false;
     }
 
     @Override

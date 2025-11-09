@@ -4,6 +4,7 @@ import ai.catboost.CatBoostModel;
 import ai.catboost.CatBoostPredictions;
 import com.dsp.main.Api;
 import com.dsp.main.Utils.Minecraft.Chat.ChatUtil;
+import com.dsp.main.Utils.Minecraft.Client.ClientFallDistance;
 import com.dsp.main.Utils.Render.AnimFromRockstarClient.RotationAnimation;
 import com.dsp.main.Utils.Render.Other.Vec2Vector;
 import net.minecraft.util.Mth;
@@ -11,7 +12,12 @@ import net.minecraft.world.entity.LivingEntity;
 import org.joml.Vector2f;
 import org.joml.Vector3d;
 
+import java.io.File;
+import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.stream.Collectors;
 
 import static com.dsp.main.Api.*;
 
@@ -19,12 +25,21 @@ public final class AimPredictor {
     public static RotationAnimation interp = new RotationAnimation();
     private static CatBoostModel yawModel;
     private static CatBoostModel pitchModel;
-    private static Path rotationDir() {
-        return Api.getCustomConfigDir().resolve("rotation");
-    }
+
+    private static String currentModelName = "default";
+    private static List<String> availableModels = new ArrayList<>();
+
     private static boolean modelsAvailable = false;
     private static boolean checkedAvailability = false;
     private static boolean loadAttempted = false;
+
+    private static Path rotationDir() {
+        return Api.getCustomConfigDir().resolve("rotation");
+    }
+
+    private static Path getModelDir(String modelName) {
+        return rotationDir().resolve(modelName);
+    }
 
     private static boolean isCatBoostAvailable() {
         if (!checkedAvailability) {
@@ -40,40 +55,151 @@ public final class AimPredictor {
         return modelsAvailable;
     }
 
-    public static void load() {
-        if (!isCatBoostAvailable() || loadAttempted) {
-            return;
-        }
-
-        loadAttempted = true;
+    public static List<String> scanAvailableModels() {
+        List<String> models = new ArrayList<>();
 
         try {
-            Path yawPath = rotationDir().resolve("yaw.cbm");
-            Path pitchPath = rotationDir().resolve("pitch.cbm");
+            Path rotDir = rotationDir();
+            if (!Files.exists(rotDir)) {
+                Files.createDirectories(rotDir);
+                return models;
+            }
 
-            if (!yawPath.toFile().exists() || !pitchPath.toFile().exists()) {
-                ChatUtil.sendMessage("§e[AimPredictor] Модели не найдены. AI prediction отключен");
-                ChatUtil.sendMessage("§e[AimPredictor] Используется базовая ротация");
-                modelsAvailable = false;
-                return;
+            File[] folders = rotDir.toFile().listFiles(File::isDirectory);
+            if (folders == null) return models;
+
+            for (File folder : folders) {
+                String modelName = folder.getName();
+                Path yawPath = folder.toPath().resolve("yaw.cbm");
+                Path pitchPath = folder.toPath().resolve("pitch.cbm");
+
+                if (Files.exists(yawPath) && Files.exists(pitchPath)) {
+                    models.add(modelName);
+                }
+            }
+
+            if (models.isEmpty()) {
+                models.add("default");
+            }
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            ChatUtil.sendMessage("§c[AimPredictor] Ошибка сканирования моделей");
+        }
+
+        return models;
+    }
+
+    public static void rescanModels() {
+        availableModels = scanAvailableModels();
+        ChatUtil.sendMessage("§a[AimPredictor] Найдено моделей: " + availableModels.size());
+        for (String model : availableModels) {
+            ChatUtil.sendMessage("§7- " + model);
+        }
+    }
+
+    public static boolean loadModel(String modelName) {
+        if (!isCatBoostAvailable()) {
+            return false;
+        }
+
+        try {
+            Path modelDir = getModelDir(modelName);
+            Path yawPath = modelDir.resolve("yaw.cbm");
+            Path pitchPath = modelDir.resolve("pitch.cbm");
+
+            if (!Files.exists(yawPath) || !Files.exists(pitchPath)) {
+                ChatUtil.sendMessage("§c[AimPredictor] Модель '" + modelName + "' не найдена");
+
+                if (!modelName.equals("default")) {
+                    ChatUtil.sendMessage("§e[AimPredictor] Попытка загрузить default...");
+                    return loadModel("default");
+                }
+                return false;
+            }
+
+            if (yawModel != null) {
+                yawModel = null;
+            }
+            if (pitchModel != null) {
+                pitchModel = null;
             }
 
             yawModel = CatBoostModel.loadModel(yawPath.toString());
             pitchModel = CatBoostModel.loadModel(pitchPath.toString());
 
+            currentModelName = modelName;
             modelsAvailable = true;
-            ChatUtil.sendMessage("§a[AimPredictor] AI модели загружены успешно");
+
+            ChatUtil.sendMessage("§a[AimPredictor] Модель '" + modelName + "' загружена");
+
+            return true;
 
         } catch (Exception e) {
             modelsAvailable = false;
-            ChatUtil.sendMessage("§c[AimPredictor] Ошибка загрузки моделей: " + e.getMessage());
-            ChatUtil.sendMessage("§e[AimPredictor] Используется базовая ротация");
+            ChatUtil.sendMessage("§c[AimPredictor] Ошибка загрузки '" + modelName + "': " + e.getMessage());
+
+            if (!modelName.equals("default")) {
+                return loadModel("default");
+            }
+            return false;
         }
     }
 
+    public static void reloadModel(String newModelName) {
+        if (newModelName == null || newModelName.isEmpty()) {
+            ChatUtil.sendMessage("§c[AimPredictor] Неверное имя модели");
+            return;
+        }
+
+        if (newModelName.equals(currentModelName) && modelsAvailable) {
+            return;
+        }
+
+        ChatUtil.sendMessage("§e[AimPredictor] Переключение на '" + newModelName + "'...");
+
+        yawModel = null;
+        pitchModel = null;
+        modelsAvailable = false;
+
+        loadModel(newModelName);
+    }
+
+    public static void load() {
+        if (loadAttempted) {
+            return;
+        }
+
+        loadAttempted = true;
+
+        availableModels = scanAvailableModels();
+
+        if (availableModels.isEmpty()) {
+            ChatUtil.sendMessage("§e[AimPredictor] Модели не найдены. AI prediction отключен");
+            modelsAvailable = false;
+            return;
+        }
+
+        String modelToLoad = availableModels.contains("default") ? "default" : availableModels.get(0);
+        loadModel(modelToLoad);
+    }
+
     public static boolean isAiAvailable() {
-        load();
+        if (!loadAttempted) {
+            load();
+        }
         return modelsAvailable && yawModel != null && pitchModel != null;
+    }
+
+    public static String getCurrentModelName() {
+        return currentModelName;
+    }
+
+    public static String[] getAvailableModelNames() {
+        if (availableModels.isEmpty()) {
+            availableModels = scanAvailableModels();
+        }
+        return availableModels.toArray(new String[0]);
     }
 
     public static float[] predict(float[] features) {
@@ -84,7 +210,7 @@ public final class AimPredictor {
         try {
             String[] categoricals = {
                     String.valueOf(mc.player.onGround()),
-                    String.valueOf(mc.player.fallDistance > 0)
+                    String.valueOf(ClientFallDistance.get() > 0)
             };
 
             CatBoostPredictions predYaw = yawModel.predict(features, categoricals);
@@ -93,6 +219,7 @@ public final class AimPredictor {
             float pitch = (float) predPitch.get(0, 0);
             return new float[]{yaw, pitch};
         } catch (Exception e) {
+            e.printStackTrace();
             return null;
         }
     }
@@ -162,6 +289,7 @@ public final class AimPredictor {
             rot.y = Mth.clamp(rot.y, -90, 90);
             return rot;
         } catch (Exception e) {
+            e.printStackTrace();
             return null;
         }
     }

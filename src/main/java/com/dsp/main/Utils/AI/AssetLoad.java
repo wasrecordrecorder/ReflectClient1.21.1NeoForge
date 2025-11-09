@@ -17,32 +17,40 @@ public class AssetLoad {
         return Api.getCustomConfigDir().resolve("rotation");
     }
 
+    private static Path defaultModelDir() {
+        return rotationDir().resolve("default");
+    }
+
     private static Path yawPath() {
-        return rotationDir().resolve("yaw.cbm");
+        return defaultModelDir().resolve("yaw.cbm");
     }
 
     private static Path pitchPath() {
-        return rotationDir().resolve("pitch.cbm");
+        return defaultModelDir().resolve("pitch.cbm");
     }
 
     public static void LoadAsset() {
         try {
-            Path dir = rotationDir();
+            Path dir = defaultModelDir();
             Files.createDirectories(dir);
+
             Path yaw = yawPath();
             if (Files.notExists(yaw)) {
-                System.out.println("yaw.cbm file not found, downloading...");
+                System.out.println("[AssetLoad] yaw.cbm not found in default/, downloading...");
                 downloadFile(YAW_URL, yaw);
-                System.out.println("yaw.cbm downloaded successfully");
+                System.out.println("[AssetLoad] yaw.cbm downloaded successfully");
             }
+
             Path pitch = pitchPath();
             if (Files.notExists(pitch)) {
-                System.out.println("pitch.cbm file not found, downloading...");
+                System.out.println("[AssetLoad] pitch.cbm not found in default/, downloading...");
                 downloadFile(PITCH_URL, pitch);
-                System.out.println("pitch.cbm downloaded successfully");
+                System.out.println("[AssetLoad] pitch.cbm downloaded successfully");
             }
+
+            System.out.println("[AssetLoad] Default AI model ready at: " + dir);
         } catch (Exception e) {
-            System.err.println("Error in LoadAsset: " + e.getMessage());
+            System.err.println("[AssetLoad] Error: " + e.getMessage());
             e.printStackTrace();
         }
     }

@@ -10,7 +10,6 @@ import com.dsp.main.Utils.Font.builders.states.SizeState;
 import com.dsp.main.Utils.Font.renderers.impl.BuiltBorder;
 import com.dsp.main.Utils.Font.renderers.impl.BuiltText;
 import com.dsp.main.Utils.Render.Blur.DrawShader;
-import com.dsp.main.Utils.Render.DrawHelper;
 import net.minecraft.client.gui.GuiGraphics;
 import org.joml.Matrix4f;
 import org.lwjgl.glfw.GLFW;
@@ -41,7 +40,7 @@ public class BindCheckBoxComponent extends Component {
 
         int compX = (int) this.x;
         int compY = (int) this.y;
-        int width = (int) (parent.getWidth());
+        int width = parent.getWidth();
 
         boolean isHovered = isHovered(mouseX, mouseY);
         hoverAnimation += isHovered ? (1 - hoverAnimation) * 0.1f : (0 - hoverAnimation) * 0.1f;
@@ -60,7 +59,7 @@ public class BindCheckBoxComponent extends Component {
         bindSettName.render(new Matrix4f(), textX, textY);
 
         String keyText = getString();
-        int keyWidth = (int) (BIKO_FONT.get().getWidth(keyText, 8f * scaleFactor) * scaleFactor);
+        int keyWidth = (int) (BIKO_FONT.get().getWidth(keyText, 8f * scaleFactor));
         int bindX = (int) (compX + width - keyWidth - 12 * scaleFactor);
         BuiltBorder border = Builder.border()
                 .size(new SizeState(BIKO_FONT.get().getWidth(keyText.toUpperCase(), 8f * scaleFactor) + 5.5f * scaleFactor, 11 * scaleFactor))
@@ -69,7 +68,7 @@ public class BindCheckBoxComponent extends Component {
                 .thickness(0.01f)
                 .smoothness(1f, 1f)
                 .build();
-        border.render(new Matrix4f(), bindX - 2.25 * scaleFactor, textY - 2 * scaleFactor);
+        border.render(new Matrix4f(), bindX - 2.25f * scaleFactor, textY - 2 * scaleFactor);
         BuiltText text2 = Builder.text()
                 .font(BIKO_FONT.get())
                 .text(keyText.toUpperCase())
@@ -106,12 +105,17 @@ public class BindCheckBoxComponent extends Component {
 
     public void handleKeyPress(int keyCode) {
         if (binding) {
-            bindSetting.setBindKey(keyCode);
             if (keyCode == GLFW.GLFW_KEY_ESCAPE || keyCode == GLFW.GLFW_KEY_DELETE) {
                 bindSetting.setBindKey(0);
+            } else {
+                bindSetting.setBindKey(keyCode);
             }
             binding = false;
         }
+    }
+
+    public void deactivate() {
+        binding = false;
     }
 
     @Override

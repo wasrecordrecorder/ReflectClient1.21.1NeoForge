@@ -26,11 +26,11 @@ public abstract class Component {
     }
 
     public void setX(double x) {
-        this.x = x * scaleFactor;
+        this.x = x;
     }
 
     public void setY(double y) {
-        this.y = y * scaleFactor;
+        this.y = y;
     }
 
     public double getX() {
@@ -60,6 +60,7 @@ public abstract class Component {
         return mouseX > x && mouseX < x + parent.getWidth()
                 && mouseY > y && mouseY < y + getHeight();
     }
+
     public boolean isInputActive() {
         return false;
     }

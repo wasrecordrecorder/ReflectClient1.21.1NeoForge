@@ -3,6 +3,7 @@ package com.dsp.main.Functions.Render;
 import com.dsp.main.Module;
 import com.dsp.main.UI.ClickGui.Dropdown.Settings.Mode;
 import com.dsp.main.UI.Themes.ThemesUtil;
+import com.dsp.main.Utils.Minecraft.Client.ClientPlayerUtil;
 import com.dsp.main.Utils.Render.DrawHelper;
 import com.dsp.main.Utils.Render.Other.ESPUtils;
 import net.minecraft.util.Mth;
@@ -191,11 +192,10 @@ public class BoxEsp extends Module {
         if (event == null || player == null) return;
 
         try {
-            float health = player.getHealth();
-            float maxHealth = player.getMaxHealth();
+            float[] health = ClientPlayerUtil.getHealthFromScoreboard(player);
 
             String playerId = player.getUUID().toString();
-            float targetPercent = Mth.clamp(health / maxHealth, 0f, 1f);
+            float targetPercent = Mth.clamp(health[0] / health[1], 0f, 1f);
             float currentPercent = animateSmooth(playerId, targetPercent);
 
             float basePadding = 2.0f;

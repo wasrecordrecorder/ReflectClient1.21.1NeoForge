@@ -3,11 +3,15 @@ package com.dsp.main.Functions.Combat;
 import com.dsp.main.Core.FrndSys.FriendManager;
 import com.dsp.main.Module;
 import com.dsp.main.UI.ClickGui.Dropdown.Settings.CheckBox;
+import com.dsp.main.UI.ClickGui.Dropdown.Settings.MultiCheckBox;
 import com.dsp.main.UI.ClickGui.Dropdown.Settings.Slider;
 import net.minecraft.util.Mth;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.animal.Animal;
+import net.minecraft.world.entity.monster.Monster;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.ClipContext;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.HitResult;
@@ -15,6 +19,7 @@ import net.minecraft.world.phys.Vec3;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.neoforge.client.event.RenderFrameEvent;
 
+import java.util.Arrays;
 import java.util.Comparator;
 
 import static com.dsp.main.Api.mc;
@@ -24,13 +29,21 @@ public class AimAssistant extends Module {
     private static final Slider AIM_SPEED = new Slider("Aim Speed", 1, 10, 2, 1);
     private static final CheckBox LOCK_TARGET = new CheckBox("Lock Target", false);
     private static final CheckBox THROUGH_WALLS = new CheckBox("Through Walls", false);
-    private static final CheckBox FRIEND_CHECK = new CheckBox("Check Friend", false);
+
+    private static final MultiCheckBox TARGETS = new MultiCheckBox("Targets", Arrays.asList(
+            new CheckBox("Friends", false),
+            new CheckBox("Invisible", false),
+            new CheckBox("No Armor", false),
+            new CheckBox("Animals", false),
+            new CheckBox("Monsters", false),
+            new CheckBox("Players", true)
+    ));
 
     private LivingEntity currentTarget;
 
     public AimAssistant() {
         super("AimAssistant", 0, Category.COMBAT, "Smoothly aims at the nearest valid target");
-        addSettings(AIM_RANGE, AIM_SPEED, LOCK_TARGET, THROUGH_WALLS, FRIEND_CHECK);
+        addSettings(AIM_RANGE, AIM_SPEED, LOCK_TARGET, THROUGH_WALLS, TARGETS);
     }
 
     @Override
@@ -64,20 +77,62 @@ public class AimAssistant extends Module {
         if (entity == null || !entity.isAlive() || entity == mc.player) {
             return false;
         }
+
         double distance = mc.player.distanceTo(entity);
         if (distance > AIM_RANGE.getValue()) {
             return false;
         }
+
         if (!THROUGH_WALLS.isEnabled() && !hasClearLineOfSight(mc.player, entity)) {
             return false;
         }
-        if (FRIEND_CHECK.isEnabled() && FriendManager.isFriend(entity.getName().getString())) {
+
+        if (!TARGETS.hasAnyEnabled()) {
             return false;
         }
-        return true;
+
+        boolean shouldTarget = false;
+
+        if (FriendManager.isFriend(entity.getName().getString())) {
+            if (TARGETS.isOptionEnabled("Friends")) {
+                shouldTarget = true;
+            } else {
+                return false;
+            }
+        }
+
+        if (TARGETS.isOptionEnabled("Invisible") && isInvisible(entity)) {
+            shouldTarget = true;
+        }
+
+        if (TARGETS.isOptionEnabled("No Armor") && hasNoArmor(entity)) {
+            shouldTarget = true;
+        }
+
+        if (!TARGETS.isOptionEnabled("No Armor") && hasNoArmor(entity)) {
+            shouldTarget = false;
+        }
+
+        if (TARGETS.isOptionEnabled("Animals") && isAnimal(entity)) {
+            shouldTarget = true;
+        }
+
+        if (TARGETS.isOptionEnabled("Monsters") && isMonster(entity)) {
+            shouldTarget = true;
+        }
+
+        if (TARGETS.isOptionEnabled("Players") && entity instanceof Player) {
+            shouldTarget = true;
+        }
+
+        return shouldTarget;
     }
 
     private LivingEntity findNearestTarget() {
+        if (mc.player == null || mc.level == null) {
+            return null;
+        }
+
         double range = AIM_RANGE.getValue();
         Vec3 playerPos = mc.player.getEyePosition();
         AABB searchBox = new AABB(playerPos, playerPos).inflate(range);
@@ -90,6 +145,10 @@ public class AimAssistant extends Module {
     }
 
     public static void LegitRot(Entity target) {
+        if (mc.player == null || target == null) {
+            return;
+        }
+
         double deltaX = target.getX() - mc.player.getX();
         double deltaY = target.getY() - (mc.player.getY() + mc.player.getEyeHeight()) + 0.7D;
         double deltaZ = target.getZ() - mc.player.getZ();
@@ -102,6 +161,10 @@ public class AimAssistant extends Module {
     }
 
     private boolean hasClearLineOfSight(Player player, Entity target) {
+        if (player == null || target == null || mc.level == null) {
+            return false;
+        }
+
         Vec3 playerEyePos = player.getEyePosition();
         Vec3 targetPos = target.position().add(0, target.getBbHeight() / 2, 0);
         ClipContext context = new ClipContext(
@@ -112,5 +175,29 @@ public class AimAssistant extends Module {
                 player
         );
         return mc.level.clip(context).getType() != HitResult.Type.BLOCK;
+    }
+
+    private static boolean isInvisible(Entity entity) {
+        return entity != null && entity.isInvisible();
+    }
+
+    private static boolean hasNoArmor(Entity entity) {
+        if (entity instanceof Player player) {
+            for (ItemStack stack : player.getInventory().armor) {
+                if (!stack.isEmpty()) {
+                    return false;
+                }
+            }
+            return true;
+        }
+        return false;
+    }
+
+    private static boolean isAnimal(Entity entity) {
+        return entity instanceof Animal;
+    }
+
+    private static boolean isMonster(Entity entity) {
+        return entity instanceof Monster;
     }
 }

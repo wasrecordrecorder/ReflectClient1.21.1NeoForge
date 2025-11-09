@@ -1,7 +1,7 @@
 plugins {
     id 'java-library'
     id 'maven-publish'
-    id 'net.neoforged.gradle.userdev' version '7.0.190'
+    id 'net.neoforged.gradle.userdev' version '7.1.4'
     id 'com.gradleup.shadow' version '9.0.0-rc2'
 }
 
@@ -22,6 +22,10 @@ base {
 }
 
 java.toolchain.languageVersion = JavaLanguageVersion.of(21)
+
+configurations {
+    runtimeClasspath.extendsFrom localRuntime
+}
 
 runs {
     configureEach {
@@ -55,16 +59,12 @@ runs {
         systemProperty 'neoforge.enabledGameTestNamespaces', project.mod_id
     }
 
-    data {
+    clientData {
         arguments.addAll '--mod', project.mod_id, '--all', '--output', file('src/generated/resources/').getAbsolutePath(), '--existing', file('src/main/resources/').getAbsolutePath()
     }
 }
 
 sourceSets.main.resources { srcDir 'src/generated/resources' }
-
-configurations {
-    runtimeClasspath.extendsFrom localRuntime
-}
 
 dependencies {
     implementation "net.neoforged:neoforge:${neo_version}"
@@ -82,7 +82,6 @@ shadowJar {
     configurations = [project.configurations.shadow]
     archiveClassifier.set('')
     duplicatesStrategy = DuplicatesStrategy.EXCLUDE
-    exclude 'com/sun/jna/**'
     exclude 'javax/annotation/**'
     exclude 'org/slf4j/**'
     exclude 'META-INF/maven/com.google.code.findbugs/**'
@@ -96,8 +95,6 @@ tasks.withType(ProcessResources).configureEach {
             minecraft_version      : minecraft_version,
             minecraft_version_range: minecraft_version_range,
             neo_version            : neo_version,
-            neo_version_range      : neo_version_range,
-            loader_version_range   : loader_version_range,
             mod_id                 : mod_id,
             mod_name               : mod_name,
             mod_license            : mod_license,

@@ -54,7 +54,7 @@ public class AutoJoiner extends Module {
         if (server.isMode("Rw") && WhatServer.isRw() && isJoinedRwHub) {
             isJoinedRwHub = false;
             if (FindItemSlot(Items.COMPASS, 9) > 0) {
-                mc.gameMode.handlePickItem(FindItemSlot(Items.COMPASS, 9));
+                mc.player.getInventory().selected = FindItemSlot(Items.COMPASS,9);
             }
             mc.gameMode.useItem(mc.player, InteractionHand.MAIN_HAND);
             lastActionTime = System.currentTimeMillis();

@@ -29,6 +29,7 @@ import org.joml.Matrix4f;
 import org.joml.Quaternionf;
 import org.joml.Vector3f;
 
+import javax.annotation.Nullable;
 import java.awt.*;
 import java.util.ArrayList;
 import java.util.List;
@@ -321,20 +322,28 @@ public class TargetHud extends DraggableElement {
     }
 
     public static void renderEntityInInventory(
-            GuiGraphics guiGraphics, float x, float y, float scale, Vector3f translate, Quaternionf pose, Quaternionf cameraOrientation, LivingEntity entity
+            GuiGraphics guiGraphics,
+            float x,
+            float y,
+            float scale,
+            Vector3f translate,
+            Quaternionf pose,
+            @Nullable Quaternionf cameraOrientation,
+            LivingEntity entity
     ) {
         guiGraphics.pose().pushPose();
         guiGraphics.pose().translate((double)x, (double)y, 50.0);
         guiGraphics.pose().scale(scale, scale, -scale);
         guiGraphics.pose().translate(translate.x, translate.y, translate.z);
         guiGraphics.pose().mulPose(pose);
+        guiGraphics.flush();
         Lighting.setupForEntityInInventory();
         EntityRenderDispatcher entityRenderDispatcher = Minecraft.getInstance().getEntityRenderDispatcher();
         if (cameraOrientation != null) {
             entityRenderDispatcher.overrideCameraOrientation(cameraOrientation.conjugate(new Quaternionf()).rotateY((float)Math.PI));
         }
         entityRenderDispatcher.setRenderShadow(false);
-        RenderSystem.runAsFancy(() -> entityRenderDispatcher.render(entity, 0.0, 0.0, 0.0, 0.0f, 1.0f, guiGraphics.pose(), guiGraphics.bufferSource(), 15728880));
+        guiGraphics.drawSpecial(bufferSource -> entityRenderDispatcher.render(entity, 0.0, 0.0, 0.0, 1.0f, guiGraphics.pose(), bufferSource, 15728880));
         guiGraphics.flush();
         entityRenderDispatcher.setRenderShadow(true);
         guiGraphics.pose().popPose();

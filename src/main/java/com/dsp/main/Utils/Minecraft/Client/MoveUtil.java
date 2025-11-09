@@ -6,7 +6,9 @@ import net.minecraft.util.Mth;
 
 public class MoveUtil {
     private static final Minecraft mc = Minecraft.getInstance();
-
+    private static float smoothForward = 0;
+    private static float smoothStrafe = 0;
+    private static final float SMOOTHNESS = 0.3f;
     public static boolean isMoving() {
         if (mc.player == null) return false;
         return mc.player.zza != 0 || mc.player.xxa != 0;
@@ -143,5 +145,58 @@ public class MoveUtil {
         event.setForward(closestForward);
         event.setStrafe(closestStrafe);
         event.setCanceled(true);
+    }
+    public static void fixMovementSmooth(MoveInputEvent event, float yaw) {
+        float forward = event.getForward();
+        float strafe = event.getStrafe();
+
+        if (forward == 0 && strafe == 0) {
+            smoothForward = lerp(smoothForward, 0, SMOOTHNESS * 2);
+            smoothStrafe = lerp(smoothStrafe, 0, SMOOTHNESS * 2);
+
+            if (Math.abs(smoothForward) < 0.01f) smoothForward = 0;
+            if (Math.abs(smoothStrafe) < 0.01f) smoothStrafe = 0;
+
+            if (smoothForward == 0 && smoothStrafe == 0) return;
+
+            event.setForward(smoothForward);
+            event.setStrafe(smoothStrafe);
+            event.setCanceled(true);
+            return;
+        }
+
+        double targetAngle = Mth.wrapDegrees(Math.toDegrees(direction(mc.player.isFallFlying() ? mc.player.getYRot() : yaw, forward, strafe)));
+        float closestForward = 0, closestStrafe = 0;
+        float closestDifference = Float.MAX_VALUE;
+
+        for (float predictedForward = -1; predictedForward <= 1; predictedForward++) {
+            for (float predictedStrafe = -1; predictedStrafe <= 1; predictedStrafe++) {
+                if (predictedForward == 0 && predictedStrafe == 0) continue;
+
+                double predictedAngle = Mth.wrapDegrees(Math.toDegrees(direction(mc.player.getYRot(), predictedForward, predictedStrafe)));
+                double difference = Math.abs(targetAngle - predictedAngle);
+
+                if (difference < closestDifference) {
+                    closestDifference = (float) difference;
+                    closestForward = predictedForward;
+                    closestStrafe = predictedStrafe;
+                }
+            }
+        }
+
+        smoothForward = lerp(smoothForward, closestForward, SMOOTHNESS);
+        smoothStrafe = lerp(smoothStrafe, closestStrafe, SMOOTHNESS);
+
+        event.setForward(smoothForward);
+        event.setStrafe(smoothStrafe);
+        event.setCanceled(true);
+    }
+    private static float lerp(float start, float end, float percent) {
+        return start + (end - start) * percent;
+    }
+
+    public static void resetSmooth() {
+        smoothForward = 0;
+        smoothStrafe = 0;
     }
 }

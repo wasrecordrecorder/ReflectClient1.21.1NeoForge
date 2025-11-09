@@ -13,12 +13,13 @@ import org.joml.Vector4f;
 import static com.dsp.main.Api.mc;
 
 public class ClientPlayerUtil {
+    public static float fallDistanceX;
     public static boolean isPlayerFalling() {
         boolean cancelReason = mc.player.isInLava()
                 || mc.player.isPassenger();
         boolean onGround = mc.player.onGround();
         float attackStrength = mc.player.getAttackStrengthScale(1.0f);
-        return !cancelReason && attackStrength >= 0.85 && !onGround && mc.player.fallDistance > 0;
+        return !cancelReason && attackStrength >= 0.85 && !onGround && ClientFallDistance.get() > 0.0f;
     }
     public static boolean isMoving() {
         Vec2 vector2f = mc.player.input.getMoveVector();

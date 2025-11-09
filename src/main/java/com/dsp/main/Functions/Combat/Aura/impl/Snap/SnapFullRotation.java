@@ -4,6 +4,7 @@ import com.dsp.main.Functions.Combat.Aura.Aura;
 import com.dsp.main.Functions.Combat.Aura.impl.AttackHandler;
 import com.dsp.main.Functions.Combat.Aura.impl.RotationAngle;
 import com.dsp.main.Core.Other.FreeLook;
+import com.dsp.main.Utils.Minecraft.Client.ClientFallDistance;
 import com.dsp.main.Utils.TimerUtil;
 import net.minecraft.util.Mth;
 import net.minecraft.world.entity.Entity;
@@ -55,7 +56,7 @@ public class SnapFullRotation extends RotationAngle {
             mc.player.setXRot(FreeLook.getCameraPitch());
         }
         if (mc.player.getAttackStrengthScale(1.0F) >= 0.85F
-                && mc.player.fallDistance > 0
+                && ClientFallDistance.get() > 0
                 && snapState == SnapState.IDLE
                 && Aura.Target != null
                 && mc.player.distanceTo(Aura.Target) <= aura.attackRange.getValue()) {
@@ -103,7 +104,7 @@ public class SnapFullRotation extends RotationAngle {
                         hitTimerStarted = true;
                         hitTimer.reset();
                     } else if (hitTimer.getTimePassed() >= ATTACK_TIME_PASS) {
-                        AttackHandler.update(aura, false);
+                        AttackHandler.update(aura, false, false);
                         snapTimer.reset();
                         hitTimerStarted = false;
                         snapState = SnapState.RETURNING;
@@ -116,7 +117,7 @@ public class SnapFullRotation extends RotationAngle {
             }
         } else if (snapState == SnapState.RETURNING) {
             if (mc.player.getAttackStrengthScale(1.0F) >= 0.85F
-                    && mc.player.fallDistance > 0
+                    && ClientFallDistance.get() > 0
                     && Aura.Target != null
                     && mc.player.distanceTo(Aura.Target) <= aura.attackRange.getValue()) {
                 snapStartYaw   = mc.player.getYRot();

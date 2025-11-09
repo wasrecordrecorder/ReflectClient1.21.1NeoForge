@@ -39,8 +39,6 @@ public class ModeComponent extends Component {
         if (!isVisible()) return;
 
         PoseStack poseStack = graphics.pose();
-
-        // Отрисовка имени настройки
         float nameY = (float) (y + PADDING * scaleFactor);
         BuiltText nameText = Builder.text()
                 .font(BIKO_FONT.get())
@@ -49,9 +47,8 @@ public class ModeComponent extends Component {
                 .size(TEXT_SIZE * scaleFactor)
                 .thickness(0.05f)
                 .build();
-        nameText.render(new Matrix4f(), (int) (x + 2 * scaleFactor), (int) nameY);
+        nameText.render(new Matrix4f(), (float) (x + 2 * scaleFactor), nameY);
 
-        // Отрисовка фона текущего режима
         float modeTextWidth = BIKO_FONT.get().getWidth(modeSetting.getMode(), TEXT_SIZE * scaleFactor);
         float currentModeWidth = modeTextWidth + 5 * scaleFactor;
         float modeX = (float) (x + parent.getWidth() - currentModeWidth - 7 * scaleFactor);
@@ -60,7 +57,6 @@ public class ModeComponent extends Component {
 
         DrawShader.drawRoundBlur(poseStack, modeX, modeY - 1 * scaleFactor, currentModeWidth, modeHeight, ROUNDING * scaleFactor, new Color(33, 33, 39, 200).hashCode(), 90, 0.7f);
 
-        // Отрисовка текста текущего режима
         boolean isHovered = mouseX >= modeX && mouseX <= modeX + currentModeWidth && mouseY >= modeY && mouseY <= modeY + modeHeight;
         BuiltText currentModeText = Builder.text()
                 .font(BIKO_FONT.get())
@@ -69,7 +65,7 @@ public class ModeComponent extends Component {
                 .size(TEXT_SIZE * scaleFactor)
                 .thickness(0.07f)
                 .build();
-        currentModeText.render(new Matrix4f(), (int) (modeX + (currentModeWidth - modeTextWidth) / 2), (int) (modeY + 1 * scaleFactor));
+        currentModeText.render(new Matrix4f(), (modeX + (currentModeWidth - modeTextWidth) / 2), (modeY + 1 * scaleFactor));
 
         if (isOpen) {
             openAnimationProgress = lerp(openAnimationProgress, 1.0f, ANIMATION_SPEED);
@@ -109,7 +105,7 @@ public class ModeComponent extends Component {
                             .size(TEXT_SIZE * scaleFactor)
                             .thickness(isSelected ? 0.07f : 0.05f)
                             .build();
-                    modeText.render(new Matrix4f(), (int) (optX + 1 * scaleFactor), (int) (optY + 1 * scaleFactor));
+                    modeText.render(new Matrix4f(), (optX + 1 * scaleFactor), (optY + 1 * scaleFactor));
 
                     offset += optWidth + ELEMENT_PADDING * scaleFactor;
                 }

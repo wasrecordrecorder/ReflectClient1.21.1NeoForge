@@ -6,6 +6,7 @@ import com.dsp.main.Module;
 import com.dsp.main.UI.ClickGui.Dropdown.Settings.CheckBox;
 import com.dsp.main.UI.ClickGui.Dropdown.Settings.MultiCheckBox;
 import com.dsp.main.UI.ClickGui.Dropdown.Settings.Slider;
+import com.dsp.main.Utils.Minecraft.Chat.ChatUtil;
 import net.minecraft.client.Minecraft;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.entity.Entity;

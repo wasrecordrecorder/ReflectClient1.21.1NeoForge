@@ -86,7 +86,7 @@ public class MainScreen extends Screen {
 
     @Override
     public void render(@NotNull GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTicks) {
-        this.renderBlurredBackground(partialTicks);
+        this.renderBlurredBackground();
         DrawHelper.rectangle(guiGraphics.pose(), 0, 0, width, height, 0, 0x95000510);
 
         categoryScroll = lerp(categoryScroll, targetCategoryScroll, SCROLL_SPEED);

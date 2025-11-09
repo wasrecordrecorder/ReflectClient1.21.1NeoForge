@@ -1,18 +1,14 @@
 package com.dsp.main.Utils.Font.renderers.impl;
 
-import com.mojang.blaze3d.vertex.*;
-import org.joml.Matrix4f;
-
-import com.mojang.blaze3d.systems.RenderSystem;
-import net.minecraft.client.Minecraft;
-import net.minecraft.resources.ResourceLocation;
-import net.minecraft.server.packs.resources.ResourceManager;
-import net.minecraft.client.renderer.ShaderInstance;
 import com.dsp.main.Utils.Font.builders.states.QuadColorState;
 import com.dsp.main.Utils.Font.builders.states.QuadRadiusState;
 import com.dsp.main.Utils.Font.builders.states.SizeState;
-import com.dsp.main.Utils.Font.providers.ResourceProvider;
 import com.dsp.main.Utils.Font.renderers.IRenderer;
+import com.dsp.main.Utils.Render.ModShaders;
+import com.mojang.blaze3d.systems.RenderSystem;
+import com.mojang.blaze3d.vertex.*;
+import net.minecraft.client.renderer.CompiledShaderProgram;
+import org.joml.Matrix4f;
 
 public record BuiltBorder(
         SizeState size,
@@ -23,35 +19,54 @@ public record BuiltBorder(
         float externalSmoothness
 ) implements IRenderer {
 
-    private static ShaderInstance borderShader;
-    private static Tesselator tesselator;
-    public static void setBorderShader(ShaderInstance shader) {
-        borderShader = shader;
-    }
-
     @Override
     public void render(Matrix4f matrix, float x, float y, float z) {
-        if (borderShader == null) {
-            try {
-                ResourceManager resourceManager = Minecraft.getInstance().getResourceManager();
-                ResourceLocation shaderLocation = ResourceProvider.getShaderIdentifier("border");
-                borderShader = new ShaderInstance(resourceManager, shaderLocation, DefaultVertexFormat.POSITION_COLOR);
-            } catch (Exception e) {
-                throw new RuntimeException("Failed to load border shader", e);
-            }
+        if (ModShaders.BORDER_SHADER == null) {
+            return;
         }
 
         RenderSystem.enableBlend();
         RenderSystem.defaultBlendFunc();
         RenderSystem.disableCull();
 
-        float width = this.size.width(), height = this.size.height();
-        RenderSystem.setShader(() -> borderShader);
-        borderShader.getUniform("Size").set(width, height);
-        borderShader.getUniform("Radius").set(this.radius.radius1(), this.radius.radius2(),
-                this.radius.radius3(), this.radius.radius4());
-        borderShader.getUniform("Thickness").set(thickness);
-        borderShader.getUniform("Smoothness").set(this.internalSmoothness, this.externalSmoothness);
+        CompiledShaderProgram compiled = RenderSystem.setShader(ModShaders.BORDER_SHADER);
+        if (compiled == null) {
+            RenderSystem.enableCull();
+            RenderSystem.disableBlend();
+            return;
+        }
+
+        float width = this.size.width();
+        float height = this.size.height();
+
+        try {
+            var sizeUniform = compiled.getUniform("Size");
+            if (sizeUniform != null) {
+                sizeUniform.set(width, height);
+            }
+        } catch (Exception ignored) {}
+
+        try {
+            var radiusUniform = compiled.getUniform("Radius");
+            if (radiusUniform != null) {
+                radiusUniform.set(this.radius.radius1(), this.radius.radius2(),
+                        this.radius.radius3(), this.radius.radius4());
+            }
+        } catch (Exception ignored) {}
+
+        try {
+            var thicknessUniform = compiled.getUniform("Thickness");
+            if (thicknessUniform != null) {
+                thicknessUniform.set(thickness);
+            }
+        } catch (Exception ignored) {}
+
+        try {
+            var smoothnessUniform = compiled.getUniform("Smoothness");
+            if (smoothnessUniform != null) {
+                smoothnessUniform.set(this.internalSmoothness, this.externalSmoothness);
+            }
+        } catch (Exception ignored) {}
 
         BufferBuilder builder = Tesselator.getInstance().begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_COLOR);
 
@@ -83,7 +98,10 @@ public record BuiltBorder(
         float a4 = ((c4 >> 24) & 0xFF) / 255.0f;
         builder.addVertex(matrix, x + width, y, z).setColor(r4, g4, b4, a4);
 
-        BufferUploader.drawWithShader(builder.buildOrThrow());
+        MeshData meshData = builder.build();
+        if (meshData != null) {
+            BufferUploader.drawWithShader(meshData);
+        }
 
         RenderSystem.enableCull();
         RenderSystem.disableBlend();

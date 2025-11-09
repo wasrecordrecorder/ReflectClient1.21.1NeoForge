@@ -1,7 +1,7 @@
 {
   "required": true,
   "package": "com.dsp.main.Mixin",
-  "compatibilityLevel": "JAVA_17",
+  "compatibilityLevel": "JAVA_21",
   "refmap": "mixins.dsp.refmap.json",
   "mixins": [
   ],
@@ -9,6 +9,7 @@
     "defaultRequire": 1
   },
   "client": [
+    "AuctionHelperMixin",
     "BossHealthOverlayMixin",
     "CameraMixin",
     "ChatComponentMixin",
@@ -16,12 +17,14 @@
     "EntityMixin",
     "GameRendererMixin",
     "GuiHotbarMixin",
+    "ItemInHandRendererMixin",
     "KeyboardInputMixin",
     "LevelRendererMixin",
     "LivingEntityMixin",
     "LocalPlayerMixin",
     "LocalPlayerSprintAccessorMixin",
     "MinecraftMixin",
+    "MixinClientPacketListener",
     "MouseHandlerMixin",
     "MultiPlayerGameModeMixin",
     "PlayerMixin",
@@ -29,6 +32,7 @@
     "PlayerTabOverlayMixin",
     "ScoreboardMixin",
     "ScreenEffectRendererMixin",
+    "ScreenMixin",
     "ServerboundInteractPacketMixin",
     "Accesors.BossHealthOverlayAccessor",
     "Accesors.LivingEntityAccessor",

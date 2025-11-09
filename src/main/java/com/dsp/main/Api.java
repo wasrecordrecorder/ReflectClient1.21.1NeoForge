@@ -3,6 +3,7 @@ package com.dsp.main;
 import com.dsp.main.Core.Sound.SoundRegister;
 import com.dsp.main.Functions.Combat.*;
 import com.dsp.main.Functions.Combat.Aura.Aura;
+import com.dsp.main.Functions.Combat.Aura.ElytraTarget;
 import com.dsp.main.Functions.Misc.*;
 import com.dsp.main.Functions.Movement.*;
 import com.dsp.main.Functions.Player.*;
@@ -11,6 +12,7 @@ import com.dsp.main.Core.ConfigSystem.CfgManager;
 import com.dsp.main.Core.Event.OnUpdate;
 import com.dsp.main.Core.Event.UpdateInputEvent;
 import com.dsp.main.Core.Other.Hooks.KeyboardInputHook;
+import com.dsp.main.Functions.Render.XRay.XRay;
 import com.dsp.main.UI.ClickGui.CsWindow.MainScreen;
 import com.dsp.main.UI.ClickGui.Dropdown.ClickGuiScreen;
 import com.dsp.main.Functions.Movement.AutoSprint;
@@ -23,17 +25,20 @@ import com.dsp.main.UI.MainMenu.MainMenuScreen;
 import com.dsp.main.Core.Other.Hooks.InventoryScreenHook;
 import com.dsp.main.UI.Notifications.NotificationManager;
 import com.dsp.main.Utils.Engine.Particle.SinusoidEngine;
+import com.dsp.main.Utils.Minecraft.Client.ClientFallDistance;
 import com.dsp.main.Utils.TimerUtil;
 import net.minecraft.client.CameraType;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.MouseHandler;
 import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.network.protocol.game.ClientboundSystemChatPacket;
 import net.minecraft.sounds.SoundEvent;
 import net.minecraft.util.Mth;
 import net.neoforged.bus.api.EventPriority;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.neoforge.client.event.*;
 import net.neoforged.neoforge.event.entity.player.AttackEntityEvent;
+import net.neoforged.neoforge.event.tick.PlayerTickEvent;
 import org.lwjgl.glfw.GLFW;
 
 import java.nio.file.Path;
@@ -42,7 +47,6 @@ import java.util.*;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 import static com.dsp.main.Functions.Misc.ClientSetting.*;
-import static com.dsp.main.Functions.Render.HudElement.snapGride;
 import static com.dsp.main.Main.isDetect;
 
 public class Api {
@@ -51,6 +55,7 @@ public class Api {
     public static Minecraft mc = Minecraft.getInstance();
     public static CopyOnWriteArrayList<Module> Functions = new CopyOnWriteArrayList<>();
     private boolean isCfgLoaded = false;
+    private int ticksSinceStart = 0;
     public static boolean isResetingSprint = false;
     public static boolean isSlowBypass = false;
     public static NotificationManager notificationManager = new NotificationManager();
@@ -73,26 +78,23 @@ public class Api {
 
     public static void Initialize() {
         Collections.addAll(Functions,
-                // Misc
+                //misc
                 new AutoLeave(), new AntiAttack(), new AutoAccept(), new UnHook(), new ItemScroller(), new AutoRespawn(),
                 new ItemSwapFix(), new AutoAuch(), new AutoJoiner(), new ClientSetting(), new FuntimeHelper(), new HolyworldHelper(),
-                new NoServerRot(), new SRPSpoof(), new SlowPacket(), new AuctionHelper(),
-
-                // Combat
-                new Aura(), new TriggerBot(), new AimAssistant(), new AntiBot(), new AutoGApple(), new HitBox(), new AutoWeapon(),
-                new AutoFlipFireball(), new AutoSwap(), new AutoTotem(), new BreachSwap(), new AimTrainer(),
-
-                //Movement
+                new NoServerRot(), new SRPSpoof(), new SlowPacket(), new AuctionHelper(), new AutoEZ(), new DeathCoordinates(),
+                new AutoFish(),
+                //combat
+                new Aura(), new ElytraTarget(), new TriggerBot(), new AimAssistant(), new AntiBot(), new AutoGApple(), new HitBox(), new AutoWeapon(),
+                new AutoFlipFireball(), new AutoSwap(), new AutoTotem(), new BreachSwap(), new AimTrainer(), new SuperBow(),
+                //movement
                 new AutoSprint(), new NoSlow(), new Speed(), new ScreenWalk(), new Scaffhold(), new ElytraRecast(),
-
-                // Player
+                //player
                 new ClickActions(), new NoDelay(), new NoPush(), new FastExp(), new FreelookModule(), new ElytraHelper(),
-                new AutoSoup(), new SafeWalking(), /*new FreeCamera(),*/ new LockSlot(), new TapeMouse(), new ClanInvest(),
-                new ChestStealer(), new AntiAfk(),
-
-                // Render
+                new AutoSoup(), new SafeWalking(), new LockSlot(), new TapeMouse(), new ClanInvest(),
+                new ChestStealer(), new AntiAfk(), new AutoDodge(), new InvCleaner(), new Nuker(),
+                //render
                 new HudElement(), new NoRender(), new Notifications(), new NameTagsModule(), new Predictions(), new Fullbright(),
-                new Snow(), new BoxEsp()
+                new Snow(), new BoxEsp(), new JumpCircles(), new TNTTimer(), new XRay(), new ViewModel()
         );
     }
 
@@ -105,6 +107,15 @@ public class Api {
             }
         }
         return false;
+    }
+
+    public static Module getModule(String name) {
+        for (Module m : Functions) {
+            if (Objects.equals(m.name, name)) {
+                return m;
+            }
+        }
+        return null;
     }
 
     @SubscribeEvent
@@ -138,6 +149,7 @@ public class Api {
             }
         }
     }
+
     @SubscribeEvent
     public void onMouseKey(InputEvent.MouseButton.Pre e) {
         if (isDetect) return;
@@ -157,6 +169,7 @@ public class Api {
             }
         }
     }
+
     @SubscribeEvent(priority = EventPriority.HIGHEST)
     public void onRenderGui(RenderGuiEvent.Pre event) {
         GuiGraphics guiGraphics = event.getGuiGraphics();
@@ -187,6 +200,7 @@ public class Api {
             element.onRelease(event.getButton());
         }
     }
+
     @SubscribeEvent
     public void onAttack(AttackEntityEvent e) {
         if (isDetect) return;
@@ -203,9 +217,22 @@ public class Api {
             mc.player.playSound(selectedSound, 1.0F, 1.0F);
         }
     }
+
     @SubscribeEvent
     public void OnTickEvent(OnUpdate event) {
-        if (mc.player == null) return;
+        if (mc.player == null || mc.level == null) {
+            ClientFallDistance.reset();
+            return;
+        }
+
+        if (!isCfgLoaded) {
+            ticksSinceStart++;
+            if (ticksSinceStart >= 40) {
+                CfgManager.loadCfg("autoload");
+                isCfgLoaded = true;
+            }
+        }
+        ClientFallDistance.update(mc.player);
         if (!(mc.player.input instanceof KeyboardInputHook)) {
             mc.player.input = new KeyboardInputHook(mc.options);
         }
@@ -228,16 +255,13 @@ public class Api {
     @SubscribeEvent
     public void onInitGui(ScreenEvent.Init.Pre e) {
         if (e.getScreen() instanceof net.minecraft.client.gui.screens.TitleScreen && !isDetect) {
-            if (!isCfgLoaded) {
-                CfgManager.loadCfg("autoload");
-                isCfgLoaded = true;
-            }
-
             mc.setScreen(new MainMenuScreen());
-        } if (e.getScreen() instanceof  net.minecraft.client.gui.screens.inventory.InventoryScreen && !isDetect && mc.player != null) {
+        }
+        if (e.getScreen() instanceof net.minecraft.client.gui.screens.inventory.InventoryScreen && !isDetect && mc.player != null) {
             mc.setScreen(new InventoryScreenHook(mc.player));
         }
     }
+
     @SubscribeEvent
     public void onUpdateInput(UpdateInputEvent event) {
         if (isResetingSprint) {
@@ -255,9 +279,11 @@ public class Api {
             TimerUtil.sleepVoid(() -> isSlowBypass = false, 150);
         }
     }
+
     public static float fast(float end, float start, float multiple) {
         return (1 - Mth.clamp((float) (deltaTime() * multiple), 0, 1)) * end + Mth.clamp((float) (deltaTime() * multiple), 0, 1) * start;
     }
+
     private static double deltaTime() {
         float fps = 60;
         try {
@@ -265,6 +291,7 @@ public class Api {
         }catch (Exception ignore){}
         return fps > 0 ? (1.0000 / fps) : 1;
     }
+
     public static Path getCrossPlatformAppDataFolder() {
         String os = System.getProperty("os.name").toLowerCase();
         if (os.contains("win")) {
@@ -275,6 +302,7 @@ public class Api {
             return Paths.get(System.getProperty("user.home"));
         }
     }
+
     public static Path getCustomConfigDir() {
         if (customConfigDirCache == null) {
             Path baseDir = getCrossPlatformAppDataFolder();
@@ -287,7 +315,9 @@ public class Api {
         }
         return customConfigDirCache;
     }
+
     private static float animation = 0;
+
     @SubscribeEvent
     public void onEventContinuous(RenderFrameEvent.Pre e) {
         if (mc.player == null) return;
@@ -295,7 +325,22 @@ public class Api {
         else animation = fast(animation, 1f, 10);
         SinusoidEngine.tickAll(mc.level);
     }
+
     public static double getDistance(double dis) {
         return 1f + ((dis - 1f) * animation);
+    }
+
+    @SubscribeEvent
+    public void onPacket(net.neoforged.neoforge.client.event.ClientChatReceivedEvent event) {
+        try {
+            if (Api.isEnabled("AutoEZ")) {
+                if (event.getMessage() != null) {
+                    ClientboundSystemChatPacket packet = new ClientboundSystemChatPacket(event.getMessage(), false);
+                    AutoEZ.onChatPacket(packet);
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 }

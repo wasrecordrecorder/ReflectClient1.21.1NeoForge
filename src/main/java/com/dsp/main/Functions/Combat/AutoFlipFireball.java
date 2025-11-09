@@ -17,11 +17,12 @@ import net.minecraft.world.phys.Vec3;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.neoforge.client.event.RenderFrameEvent;
 
-import static com.dsp.main.Core.Other.FreeLook.enableFreeLook;
 import static com.dsp.main.Core.Other.FreeLook.getCameraYaw;
 import static com.dsp.main.Utils.Minecraft.Client.InvUtil.requestFreeLook;
 
 public class AutoFlipFireball extends Module {
+    private static final String FREELOOK_REQUEST_ID = "AutoFlipFireball";
+
     private static Fireball closestFireball = null;
     public static boolean isFlippingFireball = false;
     private static Slider dist = new Slider("Distance", 1, 6, 3, 1);
@@ -61,7 +62,7 @@ public class AutoFlipFireball extends Module {
 
         if (rot.isEnabled()) {
             isFlippingFireball = true;
-            if (!FreeLook.isFreeLookEnabled) enableFreeLook();
+            FreeLook.requestFreeLook(FREELOOK_REQUEST_ID);
             Vec3 playerEye = player.getEyePosition();
             Vec3 fireballPos = closestFireball.position().add(0, closestFireball.getBbHeight() / 2, 0);
             Vec3 lookVec = fireballPos.subtract(playerEye);
@@ -88,21 +89,26 @@ public class AutoFlipFireball extends Module {
                 mc.player.setXRot(FreeLook.getCameraPitch());
             }
         }, 70);
-        TimerUtil.sleepVoid(() -> {
-            if (mc.player != null) {
-                if (FreeLook.isFreeLookEnabled) FreeLook.disableFreeLook();
-            }
-        }, 90);
+        TimerUtil.sleepVoid(() -> FreeLook.releaseFreeLook(FREELOOK_REQUEST_ID), 90);
         attackCooldown = (int) clickCd.getValue();
     }
 
     private double lerp(double start, double end, float factor) {
         return start + (end - start) * factor;
     }
+
     @SubscribeEvent
     public void OnMoveInput(MoveInputEvent event) {
         if (FreeLook.isFreeLookEnabled && closestFireball != null) {
             MoveUtil.fixMovement(event, getCameraYaw());
         }
+    }
+
+    @Override
+    public void onDisable() {
+        super.onDisable();
+        FreeLook.releaseFreeLook(FREELOOK_REQUEST_ID);
+        isFlippingFireball = false;
+        closestFireball = null;
     }
 }

@@ -46,7 +46,21 @@ public class ElytraHelper extends Module {
             return;
         }
 
-        Item currentChestItem = mc.player.getItemBySlot(EquipmentSlot.CHEST).getItem();
+        ItemStack currentChestStack = mc.player.getItemBySlot(EquipmentSlot.CHEST);
+        if (currentChestStack.isEmpty()) {
+            int elytraSlot = invUtil.getSlotInAllInventory(Items.ELYTRA);
+            if (elytraSlot != -1) {
+                invUtil.moveItem(elytraSlot, EquipmentSlot.CHEST.getIndex());
+                return;
+            }
+            int chestplateSlot = getBestChestplate(mc);
+            if (chestplateSlot != -1) {
+                invUtil.moveItem(chestplateSlot, EquipmentSlot.CHEST.getIndex());
+            }
+            return;
+        }
+
+        Item currentChestItem = currentChestStack.getItem();
 
         if (slowBypass.isEnabled()) isSlowBypass = true;
 
@@ -55,21 +69,23 @@ public class ElytraHelper extends Module {
             if (chestplateSlot == -1) {
                 return;
             }
-            invUtil.moveItem(chestplateSlot, EquipmentSlot.CHEST.getIndex(4));
-        } else if (currentChestItem instanceof ArmorItem && ((ArmorItem) currentChestItem).getEquipmentSlot() == EquipmentSlot.CHEST) {
-            int elytraSlot = invUtil.getSlotInAllInventory(Items.ELYTRA);
-            if (elytraSlot == -1) {
-                return;
+            invUtil.moveItem(chestplateSlot, EquipmentSlot.CHEST.getIndex());
+        } else if (currentChestItem instanceof ArmorItem) {
+            if (((ArmorItem) currentChestItem).getEquipmentSlot(currentChestStack) == EquipmentSlot.CHEST) {
+                int elytraSlot = invUtil.getSlotInAllInventory(Items.ELYTRA);
+                if (elytraSlot == -1) {
+                    return;
+                }
+                invUtil.moveItem(elytraSlot, EquipmentSlot.CHEST.getIndex());
             }
-            invUtil.moveItem(elytraSlot, EquipmentSlot.CHEST.getIndex(4));
         } else {
             int elytraSlot = invUtil.getSlotInAllInventory(Items.ELYTRA);
             if (elytraSlot != -1) {
-                invUtil.moveItem(elytraSlot, EquipmentSlot.CHEST.getIndex(4));
+                invUtil.moveItem(elytraSlot, EquipmentSlot.CHEST.getIndex());
             } else {
                 int chestplateSlot = getBestChestplate(mc);
                 if (chestplateSlot != -1) {
-                    invUtil.moveItem(chestplateSlot, EquipmentSlot.CHEST.getIndex(4));
+                    invUtil.moveItem(chestplateSlot, EquipmentSlot.CHEST.getIndex());
                 }
             }
         }

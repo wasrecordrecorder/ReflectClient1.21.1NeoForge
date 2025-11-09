@@ -2,7 +2,7 @@ package com.dsp.main.Functions.Misc;
 
 import com.dsp.main.Core.Event.ClientPacketReceiveEvent;
 import com.dsp.main.Module;
-import net.minecraft.network.protocol.game.ClientboundSetCarriedItemPacket;
+import net.minecraft.network.protocol.game.ClientboundSetHeldSlotPacket;
 import net.minecraft.network.protocol.game.ServerboundSetCarriedItemPacket;
 import net.neoforged.bus.api.SubscribeEvent;
 
@@ -15,8 +15,8 @@ public class ItemSwapFix extends Module {
     @SubscribeEvent
     public void packet(ClientPacketReceiveEvent e) {
         if (mc.player == null) return;
-        if (e.getPacket() instanceof ClientboundSetCarriedItemPacket pac) {
-            mc.player.connection.send(new ServerboundSetCarriedItemPacket(pac.getSlot()));
+        if (e.getPacket() instanceof ClientboundSetHeldSlotPacket pac) {
+            mc.player.connection.send(new ServerboundSetCarriedItemPacket(pac.slot()));
             e.setCanceled(true);
         }
     }

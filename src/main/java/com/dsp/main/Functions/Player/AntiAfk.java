@@ -1,6 +1,7 @@
 package com.dsp.main.Functions.Player;
 
 import com.dsp.main.Core.Event.OnUpdate;
+import com.dsp.main.Core.Other.FreeLook;
 import com.dsp.main.Mixin.Accesors.MouseHandlerAccessor;
 import com.dsp.main.Module;
 import com.dsp.main.UI.ClickGui.Dropdown.ClickGuiScreen;
@@ -40,7 +41,9 @@ public class AntiAfk extends Module {
                     mouse.invokeOnPress(window, 0, 0, 0);
                     break;
                 case "Rotation":
-                    mc.player.setYHeadRot(Mth.clamp(new Random().nextFloat(360), 0, 360));
+                    FreeLook.requestFreeLook("AntiAfk");
+                    mc.player.setYRot(Mth.clamp(new Random().nextFloat(360), 0, 360));
+                    FreeLook.releaseFreeLook("AntiAfk");
                     break;
             }
             timer.reset();

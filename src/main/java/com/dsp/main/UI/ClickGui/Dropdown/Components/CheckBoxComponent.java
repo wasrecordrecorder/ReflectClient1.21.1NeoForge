@@ -51,7 +51,7 @@ public class CheckBoxComponent extends Component {
                 .size(8.5f * scaleFactor)
                 .thickness(0.05f)
                 .build();
-        nameText.render(new Matrix4f(), (int) (x + 5 * scaleFactor), (int) (y + 4 * scaleFactor));
+        nameText.render(new Matrix4f(), (float) (x + 5 * scaleFactor), (float) (y + 4 * scaleFactor));
 
         BuiltText KnobRender = Builder.text()
                 .font(ICONS.get())
@@ -60,7 +60,7 @@ public class CheckBoxComponent extends Component {
                 .size(10.5f * scaleFactor)
                 .thickness(0.05f)
                 .build();
-        KnobRender.render(new Matrix4f(), (float) (parent.getX() + parent.getWidth() - 19 * scaleFactor), (int) (y + 4 * scaleFactor));
+        KnobRender.render(new Matrix4f(), (float) (parent.getX() + parent.getWidth() - 19 * scaleFactor), (float) (y + 4 * scaleFactor));
     }
 
     @Override
@@ -91,13 +91,5 @@ public class CheckBoxComponent extends Component {
 
     private float lerp(float start, float end, float t) {
         return start + t * (end - start);
-    }
-
-    private int interpolateColor(Color start, Color end, float fraction) {
-        int r = (int) (start.getRed() + (end.getRed() - start.getRed()) * fraction);
-        int g = (int) (start.getGreen() + (end.getGreen() - start.getGreen()) * fraction);
-        int b = (int) (start.getBlue() + (end.getBlue() - start.getBlue()) * fraction);
-        int a = (int) (start.getAlpha() + (end.getAlpha() - start.getAlpha()) * fraction);
-        return (a << 24) | (r << 16) | (g << 8) | b;
     }
 }

@@ -30,6 +30,8 @@ public class AimDataCollector {
     private static RotationData previousData = null;
     private static int validSamples = 0;
     private static int invalidSamples = 0;
+    private static int writeErrors = 0;
+    private static final int FLUSH_INTERVAL = 50;
 
     public static void startCollection() {
         if (isCollecting) {
@@ -42,14 +44,16 @@ public class AimDataCollector {
             dataFile = getCustomConfigDir().resolve("aim_training_" + timestamp + ".csv");
 
             Files.createDirectories(dataFile.getParent());
-            writer = new BufferedWriter(new FileWriter(dataFile.toFile()));
+            writer = new BufferedWriter(new FileWriter(dataFile.toFile(), true), 8192);
 
             writer.write("yaw_delta,pitch_delta,target_yaw,target_pitch,since_attack,distance,on_ground,mini_hitbox,current_yaw,current_pitch,next_yaw,next_pitch\n");
+            writer.flush();
 
             isCollecting = true;
             samplesCollected = 0;
             validSamples = 0;
             invalidSamples = 0;
+            writeErrors = 0;
             previousData = null;
             lastRotation = new Vector2f(mc.player.getYRot(), mc.player.getXRot());
             prevRotation = new Vector2f(lastRotation);
@@ -59,6 +63,9 @@ public class AimDataCollector {
             ChatUtil.sendMessage("§eБейтесь с противником, данные собираются автоматически");
         } catch (IOException e) {
             ChatUtil.sendMessage("§cОшибка создания файла: " + e.getMessage());
+            e.printStackTrace();
+            isCollecting = false;
+            safeCloseWriter();
         }
     }
 
@@ -68,24 +75,40 @@ public class AimDataCollector {
             return;
         }
 
+        isCollecting = false;
+
         try {
             if (writer != null) {
+                writer.flush();
                 writer.close();
+                writer = null;
             }
-            isCollecting = false;
+
             previousData = null;
 
             ChatUtil.sendMessage("§aСбор завершен!");
             ChatUtil.sendMessage("§eВалидных: " + validSamples + " | Отброшено: " + invalidSamples);
+            if (writeErrors > 0) {
+                ChatUtil.sendMessage("§cОшибок записи: " + writeErrors);
+            }
             ChatUtil.sendMessage("§eФайл: " + dataFile.getFileName());
             ChatUtil.sendMessage("§6Запустите train_model.py для обучения модели");
         } catch (IOException e) {
             ChatUtil.sendMessage("§cОшибка закрытия файла: " + e.getMessage());
+            e.printStackTrace();
+        } finally {
+            safeCloseWriter();
         }
     }
 
     public static void collectData(LivingEntity target) {
-        if (!isCollecting || target == null || mc.player == null || writer == null) {
+        if (!isCollecting || target == null || mc.player == null) {
+            return;
+        }
+
+        if (writer == null) {
+            ChatUtil.sendMessage("§cWriter is null! Stopping collection...");
+            stopCollection();
             return;
         }
 
@@ -129,22 +152,45 @@ public class AimDataCollector {
 
             if (previousData != null) {
                 if (isValidData(previousData)) {
-                    writer.write(String.format(Locale.US, "%.4f,%.4f,%.4f,%.4f,%.2f,%.4f,%d,%d,%.4f,%.4f,%.4f,%.4f\n",
-                            previousData.yawDelta,
-                            previousData.pitchDelta,
-                            previousData.targetYaw,
-                            previousData.targetPitch,
-                            previousData.sinceAttack,
-                            previousData.distance,
-                            (int)previousData.onGround,
-                            (int)previousData.miniHitbox,
-                            previousData.yaw,
-                            previousData.pitch,
-                            currentYaw,
-                            currentPitch
-                    ));
-                    validSamples++;
-                    samplesCollected++;
+                    try {
+                        String line = String.format(Locale.US, "%.4f,%.4f,%.4f,%.4f,%.2f,%.4f,%d,%d,%.4f,%.4f,%.4f,%.4f\n",
+                                previousData.yawDelta,
+                                previousData.pitchDelta,
+                                previousData.targetYaw,
+                                previousData.targetPitch,
+                                previousData.sinceAttack,
+                                previousData.distance,
+                                (int) previousData.onGround,
+                                (int) previousData.miniHitbox,
+                                previousData.yaw,
+                                previousData.pitch,
+                                currentYaw,
+                                currentPitch
+                        );
+
+                        writer.write(line);
+                        validSamples++;
+                        samplesCollected++;
+
+                        if (samplesCollected % FLUSH_INTERVAL == 0) {
+                            writer.flush();
+                        }
+
+                        if (samplesCollected % 100 == 0 && samplesCollected > 0) {
+                            ChatUtil.sendMessage(String.format("§7Собрано: %d | Валидных: %d | Отброшено: %d",
+                                    samplesCollected, validSamples, invalidSamples));
+                        }
+                    } catch (IOException e) {
+                        writeErrors++;
+                        ChatUtil.sendMessage("§cОшибка записи #" + writeErrors + ": " + e.getMessage());
+                        e.printStackTrace();
+
+                        if (writeErrors >= 10) {
+                            ChatUtil.sendMessage("§cСлишком много ошибок! Останавливаю сбор...");
+                            stopCollection();
+                            return;
+                        }
+                    }
                 } else {
                     invalidSamples++;
                 }
@@ -166,21 +212,34 @@ public class AimDataCollector {
             prevRotation.set(lastRotation);
             lastRotation.set(currentRot);
 
-            if (samplesCollected % 100 == 0 && samplesCollected > 0) {
-                ChatUtil.sendMessage(String.format("§7Собрано: %d | Валидных: %d", samplesCollected, validSamples));
-            }
-
-        } catch (IOException e) {
-            ChatUtil.sendMessage("§cОшибка записи: " + e.getMessage());
+        } catch (Exception e) {
+            ChatUtil.sendMessage("§cКритическая ошибка сбора: " + e.getMessage());
+            e.printStackTrace();
             stopCollection();
         }
     }
 
     private static boolean isValidData(RotationData data) {
+        if (data == null) return false;
+
         return data.distance > 0.1f && data.distance < 50.0f &&
                 data.yawDelta >= 0 && data.yawDelta < 180 &&
                 data.pitchDelta >= 0 && data.pitchDelta < 90 &&
-                data.sinceAttack >= 0 && data.sinceAttack < 30;
+                data.sinceAttack >= 0 && data.sinceAttack < 30 &&
+                !Float.isNaN(data.yaw) && !Float.isNaN(data.pitch) &&
+                !Float.isNaN(data.targetYaw) && !Float.isNaN(data.targetPitch);
+    }
+
+    private static void safeCloseWriter() {
+        try {
+            if (writer != null) {
+                writer.flush();
+                writer.close();
+                writer = null;
+            }
+        } catch (IOException e) {
+            System.err.println("Error closing writer: " + e.getMessage());
+        }
     }
 
     public static void onAttack() {
@@ -193,5 +252,13 @@ public class AimDataCollector {
 
     public static int getSamplesCollected() {
         return samplesCollected;
+    }
+
+    public static int getValidSamples() {
+        return validSamples;
+    }
+
+    public static int getInvalidSamples() {
+        return invalidSamples;
     }
 }

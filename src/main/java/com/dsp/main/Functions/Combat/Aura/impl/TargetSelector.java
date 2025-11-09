@@ -1,5 +1,6 @@
 package com.dsp.main.Functions.Combat.Aura.impl;
 
+import com.dsp.main.Api;
 import com.dsp.main.Functions.Combat.AntiBot;
 import com.dsp.main.Functions.Combat.Aura.Aura;
 import com.dsp.main.Core.FrndSys.FriendManager;
@@ -24,7 +25,9 @@ public class TargetSelector {
         Player player = mc.player;
         if (player == null) return null;
 
-        float aimRange = aura.aimRange.getValueFloat();
+        boolean isElytraMode = player.isFallFlying() && Api.getModule("ElytraTarget").isEnabled();
+        float aimRange = isElytraMode ? aura.elytraAimRange.getValueFloat() : aura.aimRange.getValueFloat();
+
         AABB aabb = new AABB(
                 player.position().subtract(aimRange, aimRange, aimRange),
                 player.position().add(aimRange, aimRange, aimRange)

@@ -11,7 +11,9 @@ import com.dsp.main.Utils.Font.renderers.impl.BuiltText;
 import com.dsp.main.Utils.Render.DrawHelper;
 import com.dsp.main.Utils.Render.Other.ESPUtils;
 import com.dsp.main.Utils.Render.Other.EntityPos;
+import com.mojang.blaze3d.systems.RenderSystem;
 import net.minecraft.client.Minecraft;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.entity.player.Player;
@@ -32,17 +34,21 @@ import static com.dsp.main.Utils.Minecraft.Client.ClientPlayerUtil.getHealthFrom
 
 public class NameTagsModule extends Module {
     private static final Minecraft mc = Minecraft.getInstance();
+    private static final ResourceLocation FRIEND_ICON = ResourceLocation.fromNamespaceAndPath("dsp", "textures/1.png");
+
     private static MultiCheckBox Modi = new MultiCheckBox("Options", Arrays.asList(
             new CheckBox("Players", false),
             new CheckBox("Items", false)
     ));
     private static CheckBox pltItems = new CheckBox("Render Player Items", false).setVisible(() -> Modi.isOptionEnabled("Players"));
     private static CheckBox drawDurab = new CheckBox("Draw Item Decorations", false).setVisible(() -> pltItems.isEnabled());
+    private static CheckBox markFriends = new CheckBox("Mark Friends", false).setVisible(() -> Modi.isOptionEnabled("Players"));
+
     private static float displayedHealthPercent = 0.0f;
 
     public NameTagsModule() {
         super("NameTags", 0, Category.RENDER, "Renders custom name tags above players");
-        addSettings(Modi, pltItems, drawDurab);
+        addSettings(Modi, pltItems, drawDurab, markFriends);
     }
 
     @SubscribeEvent
@@ -146,7 +152,7 @@ public class NameTagsModule extends Module {
                         .size(4.5f)
                         .thickness(0.05f)
                         .build();
-                hpText.render(new Matrix4f(event.getGuiGraphics().pose().last().pose()), (vec.x - width / 2) + width - 1, vec.y + BIKO_FONT.get().getMetrics().baselineHeight() * 5f - 1);
+                hpText.render(new Matrix4f(event.getGuiGraphics().pose().last().pose()), (vec.x - width / 2) + width +2, vec.y + BIKO_FONT.get().getMetrics().baselineHeight() * 5f - 1);
 
                 if (isFriend) {
                     BuiltText friendText = Builder.text()
@@ -159,6 +165,10 @@ public class NameTagsModule extends Module {
                     friendText.render(new Matrix4f(event.getGuiGraphics().pose().last().pose()), (vec.x - width / 2) -4, vec.y + BIKO_FONT.get().getMetrics().baselineHeight() * 3.5f);
                 }
 
+                if (isFriend && markFriends.isEnabled()) {
+                    renderFriendIcon(event, (float) vec.x, (float) vec.y, width);
+                }
+
                 float tagCenterX = (float) vec.x;
                 float tagY = (float) vec.y;
                 if (pltItems.isEnabled()) {
@@ -166,6 +176,30 @@ public class NameTagsModule extends Module {
                 }
             } catch (Exception ignored) {}
         }
+    }
+
+    private void renderFriendIcon(RenderGuiEvent event, float centerX, float tagY, float tagWidth) {
+        try {
+            final float iconSize = 16f;
+            float iconX = centerX - (iconSize / 2f);
+            float iconY = tagY - iconSize - 5f;
+
+            RenderSystem.enableBlend();
+            RenderSystem.defaultBlendFunc();
+            RenderSystem.setShaderColor(0.0f, 1.0f, 0.0f, 1.0f);
+
+            DrawHelper.drawTexture(
+                    FRIEND_ICON,
+                    event.getGuiGraphics().pose().last().pose(),
+                    iconX,
+                    iconY,
+                    iconSize,
+                    iconSize
+            );
+
+            RenderSystem.setShaderColor(1.0f, 1.0f, 1.0f, 1.0f);
+            RenderSystem.disableBlend();
+        } catch (Exception ignored) {}
     }
 
     public void renderPlayerItems(RenderGuiEvent event, float tagCenterX, float tagY, Player player) {

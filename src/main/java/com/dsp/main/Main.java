@@ -2,13 +2,14 @@ package com.dsp.main;
 
 import com.dsp.main.Core.ChatManager.ChatManager;
 import com.dsp.main.Core.Discord.DiscordRPC;
+import com.dsp.main.Core.GPS.GPSRenderer;
 import com.dsp.main.Core.Other.FreeLook;
 import com.dsp.main.Core.Sound.SoundRegister;
+import com.dsp.main.Functions.Misc.AutoFish;
 import com.dsp.main.UI.Draggable.DragElements.*;
 import com.dsp.main.UI.Draggable.DragManager;
 import com.dsp.main.UI.Themes.ThemesUtil;
 import com.dsp.main.Utils.AI.AssetLoad;
-import com.dsp.main.Utils.Engine.Particle.EngineSetup;
 import com.dsp.main.Utils.Font.msdf.MsdfFont;
 import com.dsp.main.Utils.Minecraft.Client.AutoEatUtil;
 import net.neoforged.bus.EventBus;
@@ -49,5 +50,6 @@ public class Main {
         EVENT_BUS.register(new AutoEatUtil());
         EVENT_BUS.register(new ChatManager());
         EVENT_BUS.register(new FreeLook());
+        EVENT_BUS.register(new GPSRenderer());
     }
 }

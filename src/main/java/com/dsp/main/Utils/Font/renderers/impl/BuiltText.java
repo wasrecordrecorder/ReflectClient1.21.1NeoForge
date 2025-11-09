@@ -2,19 +2,12 @@ package com.dsp.main.Utils.Font.renderers.impl;
 
 import com.dsp.main.Utils.Font.msdf.MsdfFont;
 import com.dsp.main.Utils.Font.providers.ColorProvider;
-import com.dsp.main.Utils.Font.providers.ResourceProvider;
 import com.dsp.main.Utils.Font.renderers.IRenderer;
-import com.mojang.blaze3d.vertex.BufferBuilder;
-import com.mojang.blaze3d.vertex.BufferUploader;
-import com.mojang.blaze3d.vertex.Tesselator;
-import com.mojang.blaze3d.vertex.VertexFormat;
-import com.mojang.blaze3d.vertex.DefaultVertexFormat;
-import net.minecraft.client.renderer.ShaderInstance;
-import org.joml.Matrix4f;
-
+import com.dsp.main.Utils.Render.ModShaders;
 import com.mojang.blaze3d.systems.RenderSystem;
-import net.minecraft.client.Minecraft;
-import net.minecraft.resources.ResourceLocation;
+import com.mojang.blaze3d.vertex.*;
+import net.minecraft.client.renderer.CompiledShaderProgram;
+import org.joml.Matrix4f;
 
 public record BuiltText(
 		MsdfFont font,
@@ -28,25 +21,14 @@ public record BuiltText(
 		float outlineThickness
 ) implements IRenderer {
 
-	private static ShaderInstance msdfFontShader;
-	private static Tesselator tesselator;
-
-	public static void setMsdfFontShader(ShaderInstance shader) {
-		msdfFontShader = shader;
-	}
-
 	@Override
 	public void render(Matrix4f matrix, float x, float y, float z) {
 		if (text == null || text.isEmpty()) {
 			return;
 		}
-		if (msdfFontShader == null) {
-			try {
-				ResourceLocation shaderLocation = ResourceProvider.getShaderIdentifier("msdf_font");
-				msdfFontShader = new ShaderInstance(Minecraft.getInstance().getResourceManager(), shaderLocation, DefaultVertexFormat.POSITION_TEX_COLOR);
-			} catch (Exception e) {
-				throw new RuntimeException("Failed to load MSDF font shader", e);
-			}
+
+		if (ModShaders.MSDF_FONT_SHADER == null) {
+			return;
 		}
 
 		RenderSystem.enableBlend();
@@ -55,18 +37,59 @@ public record BuiltText(
 
 		RenderSystem.setShaderTexture(0, this.font.getTextureId());
 
+		CompiledShaderProgram compiled = RenderSystem.setShader(ModShaders.MSDF_FONT_SHADER);
+		if (compiled == null) {
+			RenderSystem.enableCull();
+			RenderSystem.disableBlend();
+			return;
+		}
+
 		boolean outlineEnabled = (this.outlineThickness > 0.0f);
-		RenderSystem.setShader(() -> msdfFontShader);
-		msdfFontShader.getUniform("Range").set(this.font.getAtlas().range());
-		msdfFontShader.getUniform("Thickness").set(this.thickness);
-		msdfFontShader.getUniform("Smoothness").set(this.smoothness);
-		msdfFontShader.getUniform("Outline").set(outlineEnabled ? 1 : 0);
+
+		try {
+			var rangeUniform = compiled.getUniform("Range");
+			if (rangeUniform != null) {
+				rangeUniform.set(this.font.getAtlas().range());
+			}
+		} catch (Exception ignored) {}
+
+		try {
+			var thicknessUniform = compiled.getUniform("Thickness");
+			if (thicknessUniform != null) {
+				thicknessUniform.set(this.thickness);
+			}
+		} catch (Exception ignored) {}
+
+		try {
+			var smoothnessUniform = compiled.getUniform("Smoothness");
+			if (smoothnessUniform != null) {
+				smoothnessUniform.set(this.smoothness);
+			}
+		} catch (Exception ignored) {}
+
+		try {
+			var outlineUniform = compiled.getUniform("Outline");
+			if (outlineUniform != null) {
+				outlineUniform.set(outlineEnabled ? 1 : 0);
+			}
+		} catch (Exception ignored) {}
 
 		if (outlineEnabled) {
-			msdfFontShader.getUniform("OutlineThickness").set(this.outlineThickness);
-			float[] outlineComponents = ColorProvider.normalize(this.outlineColor);
-			msdfFontShader.getUniform("OutlineColor").set(outlineComponents[0], outlineComponents[1],
-					outlineComponents[2], outlineComponents[3]);
+			try {
+				var outlineThicknessUniform = compiled.getUniform("OutlineThickness");
+				if (outlineThicknessUniform != null) {
+					outlineThicknessUniform.set(this.outlineThickness);
+				}
+			} catch (Exception ignored) {}
+
+			try {
+				float[] outlineComponents = ColorProvider.normalize(this.outlineColor);
+				var outlineColorUniform = compiled.getUniform("OutlineColor");
+				if (outlineColorUniform != null) {
+					outlineColorUniform.set(outlineComponents[0], outlineComponents[1],
+							outlineComponents[2], outlineComponents[3]);
+				}
+			} catch (Exception ignored) {}
 		}
 
 		BufferBuilder builder = Tesselator.getInstance().begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_TEX_COLOR);
@@ -74,13 +97,12 @@ public record BuiltText(
 				(this.thickness + this.outlineThickness * 0.5f) * 0.5f * this.size, this.spacing,
 				x, y + this.font.getMetrics().baselineHeight() * this.size, z, this.color);
 
-		try {
-			BufferUploader.drawWithShader(builder.buildOrThrow());
-		} catch (IllegalStateException e) {
+		MeshData meshData = builder.build();
+		if (meshData != null) {
+			BufferUploader.drawWithShader(meshData);
 		}
 
 		RenderSystem.setShaderTexture(0, 0);
-
 		RenderSystem.enableCull();
 		RenderSystem.disableBlend();
 	}

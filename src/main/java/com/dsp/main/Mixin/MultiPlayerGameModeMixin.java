@@ -56,10 +56,14 @@ public abstract class MultiPlayerGameModeMixin {
             at = @At("HEAD")
     )
     private void resetSprintBeforeAttack(Player player, Entity targetEntity, CallbackInfo ci) {
-        if (mc.player.isSprinting() && isMoving() && (isFt() || isAm() || isSp() || isHw() || isFs() || resetSprintMode.isMode("Packet + Slow"))) {
+        if (mc.player.isSprinting() && isMoving() && (isAm() || isSp() || isHw() || isFs() || resetSprintMode.isMode("Packet + Slow"))) {
             mc.player.setSprinting(false);
             mc.getConnection().send(new ServerboundPlayerCommandPacket(mc.player, ServerboundPlayerCommandPacket.Action.STOP_SPRINTING));
             mc.player.setDeltaMovement(mc.player.getDeltaMovement().multiply(0.6, 1, 0.6));
+        }
+        if (mc.player.isSprinting() && isMoving() && isFt()) {
+            mc.player.setSprinting(false);
+            mc.getConnection().send(new ServerboundPlayerCommandPacket(mc.player, ServerboundPlayerCommandPacket.Action.STOP_SPRINTING));
         }
         if (!Aura.attackType.isMode("1.8") && resetSprintMode.isMode("Legit")) {
             isResetingSprint = true;

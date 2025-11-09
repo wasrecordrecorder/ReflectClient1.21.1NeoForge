@@ -1,94 +1,58 @@
 package com.dsp.main.Utils.Engine.Particle;
 
-import com.dsp.main.Utils.Minecraft.Chat.ChatUtil;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.*;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.renderer.RenderStateShard;
-import net.minecraft.client.renderer.RenderType;
-import net.minecraft.client.renderer.ShaderInstance;
-import net.minecraft.resources.ResourceLocation;
-import net.minecraft.server.packs.resources.ResourceManager;
+import net.minecraft.client.renderer.CoreShaders;
 import net.minecraft.world.phys.Vec3;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
-import net.neoforged.neoforge.client.event.RegisterShadersEvent;
 import net.neoforged.neoforge.client.event.RenderLevelStageEvent;
-
-import java.io.IOException;
 
 import static net.neoforged.neoforge.client.event.RenderLevelStageEvent.Stage.AFTER_PARTICLES;
 
 @EventBusSubscriber(value = Dist.CLIENT)
 public final class EngineSetup {
 
-    private static ShaderInstance sinusShader;
-    private static RenderType sinusRenderType;
-    private static boolean shadersReady = false;
-
     private EngineSetup() {}
 
-    @SubscribeEvent
-    public static void onRegisterShaders(RegisterShadersEvent e) throws IOException {
-        ResourceManager rm = Minecraft.getInstance().getResourceManager();
-        ResourceLocation loc = ResourceLocation.fromNamespaceAndPath("minecraft", "sinusoid_core");
-        sinusShader = new ShaderInstance(rm, loc, DefaultVertexFormat.POSITION_TEX_COLOR);
-        RenderType.CompositeState state = RenderType.CompositeState.builder()
-                .setShaderState(new RenderStateShard.ShaderStateShard(() -> sinusShader))
-                .setTransparencyState(RenderStateShard.TRANSLUCENT_TRANSPARENCY)
-                .setWriteMaskState(RenderStateShard.COLOR_DEPTH_WRITE)
-                .setCullState(RenderStateShard.NO_CULL)
-                .createCompositeState(false);
-        sinusRenderType = RenderType.create("sinusoid_render",
-                DefaultVertexFormat.POSITION_TEX_COLOR,
-                VertexFormat.Mode.QUADS,
-                256,
-                false, true,
-                state);
-        shadersReady = true;
-    }
+    // ❌ УДАЛИЛИ метод onRegisterShaders - больше не нужен!
 
     @SubscribeEvent
-    public static void onRenderWorld(RenderLevelStageEvent e) {
-        if (e.getStage() != AFTER_PARTICLES || !shadersReady || sinusShader == null || sinusRenderType == null || SinusoidEngine.getParticles().isEmpty())
+    public static void onRenderWorld(RenderLevelStageEvent event) {
+        if (event.getStage() != AFTER_PARTICLES || SinusoidEngine.getParticles().isEmpty())
             return;
 
         Minecraft mc = Minecraft.getInstance();
         if (mc.player == null || mc.level == null) return;
+
         if (mc.options.keyAttack.isDown()) {
             SinusoidEngine.handleAttackInput();
         }
 
-        Vec3 cam = e.getCamera().getPosition();
+        Vec3 cam = event.getCamera().getPosition();
 
         RenderSystem.enableBlend();
         RenderSystem.defaultBlendFunc();
-        RenderSystem.setShader(() -> sinusShader);
+        RenderSystem.setShader(CoreShaders.PARTICLE);  // ✅ Используем встроенный шейдер
 
-        try {
-            var u = sinusShader.getUniform("ProjectionMatrix");
-            if (u != null) u.set(RenderSystem.getProjectionMatrix());
-        } catch (Throwable ignored) {}
-        try {
-            var u = sinusShader.getUniform("ViewModelMatrix");
-            if (u != null) u.set(RenderSystem.getModelViewMatrix());
-        } catch (Throwable ignored) {}
-        try {
-            var u = sinusShader.getUniform("Time");
-            if (u != null) u.set((float) mc.level.getGameTime() * 0.05f);
-        } catch (Throwable ignored) {}
-        try {
-            var u = sinusShader.getUniform("GlowIntensity");
-            if (u != null) u.set(1.0f);
-        } catch (Throwable ignored) {}
+        Tesselator tesselator = Tesselator.getInstance();
+        BufferBuilder buffer = tesselator.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.PARTICLE);  // ✅ Правильный формат
 
-        Tesselator tess = Tesselator.getInstance();
-        BufferBuilder buf = tess.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_TEX_COLOR);
+        renderParticles(buffer, cam);
 
+        MeshData meshData = buffer.build();
+        if (meshData != null) {
+            BufferUploader.drawWithShader(meshData);
+        }
+
+        RenderSystem.disableBlend();
+    }
+
+    private static void renderParticles(BufferBuilder buffer, Vec3 cam) {
         for (SinusoidParticle p : SinusoidEngine.getParticles()) {
             Vec3 pos = p.position;
-            float na = p.normalizedAge();
             float s = p.getCurrentSize();
             float r = (float) p.getCurrentColor().x;
             float g = (float) p.getCurrentColor().y;
@@ -100,33 +64,45 @@ public final class EngineSetup {
             double cz = pos.z - cam.z;
 
             float h = s * 0.5f;
-            buf.addVertex((float)(cx - h), (float)(cy - h), (float)(cz + h)).setColor(r, g, b, a).setUv(0, 0);
-            buf.addVertex((float)(cx + h), (float)(cy - h), (float)(cz + h)).setColor(r, g, b, a).setUv(1, 0);
-            buf.addVertex((float)(cx + h), (float)(cy + h), (float)(cz + h)).setColor(r, g, b, a).setUv(1, 1);
-            buf.addVertex((float)(cx - h), (float)(cy + h), (float)(cz + h)).setColor(r, g, b, a).setUv(0, 1);
-            buf.addVertex((float)(cx + h), (float)(cy - h), (float)(cz - h)).setColor(r, g, b, a).setUv(0, 0);
-            buf.addVertex((float)(cx - h), (float)(cy - h), (float)(cz - h)).setColor(r, g, b, a).setUv(1, 0);
-            buf.addVertex((float)(cx - h), (float)(cy + h), (float)(cz - h)).setColor(r, g, b, a).setUv(1, 1);
-            buf.addVertex((float)(cx + h), (float)(cy + h), (float)(cz - h)).setColor(r, g, b, a).setUv(0, 1);
-            buf.addVertex((float)(cx - h), (float)(cy + h), (float)(cz + h)).setColor(r, g, b, a).setUv(0, 0);
-            buf.addVertex((float)(cx + h), (float)(cy + h), (float)(cz + h)).setColor(r, g, b, a).setUv(1, 0);
-            buf.addVertex((float)(cx + h), (float)(cy + h), (float)(cz - h)).setColor(r, g, b, a).setUv(1, 1);
-            buf.addVertex((float)(cx - h), (float)(cy + h), (float)(cz - h)).setColor(r, g, b, a).setUv(0, 1);
-            buf.addVertex((float)(cx - h), (float)(cy - h), (float)(cz - h)).setColor(r, g, b, a).setUv(0, 0);
-            buf.addVertex((float)(cx + h), (float)(cy - h), (float)(cz - h)).setColor(r, g, b, a).setUv(1, 0);
-            buf.addVertex((float)(cx + h), (float)(cy - h), (float)(cz + h)).setColor(r, g, b, a).setUv(1, 1);
-            buf.addVertex((float)(cx - h), (float)(cy - h), (float)(cz + h)).setColor(r, g, b, a).setUv(0, 1);
-            buf.addVertex((float)(cx + h), (float)(cy - h), (float)(cz + h)).setColor(r, g, b, a).setUv(0, 0);
-            buf.addVertex((float)(cx + h), (float)(cy - h), (float)(cz - h)).setColor(r, g, b, a).setUv(1, 0);
-            buf.addVertex((float)(cx + h), (float)(cy + h), (float)(cz - h)).setColor(r, g, b, a).setUv(1, 1);
-            buf.addVertex((float)(cx + h), (float)(cy + h), (float)(cz + h)).setColor(r, g, b, a).setUv(0, 1);
-            buf.addVertex((float)(cx - h), (float)(cy - h), (float)(cz - h)).setColor(r, g, b, a).setUv(0, 0);
-            buf.addVertex((float)(cx - h), (float)(cy - h), (float)(cz + h)).setColor(r, g, b, a).setUv(1, 0);
-            buf.addVertex((float)(cx - h), (float)(cy + h), (float)(cz + h)).setColor(r, g, b, a).setUv(1, 1);
-            buf.addVertex((float)(cx - h), (float)(cy + h), (float)(cz - h)).setColor(r, g, b, a).setUv(0, 1);
-        }
+            int lightmap = 15728880; // Полная яркость (блок света 15, небо 15)
 
-        BufferUploader.drawWithShader(buf.buildOrThrow());
-        RenderSystem.disableBlend();
+            // ✅ ПРАВИЛЬНЫЙ ПОРЯДОК для PARTICLE формата:
+            // addVertex(x, y, z).setUv(u, v).setColor(r, g, b, a).setLight(lightmap)
+
+            // Передняя грань (Z+)
+            buffer.addVertex((float)(cx - h), (float)(cy - h), (float)(cz + h)).setUv(0, 0).setColor(r, g, b, a).setLight(lightmap);
+            buffer.addVertex((float)(cx + h), (float)(cy - h), (float)(cz + h)).setUv(1, 0).setColor(r, g, b, a).setLight(lightmap);
+            buffer.addVertex((float)(cx + h), (float)(cy + h), (float)(cz + h)).setUv(1, 1).setColor(r, g, b, a).setLight(lightmap);
+            buffer.addVertex((float)(cx - h), (float)(cy + h), (float)(cz + h)).setUv(0, 1).setColor(r, g, b, a).setLight(lightmap);
+
+            // Задняя грань (Z-)
+            buffer.addVertex((float)(cx + h), (float)(cy - h), (float)(cz - h)).setUv(0, 0).setColor(r, g, b, a).setLight(lightmap);
+            buffer.addVertex((float)(cx - h), (float)(cy - h), (float)(cz - h)).setUv(1, 0).setColor(r, g, b, a).setLight(lightmap);
+            buffer.addVertex((float)(cx - h), (float)(cy + h), (float)(cz - h)).setUv(1, 1).setColor(r, g, b, a).setLight(lightmap);
+            buffer.addVertex((float)(cx + h), (float)(cy + h), (float)(cz - h)).setUv(0, 1).setColor(r, g, b, a).setLight(lightmap);
+
+            // Верхняя грань (Y+)
+            buffer.addVertex((float)(cx - h), (float)(cy + h), (float)(cz + h)).setUv(0, 0).setColor(r, g, b, a).setLight(lightmap);
+            buffer.addVertex((float)(cx + h), (float)(cy + h), (float)(cz + h)).setUv(1, 0).setColor(r, g, b, a).setLight(lightmap);
+            buffer.addVertex((float)(cx + h), (float)(cy + h), (float)(cz - h)).setUv(1, 1).setColor(r, g, b, a).setLight(lightmap);
+            buffer.addVertex((float)(cx - h), (float)(cy + h), (float)(cz - h)).setUv(0, 1).setColor(r, g, b, a).setLight(lightmap);
+
+            // Нижняя грань (Y-)
+            buffer.addVertex((float)(cx - h), (float)(cy - h), (float)(cz - h)).setUv(0, 0).setColor(r, g, b, a).setLight(lightmap);
+            buffer.addVertex((float)(cx + h), (float)(cy - h), (float)(cz - h)).setUv(1, 0).setColor(r, g, b, a).setLight(lightmap);
+            buffer.addVertex((float)(cx + h), (float)(cy - h), (float)(cz + h)).setUv(1, 1).setColor(r, g, b, a).setLight(lightmap);
+            buffer.addVertex((float)(cx - h), (float)(cy - h), (float)(cz + h)).setUv(0, 1).setColor(r, g, b, a).setLight(lightmap);
+
+            // Правая грань (X+)
+            buffer.addVertex((float)(cx + h), (float)(cy - h), (float)(cz + h)).setUv(0, 0).setColor(r, g, b, a).setLight(lightmap);
+            buffer.addVertex((float)(cx + h), (float)(cy - h), (float)(cz - h)).setUv(1, 0).setColor(r, g, b, a).setLight(lightmap);
+            buffer.addVertex((float)(cx + h), (float)(cy + h), (float)(cz - h)).setUv(1, 1).setColor(r, g, b, a).setLight(lightmap);
+            buffer.addVertex((float)(cx + h), (float)(cy + h), (float)(cz + h)).setUv(0, 1).setColor(r, g, b, a).setLight(lightmap);
+            // Левая грань (X-)
+            buffer.addVertex((float)(cx - h), (float)(cy - h), (float)(cz - h)).setUv(0, 0).setColor(r, g, b, a).setLight(lightmap);
+            buffer.addVertex((float)(cx - h), (float)(cy - h), (float)(cz + h)).setUv(1, 0).setColor(r, g, b, a).setLight(lightmap);
+            buffer.addVertex((float)(cx - h), (float)(cy + h), (float)(cz + h)).setUv(1, 1).setColor(r, g, b, a).setLight(lightmap);
+            buffer.addVertex((float)(cx - h), (float)(cy + h), (float)(cz - h)).setUv(0, 1).setColor(r, g, b, a).setLight(lightmap);
+        }
     }
 }

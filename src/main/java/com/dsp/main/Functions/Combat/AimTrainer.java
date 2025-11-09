@@ -5,6 +5,7 @@ import com.dsp.main.Utils.AI.Training.AimDataCollector;
 import com.dsp.main.Utils.Minecraft.Chat.ChatUtil;
 import net.minecraft.world.entity.LivingEntity;
 import net.neoforged.bus.api.SubscribeEvent;
+import net.neoforged.neoforge.event.entity.player.AttackEntityEvent;
 import net.neoforged.neoforge.event.tick.PlayerTickEvent;
 
 import static com.dsp.main.Api.mc;
@@ -27,6 +28,7 @@ public class AimTrainer extends Module {
         super.onDisable();
         AimDataCollector.stopCollection();
         ChatUtil.sendMessage("§aСобрано " + AimDataCollector.getSamplesCollected() + " образцов");
+        ChatUtil.sendMessage("§eВалидных: " + AimDataCollector.getValidSamples() + " | Отброшено: " + AimDataCollector.getInvalidSamples());
     }
 
     @SubscribeEvent
@@ -38,6 +40,13 @@ public class AimTrainer extends Module {
         if (target != null) {
             AimDataCollector.collectData(target);
             lastTarget = target;
+        }
+    }
+
+    @SubscribeEvent
+    public void onAttack(AttackEntityEvent event) {
+        if (event.getEntity() == mc.player && event.getTarget() instanceof LivingEntity) {
+            AimDataCollector.onAttack();
         }
     }
 

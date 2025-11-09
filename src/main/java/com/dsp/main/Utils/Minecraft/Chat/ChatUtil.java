@@ -17,8 +17,8 @@ public class ChatUtil {
             MutableComponent formattedMessage = Component.literal(message)
                     .withStyle(ChatFormatting.AQUA, ChatFormatting.ITALIC);
 
-            Minecraft.getInstance().player.sendSystemMessage(
-                    prefix.append(Component.literal(" > ")).append(formattedMessage)
+            Minecraft.getInstance().player.displayClientMessage(
+                    prefix.append(Component.literal(" > ")).append(formattedMessage), false
             );
         }
     }

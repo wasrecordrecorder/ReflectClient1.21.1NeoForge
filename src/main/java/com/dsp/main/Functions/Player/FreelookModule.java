@@ -14,16 +14,18 @@ public class FreelookModule extends Module {
     }
 
     @Override
-    public void onEnable() {
-        super.onEnable();
-        mc.options.setCameraType(CameraType.THIRD_PERSON_BACK);
-        if (!(mc.player == null || mc.level == null) && !FreeLook.isFreeLookEnabled) FreeLook.enableFreeLook();
-    }
-    @Override
     public void onDisable() {
         super.onDisable();
         mc.options.setCameraType(CameraType.FIRST_PERSON);
-        if (!(mc.player == null || mc.level == null) && FreeLook.isFreeLookEnabled) FreeLook.disableFreeLook();
+        FreeLook.releaseFreeLook("FreeLook");  // ← НОВЫЙ КОД
+    }
+    @Override
+    public void onEnable() {
+        super.onEnable();
+        mc.options.setCameraType(CameraType.THIRD_PERSON_BACK);
+        if (mc.player != null && mc.level != null) {
+            FreeLook.requestFreeLook("FreeLook");  // ← НОВЫЙ КОД
+        }
     }
 
     @SubscribeEvent

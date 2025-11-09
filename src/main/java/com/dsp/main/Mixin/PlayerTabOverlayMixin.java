@@ -20,6 +20,7 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
+import com.mojang.blaze3d.systems.RenderSystem;
 
 import java.util.List;
 import java.util.stream.Stream;
@@ -76,7 +77,7 @@ public abstract class PlayerTabOverlayMixin {
             poseStack.scale(scale, scale, 1.0f);
             poseStack.translate(-width / 2.0f, 0, 0);
 
-            guiGraphics.setColor(1.0f, 1.0f, 1.0f, currentProgress);
+            RenderSystem.setShaderColor(1.0f, 1.0f, 1.0f, currentProgress);
         }
     }
 
@@ -84,7 +85,7 @@ public abstract class PlayerTabOverlayMixin {
     private void onRenderTail(GuiGraphics guiGraphics, int width, Scoreboard scoreboard, Objective objective, CallbackInfo ci) {
         if (currentProgress < 1.0f || animationStartTime != -1) {
             guiGraphics.pose().popPose();
-            guiGraphics.setColor(1.0f, 1.0f, 1.0f, 1.0f);
+            RenderSystem.setShaderColor(1.0f, 1.0f, 1.0f, currentProgress);
         }
     }
 

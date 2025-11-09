@@ -4,7 +4,6 @@ import com.dsp.main.Module;
 import com.dsp.main.UI.ClickGui.Dropdown.Settings.CheckBox;
 import com.dsp.main.UI.ClickGui.Dropdown.Settings.Slider;
 import net.minecraft.world.entity.EquipmentSlot;
-import net.minecraft.world.item.ElytraItem;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.network.protocol.game.ServerboundPlayerCommandPacket;
@@ -54,8 +53,8 @@ public class ElytraRecast extends Module {
                 && !mc.player.onClimbable()) {
 
             ItemStack chest = mc.player.getItemBySlot(EquipmentSlot.CHEST);
-            return chest.getItem() == Items.ELYTRA
-                    && (ElytraItem.isFlyEnabled(chest) || allowBroken.isEnabled());
+            if (chest.getItem()==Items.ELYTRA && !allowBroken.isEnabled() && chest.getMaxDamage() - chest.getDamageValue() < 20) return false;
+            return chest.getItem() == Items.ELYTRA;
         }
         return false;
     }

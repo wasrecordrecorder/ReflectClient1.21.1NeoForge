@@ -46,7 +46,7 @@ public class SliderComponent extends Component {
                 .size(7f * scaleFactor)
                 .thickness(0.05f)
                 .build();
-        nameText.render(new Matrix4f(), (int) (x + 5 * scaleFactor), (int) (y + 3 * scaleFactor));
+        nameText.render(new Matrix4f(), (float) (x + 5 * scaleFactor), (float) (y + 3 * scaleFactor));
 
         String valueStr = String.format("%.2f", sliderSetting.getValue());
         float valueWidth = BIKO_FONT.get().getWidth(valueStr, 7f * scaleFactor);
@@ -57,7 +57,7 @@ public class SliderComponent extends Component {
                 .size(7f * scaleFactor)
                 .thickness(0.05f)
                 .build();
-        valueText.render(new Matrix4f(), (int) (x + parent.getWidth() - 10 * scaleFactor - valueWidth), (int) (y + 3 * scaleFactor));
+        valueText.render(new Matrix4f(), (float) (x + parent.getWidth() - 10 * scaleFactor - valueWidth), (float) (y + 3 * scaleFactor));
 
         float targetProgress = (float) ((sliderSetting.getValue() - sliderSetting.getMin()) / (sliderSetting.getMax() - sliderSetting.getMin()));
         animationProgress = lerp(animationProgress, targetProgress, ANIMATION_SPEED);

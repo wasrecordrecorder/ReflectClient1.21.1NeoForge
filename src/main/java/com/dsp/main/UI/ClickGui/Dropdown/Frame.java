@@ -1,6 +1,9 @@
 package com.dsp.main.UI.ClickGui.Dropdown;
 
 import com.dsp.main.Module;
+import com.dsp.main.UI.ClickGui.Dropdown.Components.BlockListComponent;
+import com.dsp.main.UI.ClickGui.Dropdown.Components.Component;
+import com.dsp.main.UI.ClickGui.Dropdown.Components.ItemListComponent;
 import com.dsp.main.UI.Themes.ThemesUtil;
 import com.dsp.main.Utils.Color.ColorHelper;
 import com.dsp.main.Utils.Font.builders.Builder;
@@ -20,11 +23,11 @@ import static com.dsp.main.Main.BIKO_FONT;
 import static com.dsp.main.Main.ICONS;
 
 public class Frame {
-    private static final int PADDING = 1;
-    private static final float ROUNDING = 10.0f;
-    private static final int BUTTON_PADDING = 3;
-    private static final float SCROLLBAR_WIDTH = 2.0f;
-    private static final float SCROLLBAR_ROUNDING = 3.0f;
+    private static final int PADDING = 2;
+    private static final float ROUNDING = 12.0f;
+    private static final int BUTTON_PADDING = 4;
+    private static final float SCROLLBAR_WIDTH = 2.5f;
+    private static final float SCROLLBAR_ROUNDING = 3.5f;
     private static final float SCROLLBAR_ANIMATION_SPEED = 0.2f;
     private static final float SCROLL_ANIMATION_SPEED = 0.3f;
     private static final long SCROLLBAR_FADE_DELAY = 1500;
@@ -62,21 +65,21 @@ public class Frame {
 
     public Frame(int x, int y, int height, Module.Category category, int index, float scaleFactor) {
         this.scaleFactor = scaleFactor;
-        this.finalX = (int) (x * scaleFactor);
-        this.finalY = (int) (y * scaleFactor);
+        this.finalX = x;
+        this.finalY = y;
 
         int screenW = mc.getWindow().getGuiScaledWidth();
         int screenH = mc.getWindow().getGuiScaledHeight();
-        this.startX = (int) (screenW / 2 * scaleFactor);
+        this.startX = screenW / 2;
         this.startY = (int) (screenH / 2 + 300 * scaleFactor);
 
-        this.width = (int) (117 * scaleFactor);
-        this.height = (int) (height * scaleFactor);
+        this.width = (int) (140 * scaleFactor);
+        this.height = height;
         this.category = category;
         this.index = index;
-        this.headerHeight = (int) (height * scaleFactor);
+        this.headerHeight = height;
         this.footerHeight = (int) (height / 2 * scaleFactor);
-        this.buttonBaseHeight = (int) (height * scaleFactor);
+        this.buttonBaseHeight = height;
         this.maxVisibleHeight = (int) (mc.getWindow().getGuiScaledHeight() * 0.65 * scaleFactor);
 
         animationStart = System.currentTimeMillis() + index * 100L;
@@ -85,12 +88,12 @@ public class Frame {
     }
 
     private void initButtons() {
-        int buttonY = (int) (finalY + headerHeight + BUTTON_PADDING * scaleFactor);
+        int buttonY = finalY + headerHeight + (int) (BUTTON_PADDING * scaleFactor);
         for (Module module : Module.getModulesByCategory(category)) {
             buttons.add(new Button(module,
-                    (int) (finalX + PADDING * scaleFactor),
+                    finalX,
                     buttonY,
-                    (int) (width - 2 * PADDING * scaleFactor),
+                    width,
                     buttonBaseHeight,
                     this, scaleFactor));
             buttonY += (int) (buttonBaseHeight + BUTTON_PADDING * scaleFactor);
@@ -128,10 +131,10 @@ public class Frame {
         ps.pushPose();
         int frameHeight = (int) (headerHeight + maxVisibleHeight + footerHeight);
         DrawShader.drawRoundBlur(ps,
-                currentX - (int) (2 * scaleFactor),
+                currentX - (int) (3 * scaleFactor),
                 currentY,
-                (int) (width + 4 * scaleFactor),
-                (int) (frameHeight + 4 * scaleFactor),
+                (int) (width + 6 * scaleFactor),
+                (int) (frameHeight + 6 * scaleFactor),
                 (ROUNDING - 2) * scaleFactor,
                 new Color(5, 15, 25).hashCode(),
                 90,
@@ -141,15 +144,15 @@ public class Frame {
 
     private void renderTitle(GuiGraphics guiGraphics) {
         String name = category.name();
-        int textWidth = (int) (BIKO_FONT.get().getWidth(name, 10f * scaleFactor) * scaleFactor);
+        int textWidth = (int) (BIKO_FONT.get().getWidth(name, 12f * scaleFactor));
         int textX = (int) (currentX + width / 2 - textWidth / 2);
-        int textY = (int) (currentY + 10 * scaleFactor);
+        int textY = (int) (currentY + 12 * scaleFactor);
 
         BuiltText text = Builder.text()
                 .font(BIKO_FONT.get())
                 .text(name)
                 .color(Color.WHITE)
-                .size(10f * scaleFactor)
+                .size(12f * scaleFactor)
                 .thickness(0.05f)
                 .build();
         text.render(new Matrix4f(), textX, textY);
@@ -170,10 +173,10 @@ public class Frame {
                         ThemesUtil.getCurrentStyle().getColorLowSpeed(1),
                         ThemesUtil.getCurrentStyle().getColorLowSpeed(2),
                         20, 10))
-                .size(10f * scaleFactor)
+                .size(12f * scaleFactor)
                 .thickness(0.05f)
                 .build();
-        int iconX = (int) (textX - 12 * scaleFactor);
+        int iconX = (int) (textX - 15 * scaleFactor);
         icon.render(new Matrix4f(), iconX, (int) (textY - 1 * scaleFactor));
     }
 
@@ -187,14 +190,14 @@ public class Frame {
                 .sum() - (int) (BUTTON_PADDING * scaleFactor);
         int visibleContentHeight = Math.min(totalContentHeight, (int) (maxVisibleHeight - 5 * scaleFactor));
 
-        int contentTop = (int) (currentY + headerHeight + 10 * scaleFactor);
+        int contentTop = (int) (currentY + headerHeight + 12 * scaleFactor);
         int contentBottom = (int) (contentTop + visibleContentHeight);
 
         guiGraphics.enableScissor(currentX, contentTop, currentX + width, contentBottom + 1);
 
         int buttonY = (int) (contentTop - scrollOffset);
         for (Button b : visibleButtons) {
-            b.setPosition((int) (currentX + PADDING * scaleFactor), buttonY);
+            b.setPosition(currentX + (int) (PADDING * scaleFactor), buttonY);
             b.setWidth((int) (width - 2 * PADDING * scaleFactor));
             if (buttonY < contentBottom && buttonY + b.getHeightWithComponents() > contentTop) {
                 b.render(guiGraphics, mouseX, mouseY, partialTicks);
@@ -231,12 +234,12 @@ public class Frame {
 
         float scrollBarHeight = ((float) visibleContentHeight / totalContentHeight) * visibleContentHeight;
         float maxScrollOffset = totalContentHeight - visibleContentHeight;
-        float scrollBarY = (int) (currentY + headerHeight + 10 * scaleFactor
+        float scrollBarY = (int) (currentY + headerHeight + 12 * scaleFactor
                 + (scrollOffset / maxScrollOffset) * (visibleContentHeight - scrollBarHeight));
 
         DrawShader.drawRoundBlur(
                 guiGraphics.pose(),
-                (int) (currentX + width + 3 * scaleFactor),
+                (int) (currentX + width + 4 * scaleFactor),
                 scrollBarY,
                 SCROLLBAR_WIDTH * scaleFactor,
                 scrollBarHeight,
@@ -287,6 +290,29 @@ public class Frame {
 
     public void mouseScrolled(double mouseX, double mouseY, double delta) {
         if (isHovered(mouseX, mouseY)) {
+            boolean scrolledInList = false;
+
+            for (Button b : visible()) {
+                for (Component c : b.getComponents()) {
+                    if ((c instanceof BlockListComponent || c instanceof ItemListComponent) && c.isHovered(mouseX, mouseY)) {
+                        if (c instanceof BlockListComponent) {
+                            ((BlockListComponent) c).mouseScrolled(mouseX, mouseY, delta);
+                        } else if (c instanceof ItemListComponent) {
+                            ((ItemListComponent) c).mouseScrolled(mouseX, mouseY, delta);
+                        }
+                        scrolledInList = true;
+                        break;
+                    }
+                }
+                if (scrolledInList) break;
+            }
+
+            if (scrolledInList) return;
+
+            for (Button b : visible()) {
+                b.mouseScrolled(mouseX, mouseY, delta);
+            }
+
             List<Button> v = visible();
             int totalContentHeight = v.stream()
                     .mapToInt(b -> (int) (b.getHeightWithComponents() + BUTTON_PADDING * scaleFactor))
@@ -294,7 +320,7 @@ public class Frame {
             int visibleContentHeight = Math.min(totalContentHeight, (int) maxVisibleHeight - 4);
             int maxScrollOffset = Math.max(0, totalContentHeight - visibleContentHeight);
 
-            targetScrollOffset += (float) (delta > 0 ? -20 * scaleFactor : 20 * scaleFactor);
+            targetScrollOffset += (float) (delta > 0 ? -25 * scaleFactor : 25 * scaleFactor);
             targetScrollOffset = Math.max(0, Math.min(targetScrollOffset, maxScrollOffset));
 
             isScrolling = true;
@@ -316,6 +342,10 @@ public class Frame {
 
     public void keyPressed(int keyCode) {
         visible().forEach(b -> b.keyPressed(keyCode));
+    }
+
+    public void charTyped(char chr) {
+        visible().forEach(b -> b.charTyped(chr));
     }
 
     private boolean isHovered(double mouseX, double mouseY) {

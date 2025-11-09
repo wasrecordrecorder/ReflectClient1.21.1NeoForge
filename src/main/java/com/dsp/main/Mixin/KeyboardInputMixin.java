@@ -15,24 +15,33 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 public class KeyboardInputMixin {
     @Inject(
             method = "tick",
-            at = @At("TAIL"),
-            cancellable = true
+            at = @At("TAIL")
     )
-    public void tick(boolean isSneaking, float sneakingSpeedMultiplier, CallbackInfo ci) {
-        KeyboardInput input = (KeyboardInput) (Object) this;
+    public void onTick(CallbackInfo ci) {
+        //System.out.println("test");
+        KeyboardInput input = (KeyboardInput)(Object)this;
+
         MoveInputEvent event = new MoveInputEvent();
         event.forward = input.forwardImpulse;
         event.strafe = input.leftImpulse;
-        event.jump = input.jumping;
-        event.sneaking = input.shiftKeyDown;
-        event.sneakSlow = sneakingSpeedMultiplier;
-        NeoForge.EVENT_BUS.post(event);
-        if (event.isCanceled()) {
-            input.forwardImpulse = event.forward;
-            input.leftImpulse = event.strafe;
-            input.jumping = event.jump;
-            input.shiftKeyDown = event.sneaking;
-            ci.cancel();
-        }
+        event.jump = input.keyPresses.jump();
+        event.sneaking = input.keyPresses.shift();
+        event.sneakSlow = 0.3f;
+
+        //NeoForge.EVENT_BUS.post(event);
+        //
+        //if (event.isCanceled()) {
+            //    input.forwardImpulse = event.forward;
+            //    input.leftImpulse = event.strafe;
+            //    input.keyPresses = new net.minecraft.world.entity.player.Input(
+                    //            input.keyPresses.forward(),
+            //            input.keyPresses.backward(),
+            //            input.keyPresses.left(),
+            //            input.keyPresses.right(),
+            //            event.jump,
+            //            event.sneaking,
+            //            input.keyPresses.sprint()
+                    //    );
+            //}
     }
 }

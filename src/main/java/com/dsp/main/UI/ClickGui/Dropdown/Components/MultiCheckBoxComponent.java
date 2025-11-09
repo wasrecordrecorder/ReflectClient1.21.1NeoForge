@@ -15,13 +15,12 @@ import java.awt.Color;
 import java.util.ArrayList;
 import java.util.List;
 
-import static com.dsp.main.Main.BIKO_FONT;
 import static com.dsp.main.Main.RUS;
 
 public class MultiCheckBoxComponent extends Component {
     private static final float ROUNDING = 3.0f;
     private static final float ANIMATION_SPEED = 0.2f;
-    private static final float TEXT_SIZE = 8.0f;
+    private static final float TEXT_SIZE = 7.0f;
     private static final float PADDING = 4.0f;
     private static final float ELEMENT_PADDING = 1.0f;
 
@@ -43,23 +42,23 @@ public class MultiCheckBoxComponent extends Component {
         PoseStack poseStack = graphics.pose();
         float nameY = (float) (y + PADDING * scaleFactor);
         BuiltText nameText = Builder.text()
-                .font(BIKO_FONT.get())
+                .font(RUS.get())
                 .text(multiCheckBox.getName())
                 .color(new Color(160, 163, 175))
                 .size(TEXT_SIZE * scaleFactor)
                 .thickness(0.05f)
                 .build();
-        nameText.render(new Matrix4f(), (int) (x + 2 * scaleFactor), (int) nameY);
+        nameText.render(new Matrix4f(), (float) (x + 2 * scaleFactor), nameY);
 
         long enabledCount = multiCheckBox.getOptions().stream().filter(CheckBox::isEnabled).count();
         long totalCount = multiCheckBox.getOptions().size();
         String enabledOptions = enabledCount + "/" + totalCount;
 
-        float modeTextWidth = BIKO_FONT.get().getWidth(enabledOptions, TEXT_SIZE * scaleFactor);
+        float modeTextWidth = RUS.get().getWidth(enabledOptions, TEXT_SIZE * scaleFactor);
         float currentModeWidth = modeTextWidth + 5 * scaleFactor;
         float modeX = (float) (x + parent.getWidth() - currentModeWidth - 7 * scaleFactor);
         float modeY = (float) (y + PADDING * scaleFactor);
-        float modeHeight = BIKO_FONT.get().getMetrics().lineHeight() * TEXT_SIZE * scaleFactor + 2 * scaleFactor;
+        float modeHeight = RUS.get().getMetrics().lineHeight() * TEXT_SIZE * scaleFactor + 2 * scaleFactor;
 
         if (isOpen) {
             openAnimationProgress = lerp(openAnimationProgress, 1.0f, ANIMATION_SPEED);
@@ -79,10 +78,10 @@ public class MultiCheckBoxComponent extends Component {
             for (List<CheckBox> row : rows) {
                 offset = 0;
                 for (CheckBox option : row) {
-                    float optWidth = BIKO_FONT.get().getWidth(option.getName(), TEXT_SIZE + 1.3f * scaleFactor) * scaleFactor;
+                    float optWidth = RUS.get().getWidth(option.getName(), TEXT_SIZE + 0.7f * scaleFactor);
                     float optX = dropdownX + 2 * scaleFactor + offset;
                     float optY = dropdownY + 3 * scaleFactor + heightOffset;
-                    float optHeight = BIKO_FONT.get().getMetrics().lineHeight() * TEXT_SIZE * scaleFactor + 1 * scaleFactor;
+                    float optHeight = RUS.get().getMetrics().lineHeight() * TEXT_SIZE * scaleFactor + 1 * scaleFactor;
                     boolean isEnabled = option.isEnabled();
 
                     DrawHelper.rectangle(poseStack, optX - 1 * scaleFactor, optY, optWidth, optHeight, ROUNDING * scaleFactor, new Color(40, 42, 50, 190).hashCode());
@@ -91,13 +90,13 @@ public class MultiCheckBoxComponent extends Component {
                     }
 
                     BuiltText optionText = Builder.text()
-                            .font(BIKO_FONT.get())
+                            .font(RUS.get())
                             .text(option.getName())
                             .color(isEnabled ? new Color(200, 200, 255) : new Color(100, 100, 120))
                             .size(TEXT_SIZE * scaleFactor)
                             .thickness(isEnabled ? 0.07f : 0.05f)
                             .build();
-                    optionText.render(new Matrix4f(), (int) (optX + 1 * scaleFactor), (int) (optY + 1 * scaleFactor));
+                    optionText.render(new Matrix4f(), (optX + 1 * scaleFactor) - 1, (optY + 1 * scaleFactor));
 
                     offset += optWidth + ELEMENT_PADDING * scaleFactor;
                 }
@@ -115,11 +114,11 @@ public class MultiCheckBoxComponent extends Component {
         long totalCount = multiCheckBox.getOptions().size();
         String enabledOptions = enabledCount + "/" + totalCount;
 
-        float modeTextWidth = BIKO_FONT.get().getWidth(enabledOptions, TEXT_SIZE * scaleFactor);
+        float modeTextWidth = RUS.get().getWidth(enabledOptions, TEXT_SIZE * scaleFactor);
         float currentModeWidth = modeTextWidth + 8 * scaleFactor;
         float modeX = (float) (x + parent.getWidth() - currentModeWidth - 7 * scaleFactor);
         float modeY = (float) (y + PADDING * scaleFactor);
-        float modeHeight = BIKO_FONT.get().getMetrics().lineHeight() * TEXT_SIZE * scaleFactor + 2 * scaleFactor;
+        float modeHeight = RUS.get().getMetrics().lineHeight() * TEXT_SIZE * scaleFactor + 2 * scaleFactor;
 
         if (mouseX >= modeX && mouseX <= modeX + currentModeWidth && mouseY >= modeY && mouseY <= modeY + modeHeight) {
             isOpen = true;
@@ -135,10 +134,10 @@ public class MultiCheckBoxComponent extends Component {
             for (List<CheckBox> row : calculateRows()) {
                 offset = 0;
                 for (CheckBox option : row) {
-                    float optWidth = BIKO_FONT.get().getWidth(option.getName(), TEXT_SIZE * scaleFactor) + 4 * scaleFactor;
+                    float optWidth = RUS.get().getWidth(option.getName(), TEXT_SIZE * scaleFactor) + 4 * scaleFactor;
                     float optX = dropdownX + 2 * scaleFactor + offset;
                     float optY = dropdownY + 1 * scaleFactor + heightOffset;
-                    float optHeight = BIKO_FONT.get().getMetrics().lineHeight() * TEXT_SIZE * scaleFactor + 1 * scaleFactor;
+                    float optHeight = RUS.get().getMetrics().lineHeight() * TEXT_SIZE * scaleFactor + 1 * scaleFactor;
 
                     if (mouseX >= optX && mouseX <= optX + optWidth && mouseY >= optY && mouseY <= optY + optHeight) {
                         option.toggle();
@@ -159,11 +158,11 @@ public class MultiCheckBoxComponent extends Component {
         long totalCount = multiCheckBox.getOptions().size();
         String enabledOptions = enabledCount + "/" + totalCount;
 
-        float modeTextWidth = BIKO_FONT.get().getWidth(enabledOptions, TEXT_SIZE * scaleFactor);
+        float modeTextWidth = RUS.get().getWidth(enabledOptions, TEXT_SIZE * scaleFactor);
         float currentModeWidth = modeTextWidth + 8 * scaleFactor;
         float modeX = (float) (x + parent.getWidth() - currentModeWidth - 7 * scaleFactor);
         float modeY = (float) (y + PADDING * scaleFactor);
-        float modeHeight = BIKO_FONT.get().getMetrics().lineHeight() * TEXT_SIZE * scaleFactor + 2 * scaleFactor;
+        float modeHeight = RUS.get().getMetrics().lineHeight() * TEXT_SIZE * scaleFactor + 2 * scaleFactor;
 
         if (mouseX >= modeX && mouseX <= modeX + currentModeWidth && mouseY >= modeY && mouseY <= modeY + modeHeight) {
             return true;
@@ -178,10 +177,10 @@ public class MultiCheckBoxComponent extends Component {
             for (List<CheckBox> row : calculateRows()) {
                 offset = 0;
                 for (CheckBox option : row) {
-                    float optWidth = BIKO_FONT.get().getWidth(option.getName(), TEXT_SIZE * scaleFactor) + 4 * scaleFactor;
+                    float optWidth = RUS.get().getWidth(option.getName(), TEXT_SIZE * scaleFactor) + 4 * scaleFactor;
                     float optX = dropdownX + 2 * scaleFactor + offset;
                     float optY = dropdownY + 1 * scaleFactor + heightOffset;
-                    float optHeight = BIKO_FONT.get().getMetrics().lineHeight() * TEXT_SIZE * scaleFactor + 1 * scaleFactor;
+                    float optHeight = RUS.get().getMetrics().lineHeight() * TEXT_SIZE * scaleFactor + 1 * scaleFactor;
 
                     if (mouseX >= optX && mouseX <= optX + optWidth && mouseY >= optY && mouseY <= optY + optHeight) {
                         return true;
@@ -202,7 +201,7 @@ public class MultiCheckBoxComponent extends Component {
         heightPadding = 0;
 
         for (CheckBox option : multiCheckBox.getOptions()) {
-            float optWidth = BIKO_FONT.get().getWidth(option.getName(), TEXT_SIZE * scaleFactor) + 4 * scaleFactor + ELEMENT_PADDING * scaleFactor;
+            float optWidth = RUS.get().getWidth(option.getName(), TEXT_SIZE * scaleFactor) + 4 * scaleFactor + ELEMENT_PADDING * scaleFactor;
             if (offset + optWidth >= (parent.getWidth() - 10 * scaleFactor)) {
                 rows.add(currentRow);
                 currentRow = new ArrayList<>();
@@ -221,7 +220,7 @@ public class MultiCheckBoxComponent extends Component {
 
     @Override
     public float getHeight() {
-        float modeHeight = BIKO_FONT.get().getMetrics().lineHeight() * TEXT_SIZE * scaleFactor + 2 * scaleFactor + PADDING * 2 * scaleFactor + ELEMENT_PADDING * scaleFactor;
+        float modeHeight = RUS.get().getMetrics().lineHeight() * TEXT_SIZE * scaleFactor + 2 * scaleFactor + PADDING * 2 * scaleFactor + ELEMENT_PADDING * scaleFactor;
         if (isOpen) {
             float dropdownHeight = 10 * scaleFactor + heightPadding + 4 * scaleFactor + ELEMENT_PADDING * scaleFactor;
             return modeHeight + dropdownHeight - 3 * scaleFactor;

@@ -5,6 +5,9 @@ import net.minecraft.util.Mth;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.neoforge.client.event.RenderFrameEvent;
 
+import java.util.HashSet;
+import java.util.Set;
+
 public class FreeLook {
     private static final Minecraft mc = Minecraft.getInstance();
     public static boolean isFreeLookEnabled = false;
@@ -17,6 +20,33 @@ public class FreeLook {
     private static final float sensitivity = 12.0F;
     private static double lastMouseX;
     private static double lastMouseY;
+
+    private static final Set<String> activeRequests = new HashSet<>();
+
+    public static void requestFreeLook(String requester) {
+        if (requester == null || requester.isEmpty()) return;
+
+        boolean wasEmpty = activeRequests.isEmpty();
+        activeRequests.add(requester);
+
+        if (wasEmpty && !isFreeLookEnabled) {
+            enableFreeLook();
+        }
+    }
+
+    public static void releaseFreeLook(String requester) {
+        if (requester == null || requester.isEmpty()) return;
+
+        activeRequests.remove(requester);
+
+        if (activeRequests.isEmpty() && isFreeLookEnabled) {
+            disableFreeLook();
+        }
+    }
+
+    public static boolean hasActiveRequests() {
+        return !activeRequests.isEmpty();
+    }
 
     public static void enableFreeLook() {
         if (mc.player == null) return;
@@ -34,6 +64,7 @@ public class FreeLook {
             isFreeLookEnabled = false;
             mc.player.setXRot(getCameraPitch());
             mc.player.setYRot(getCameraYaw());
+            activeRequests.clear();
         }
     }
 

@@ -1,7 +1,7 @@
 package com.dsp.main.Core.ChatManager;
 
-
 import com.dsp.main.Core.Event.OnUpdate;
+import com.dsp.main.Core.GPS.GPSManager;
 import com.dsp.main.Functions.Combat.Aura.impl.Rotation.UniversalRotation;
 import com.dsp.main.Utils.Minecraft.Chat.ChatUtil;
 import net.minecraft.client.multiplayer.ServerData;
@@ -22,7 +22,6 @@ import java.nio.file.Path;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-
 public class ChatManager {
     @SubscribeEvent(priority = EventPriority.HIGH)
     public void ClientChat(ClientChatEvent event) throws InterruptedException {
@@ -39,23 +38,35 @@ public class ChatManager {
         if (msg.startsWith(".test")) {
             ChatUtil.sendMessage(String.valueOf(UniversalRotation.isUsingAI()));
         }
+
         if (msg.equalsIgnoreCase(".gps off")) {
-            //Triangles.canWork = false;
+            GPSManager.disableGps();
+            ChatUtil.sendMessage("§cGPS отключен");
             event.setCanceled(true);
-        } else if (msg.startsWith(".gps add")) {
+        } else if (msg.startsWith(".gps add ")) {
             String[] split = msg.split(" ");
-            if (split.length == 3 || split.length == 4) {
+            if (split.length >= 5) {
                 try {
                     int x = Integer.parseInt(split[2]);
-                    int z = Integer.parseInt(split[3]);
-                    //Triangles.canWork = true;
-                    //Triangles.x = x;
-                    //Triangles.z = z;
-                    event.setCanceled(true);
+                    int y = Integer.parseInt(split[3]);
+                    int z = Integer.parseInt(split[4]);
+                    String name = split.length > 5 ? split[5] : "Target";
+                    GPSManager.enableGps(x, y, z, name);
+                    ChatUtil.sendMessage("§aGPS установлен на " + name + " [" + x + ", " + y + ", " + z + "]");
                 } catch (NumberFormatException ex) {
-                    //ChatUtil.sendMessage("Координаты неверны: " + split[2] + " " + split[3]);
+                    ChatUtil.sendMessage("§cНеверные координаты!");
                 }
+                event.setCanceled(true);
             }
+        } else if (msg.equalsIgnoreCase(".gps here")) {
+            String[] split = msg.split(" ", 3);
+            String name = split.length > 2 ? split[2] : "Current Position";
+            int x = mc.player.getBlockX();
+            int y = mc.player.getBlockY();
+            int z = mc.player.getBlockZ();
+            GPSManager.enableGps(x, y, z, name);
+            ChatUtil.sendMessage("§aGPS установлен на текущую позицию");
+            event.setCanceled(true);
         } else if (msg.startsWith("/ah sell")) {
             Pattern pattern = Pattern.compile("(\\d+)\\s*([+\\-*/])\\s*(\\d+)");
             Matcher matcher = pattern.matcher(msg);
@@ -139,11 +150,14 @@ public class ChatManager {
                 ChatUtil.sendMessage("Конфигураций не найдено.");
             }
             event.setCanceled(true);
-    } else if (msg.equals(CmdPrefix + "помощь") || msg.equals(CmdPrefix + "help")) {
+        } else if (msg.equals(CmdPrefix + "помощь") || msg.equals(CmdPrefix + "help")) {
             ChatUtil.sendMessage("Доступные команды:");
             ChatUtil.sendMessage(".friend add <name> - add friend");
             ChatUtil.sendMessage(".friend remove <name> - remove friend");
             ChatUtil.sendMessage(".friend list - show friends list");
+            ChatUtil.sendMessage(".gps add X Y Z [название] - установить GPS");
+            ChatUtil.sendMessage(".gps here [название] - GPS на текущую позицию");
+            ChatUtil.sendMessage(".gps off - выключить GPS");
             ChatUtil.sendMessage(".macro add Клавиша \"Текст\"");
             ChatUtil.sendMessage(".macro rem Клавиша \"Текст\"");
             ChatUtil.sendMessage(".macro list");
@@ -179,6 +193,7 @@ public class ChatManager {
             }
         }
     }
+
     public static boolean isOpeningSoon;
     public static boolean lastTimeEventa;
 
@@ -189,7 +204,9 @@ public class ChatManager {
             "Вулкан",
             "Мистический Алтарь",
             "Мистический сундук",
-            "Снежная бойня"
+            "Снежная бойня",
+            "Адская резня",
+            "метеоритный дождь"
     };
 
     String[] lootLevels = {
@@ -287,19 +304,26 @@ public class ChatManager {
 //                }
 //            }
 //        }
-//        if (message.contains("Появился на координатах")) {
-//            if (!isBetterChatEnabled) return;
-//            Pattern pattern = Pattern.compile("Появился на координатах[\\s:]*(-?\\d+(?:\\.\\d+)?)\\s*([,\\s]+)\\s*(-?\\d+(?:\\.\\d+)?)\\s*([,\\s]+)\\s*(-?\\d+(?:\\.\\d+)?)");
-//            Matcher matcher = pattern.matcher(message);
-//            if (matcher.find()) {
-//                int x = Integer.parseInt(matcher.group(1));
-//                int y = Integer.parseInt(matcher.group(3));
-//                int z = Integer.parseInt(matcher.group(5));
-//                Triangles.canWork = true;
-//                Triangles.x = x;
-//                Triangles.z = z;
-//                ChatUtil.sendMessage("Поставил GPS на: [" + x + " " + y + " " + z + "]");
-//            }
+        if (message.contains("Появился на координатах")) {
+            Pattern pattern = Pattern.compile("Появился на координатах[\\s:]*(-?\\d+(?:\\.\\d+)?)[,\\s]+(-?\\d+(?:\\.\\d+)?)[,\\s]+(-?\\d+(?:\\.\\d+)?)");
+            Matcher matcher = pattern.matcher(message);
+            if (matcher.find()) {
+                int x = Integer.parseInt(matcher.group(1));
+                int y = Integer.parseInt(matcher.group(3));
+                int z = Integer.parseInt(matcher.group(5));
+
+                String eventName = "Ивент";
+                for (String keyword : keywords) {
+                    if (message.toLowerCase().contains(keyword.toLowerCase())) {
+                        eventName = keyword;
+                        break;
+                    }
+                }
+
+                GPSManager.enableGps(x, y, z, eventName);
+                ChatUtil.sendMessage("§aПоставил GPS на " + eventName + ": §f[" + x + ", " + y + ", " + z + "]");
+            }
+        }
 //        } else if (message.contains("До следующего ивента:")) {
 //            Pattern pattern = Pattern.compile("\\[(\\d+)] До следующего ивента: (\\d+) сек");
 //            Matcher matcher = pattern.matcher(message);
@@ -341,6 +365,7 @@ public class ChatManager {
 //            NotificationManager.show(new Notification(NotificationType.WARNING,  "Вас упомянули в чате!", 2));
 //        }
     }
+
     public static String lastChatMessage = "";
 
     @SubscribeEvent

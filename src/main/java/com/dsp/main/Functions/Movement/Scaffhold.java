@@ -22,6 +22,8 @@ import net.neoforged.bus.api.SubscribeEvent;
 import static com.dsp.main.Api.mc;
 
 public class Scaffhold extends Module {
+    private static final String FREELOOK_REQUEST_ID = "Scaffhold";
+
     private static InvUtil invUtil = new InvUtil();
     private static TimerUtil timer = new TimerUtil();
     private static CheckBox shift = new CheckBox("Use Shift", false);
@@ -35,14 +37,14 @@ public class Scaffhold extends Module {
     @Override
     public void onEnable() {
         super.onEnable();
-        if (!FreeLook.isFreeLookEnabled) FreeLook.enableFreeLook();
+        FreeLook.requestFreeLook(FREELOOK_REQUEST_ID);
         mc.options.setCameraType(CameraType.THIRD_PERSON_BACK);
     }
 
     @Override
     public void onDisable() {
         super.onDisable();
-        if (FreeLook.isFreeLookEnabled) FreeLook.disableFreeLook();
+        FreeLook.releaseFreeLook(FREELOOK_REQUEST_ID);
         mc.options.keyUse.setDown(false);
         mc.options.keyShift.setDown(false);
         mc.options.setCameraType(CameraType.FIRST_PERSON);
@@ -62,7 +64,7 @@ public class Scaffhold extends Module {
     @SubscribeEvent
     public void onUpdate(OnUpdate e) {
         if (mc.player == null) return;
-        if (!FreeLook.isFreeLookEnabled) FreeLook.enableFreeLook();
+
         if (shift.isEnabled()) mc.options.keyShift.setDown(mc.level.getBlockState(mc.player.blockPosition().below()).isAir() && mc.player.onGround());
         mc.player.setXRot(81.7F);
         mc.player.setYRot(FreeLook.getCameraYaw() - 180);
@@ -77,7 +79,7 @@ public class Scaffhold extends Module {
                     } else {
                         invUtil.swapHand(i, InteractionHand.MAIN_HAND);
                     }
-                    break; // Прерываем цикл после нахождения подходящего блока
+                    break;
                 }
             }
         }

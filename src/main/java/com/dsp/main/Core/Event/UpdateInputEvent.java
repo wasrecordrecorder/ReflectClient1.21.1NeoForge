@@ -1,17 +1,18 @@
 package com.dsp.main.Core.Event;
 
+import net.minecraft.client.player.ClientInput;
 import net.minecraft.client.player.LocalPlayer;
-import net.minecraft.client.player.Input;
+import net.minecraft.world.entity.player.Input;
 import net.neoforged.bus.api.Event;
 
 public class UpdateInputEvent extends Event {
     private final LocalPlayer player;
-    private final Input input;
+    private final ClientInput input;
     private float leftImpulse;
     private float forwardImpulse;
     private int sprintTriggerTime;
 
-    public UpdateInputEvent(LocalPlayer player, Input input, float leftImpulse, float forwardImpulse, int sprintTriggerTime) {
+    public UpdateInputEvent(LocalPlayer player, ClientInput input, float leftImpulse, float forwardImpulse, int sprintTriggerTime) {
         this.player = player;
         this.input = input;
         this.leftImpulse = leftImpulse;
@@ -23,7 +24,7 @@ public class UpdateInputEvent extends Event {
         return player;
     }
 
-    public Input getInput() {
+    public ClientInput getInput() {
         return input;
     }
 

@@ -72,7 +72,7 @@ public class Cooldowns extends DraggableElement {
         if (item.getItem() == Items.FIREWORK_ROCKET) return "Феерверк";
         if (item.getItem() == Items.CHORUS_FRUIT) return "Хорус";
         if (item.getItem() == Items.EXPERIENCE_BOTTLE) return "Пузырек опыта";
-        return item.getItem().getDescription().getString();
+        return item.getItem().getName().getString();
     }
 
     @Override
@@ -180,7 +180,7 @@ public class Cooldowns extends DraggableElement {
                 DrawHelper.rectangle(guiGraphics.pose(), xPos + PADDING + ICON_SIZE,
                         currentY + TEXT_HEIGHT + BAR_OFFSET_Y - 1, maxBarWidth, BAR_HEIGHT, 1f,
                         new Color(64, 64, 64, itemAlpha).getRGB());
-                float cooldownPercent = mc.player.getCooldowns().getCooldownPercent(item, 0);
+                float cooldownPercent = mc.player.getCooldowns().getCooldownPercent(new ItemStack(item), 0);
                 float targetBarWidth = maxBarWidth * cooldownPercent;
                 float currentBarWidth = currentBarWidths.getOrDefault(item, targetBarWidth);
                 currentBarWidth = lerp(currentBarWidth, targetBarWidth, 0.2f);
@@ -206,7 +206,7 @@ public class Cooldowns extends DraggableElement {
             Map<Item, Float> itemCooldowns = new HashMap<>();
             for (ItemStack stack : mc.player.getInventory().items) {
                 Item item = stack.getItem();
-                float cooldownPercent = mc.player.getCooldowns().getCooldownPercent(item, 0);
+                float cooldownPercent = mc.player.getCooldowns().getCooldownPercent(new ItemStack(item), 0);
                 if (cooldownPercent > 0 && !itemCooldowns.containsKey(item)) {
                     itemCooldowns.put(item, cooldownPercent);
                     itemsOnCooldown.add(item);

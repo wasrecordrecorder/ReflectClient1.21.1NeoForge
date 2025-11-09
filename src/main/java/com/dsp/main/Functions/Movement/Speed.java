@@ -23,11 +23,13 @@ import net.neoforged.bus.api.SubscribeEvent;
 import static com.dsp.main.Api.mc;
 
 public class Speed extends Module {
+    private static final String FREELOOK_REQUEST_ID = "Speed";
+
     private static Mode mode = new Mode("Option", "FunTime");
-    private int sequenceCounter = 0; // Счётчик для sequence
-    private int originalSlot = -1; // Сохраняем исходный слот
-    private boolean waterPlaced = false; // Флаг, была ли размещена вода
-    private BlockPos waterPos = null; // Позиция размещённой воды
+    private int sequenceCounter = 0;
+    private int originalSlot = -1;
+    private boolean waterPlaced = false;
+    private BlockPos waterPos = null;
 
     public Speed() {
         super("Speed", 0, Category.MOVEMENT, "Makes you running much faster");
@@ -37,7 +39,7 @@ public class Speed extends Module {
     @Override
     public void onEnable() {
         super.onEnable();
-        if (!FreeLook.isFreeLookEnabled) FreeLook.enableFreeLook();
+        FreeLook.requestFreeLook(FREELOOK_REQUEST_ID);
         sequenceCounter = 0;
         originalSlot = -1;
         waterPlaced = false;
@@ -47,7 +49,7 @@ public class Speed extends Module {
     @Override
     public void onDisable() {
         super.onDisable();
-        if (FreeLook.isFreeLookEnabled) FreeLook.disableFreeLook();
+        FreeLook.releaseFreeLook(FREELOOK_REQUEST_ID);
         if (originalSlot != -1 && mc.player != null) {
             mc.player.connection.send(new ServerboundSetCarriedItemPacket(originalSlot));
         }
@@ -69,13 +71,9 @@ public class Speed extends Module {
 
     public void HandleFunTimeSpeed() {
         int waterBucketSlot = InvUtil.getSlotIDFromItem(Items.WATER_BUCKET);
-        if (waterBucketSlot < 0 || mc.player.getMainHandItem().getItem() != Items.WATER_BUCKET) {
-            if (FreeLook.isFreeLookEnabled) FreeLook.disableFreeLook();
-        } else {
-            if (!FreeLook.isFreeLookEnabled) FreeLook.enableFreeLook();
-        }
         if (waterBucketSlot < 0 || mc.player.isUsingItem() || !mc.player.onGround()) return;
         if (mc.player.getMainHandItem().getItem() != Items.WATER_BUCKET) return;
+
         mc.player.setXRot(90);
         mc.player.setYRot(FreeLook.getCameraYaw());
         if (originalSlot == -1) {
@@ -83,7 +81,7 @@ public class Speed extends Module {
         }
         BlockPos targetPos = mc.player.blockPosition().below();
         BlockHitResult hitResult = new BlockHitResult(
-                new Vec3(targetPos.getX() + 0.5, targetPos.getY() + 1.0, targetPos.getZ() + 0.5), // Точка над блоком
+                new Vec3(targetPos.getX() + 0.5, targetPos.getY() + 1.0, targetPos.getZ() + 0.5),
                 Direction.UP,
                 targetPos,
                 false
@@ -97,7 +95,7 @@ public class Speed extends Module {
         waterPlaced = true;
         waterPos = targetPos;
         if (!mc.player.hasEffect(MobEffects.MOVEMENT_SPEED)) {
-            double randomMultiplier = 1.11 + (Math.random() * 0.01); // От 1.13 до 1.17
+            double randomMultiplier = 1.11 + (Math.random() * 0.01);
             mc.player.setDeltaMovement(mc.player.getDeltaMovement().multiply(randomMultiplier, 1, randomMultiplier));
         } else {
             mc.player.setDeltaMovement(mc.player.getDeltaMovement().multiply(1.04, 1, 1.04));
@@ -118,6 +116,7 @@ public class Speed extends Module {
                 sequenceCounter++
         ));
     }
+
     @SubscribeEvent
     public void onKeepAlive(ClientPacketReceiveEvent packet) {
         if (packet.getPacket() instanceof ClientboundKeepAlivePacket pac) {

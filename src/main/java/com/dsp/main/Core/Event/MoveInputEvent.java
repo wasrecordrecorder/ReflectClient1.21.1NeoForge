@@ -8,6 +8,13 @@ public class MoveInputEvent extends Event implements ICancellableEvent {
     public float strafe;
     public boolean jump;
     public boolean sneaking;
+
+    public boolean isJump() {
+        return jump;
+    }
+    public void setJump(boolean jump) {
+        this.jump = jump;
+    }
     public double sneakSlow;
     public float getForward() {
         return forward;
@@ -21,6 +28,7 @@ public class MoveInputEvent extends Event implements ICancellableEvent {
     public void setStrafe(float strafe) {
         this.strafe = strafe;
     }
+
     public boolean isMoving() {
         return getForward() != 0 || getStrafe() != 0;
     }

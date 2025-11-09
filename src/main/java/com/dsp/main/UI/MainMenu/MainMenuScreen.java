@@ -199,8 +199,7 @@ public class MainMenuScreen extends Screen {
     public void render(GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTick) {
         int width = Minecraft.getInstance().getWindow().getGuiScaledWidth();
         int height = Minecraft.getInstance().getWindow().getGuiScaledHeight();
-        guiGraphics.blit(BACKGROUND_TEXTURE, 0, 0, 0, 0, width, height, width, height);
-        guiGraphics.fill(0, 0, width, height, 0xC0101010);
+        DrawHelper.drawTexture(BACKGROUND_TEXTURE,guiGraphics.pose().last().pose(), 0,0,width,height);
         drawButtons(guiGraphics, mouseX, mouseY, partialTick);
         drawAltWidget(guiGraphics, mouseX, mouseY, partialTick);
         super.render(guiGraphics, mouseX, mouseY, partialTick);
@@ -208,6 +207,7 @@ public class MainMenuScreen extends Screen {
 
     @Override
     public void renderBackground(GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTick) {
+        return;
     }
 
     private void drawButtons(GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTick) {

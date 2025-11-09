@@ -28,9 +28,9 @@ import static com.dsp.main.Main.BIKO_FONT;
 import static com.dsp.main.Main.ICONS;
 
 public class Button {
-    private static final int PADDING = 3;
-    private static final float ROUNDING = 5.0f;
-    private static final int COMPONENT_PADDING = 2;
+    private static final int PADDING = 4;
+    private static final float ROUNDING = 6.0f;
+    private static final int COMPONENT_PADDING = 3;
     private static final float ANIMATION_DURATION = 200.0f;
 
     private final Module module;
@@ -49,10 +49,10 @@ public class Button {
 
     public Button(Module module, int x, int y, int width, int height, Frame parent, float scaleFactor) {
         this.module = module;
-        this.x = (int) (x * scaleFactor);
-        this.y = (int) (y * scaleFactor);
-        this.width = (int) (width * scaleFactor);
-        this.height = (int) (height * scaleFactor);
+        this.x = x;
+        this.y = y;
+        this.width = width;
+        this.height = height;
         this.scaleFactor = scaleFactor;
         this.parentFrame = parent;
 
@@ -75,6 +75,10 @@ public class Button {
                 components.add(new InputComponent(setting, this, scaleFactor));
             else if (setting instanceof MultiCheckBox)
                 components.add(new MultiCheckBoxComponent((MultiCheckBox) setting, this, scaleFactor));
+            else if (setting instanceof BlockListSetting)
+                components.add(new BlockListComponent((BlockListSetting) setting, this, scaleFactor));
+            else if (setting instanceof ItemListSetting)
+                components.add(new ItemListComponent((ItemListSetting) setting, this, scaleFactor));
         }
     }
 
@@ -125,7 +129,7 @@ public class Button {
             BuiltBorder border = Builder.border()
                     .size(new SizeState(width, height))
                     .color(borderColorState)
-                    .radius(new QuadRadiusState(3f * scaleFactor, 3f * scaleFactor, 3f * scaleFactor, 3f * scaleFactor))
+                    .radius(new QuadRadiusState(4f * scaleFactor, 4f * scaleFactor, 4f * scaleFactor, 4f * scaleFactor))
                     .thickness(0.01f)
                     .smoothness(0.5f, 0.9f)
                     .build();
@@ -141,12 +145,12 @@ public class Button {
 
         String label = binding ? "> Press Key <" : module.getName();
         int textX = (int) (x + PADDING * scaleFactor);
-        int textY = (int) (y + (height - (BIKO_FONT.get().getMetrics().lineHeight() * 9f) + 1 * scaleFactor) / 2);
+        int textY = (int) (y + (height - (BIKO_FONT.get().getMetrics().lineHeight() * 10f * scaleFactor) + 1 * scaleFactor) / 2);
         BuiltText text = Builder.text()
                 .font(BIKO_FONT.get())
                 .text(label)
                 .color(textColor)
-                .size(9f * scaleFactor)
+                .size(10f * scaleFactor)
                 .thickness(0.05f)
                 .build();
         text.render(new Matrix4f(), textX, textY);
@@ -156,10 +160,10 @@ public class Button {
                     .font(ICONS.get())
                     .text("+")
                     .color(textColor)
-                    .size(9f * scaleFactor)
+                    .size(10f * scaleFactor)
                     .thickness(0.05f)
                     .build();
-            text1.render(new Matrix4f(), (int) (x + width - 15 * scaleFactor), textY);
+            text1.render(new Matrix4f(), (int) (x + width - 17 * scaleFactor), textY);
         }
 
         if (animationProgress > 0.01f) {
@@ -176,7 +180,7 @@ public class Button {
 
             for (Component comp : components) {
                 if (comp.getSetting().isVisible()) {
-                    comp.setX((int) (x + PADDING * scaleFactor));
+                    comp.setX(x + PADDING * scaleFactor);
                     comp.setY(offsetY);
                     comp.draw(graphics, mouseX, mouseY);
                     offsetY += comp.getHeight() + 2 * COMPONENT_PADDING * scaleFactor;
@@ -189,9 +193,9 @@ public class Button {
         if (isHovered(mouseX, mouseY) && !module.getDescription().isEmpty()) {
             String desc = module.getDescription();
             float descWidth = mc.font.width(desc) * scaleFactor;
-            float tooltipX = x + width + 5 * scaleFactor;
+            float tooltipX = x + width + 6 * scaleFactor;
             float tooltipY = y + (height - mc.font.lineHeight * scaleFactor) / 2f;
-            DrawHelper.rectangle(poseStack, tooltipX - 2 * scaleFactor, tooltipY - 2 * scaleFactor, descWidth + 4 * scaleFactor, mc.font.lineHeight * scaleFactor + 4 * scaleFactor, 2 * scaleFactor,
+            DrawHelper.rectangle(poseStack, tooltipX - 3 * scaleFactor, tooltipY - 3 * scaleFactor, descWidth + 6 * scaleFactor, mc.font.lineHeight * scaleFactor + 6 * scaleFactor, 3 * scaleFactor,
                     new Color(35, 50, 72, 220).getRGB());
             graphics.drawString(mc.font, desc, (int) tooltipX, (int) tooltipY, Color.WHITE.getRGB(), false);
         }
@@ -224,6 +228,15 @@ public class Button {
         components.forEach(c -> c.mouseReleased(mouseX, mouseY, button));
     }
 
+    public void mouseScrolled(double mouseX, double mouseY, double delta) {
+        for (Component c : components) {
+            if (c instanceof BlockListComponent && c.isHovered(mouseX, mouseY)) {
+                ((BlockListComponent) c).mouseScrolled(mouseX, mouseY, delta);
+                return;
+            }
+        }
+    }
+
     public void keyPressed(int keyCode) {
         if (binding) {
             module.keyCode = (keyCode == GLFW.GLFW_KEY_ESCAPE || keyCode == GLFW.GLFW_KEY_DELETE) ? 0 : keyCode;
@@ -234,6 +247,19 @@ public class Button {
                 bcc.handleKeyPress(keyCode);
             if (c instanceof InputComponent ic)
                 ic.keyPressed(keyCode);
+            if (c instanceof BlockListComponent blc)
+                blc.keyPressed(keyCode);
+            if (c instanceof ItemListComponent ilc)
+                ilc.keyPressed(keyCode);
+        });
+    }
+
+    public void charTyped(char chr) {
+        components.forEach(c -> {
+            if (c instanceof BlockListComponent blc)
+                blc.charTyped(chr);
+            if (c instanceof ItemListComponent ilc)
+                ilc.charTyped(chr);
         });
     }
 
@@ -242,12 +268,12 @@ public class Button {
     }
 
     public void setPosition(int x, int y) {
-        this.x = (int) (x * scaleFactor);
-        this.y = (int) (y * scaleFactor);
+        this.x = x;
+        this.y = y;
     }
 
     public void setWidth(int w) {
-        this.width = (int) (w * scaleFactor);
+        this.width = w;
     }
 
     public float getHeightWithComponents() {

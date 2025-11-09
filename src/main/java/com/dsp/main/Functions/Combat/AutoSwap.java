@@ -17,8 +17,8 @@ import static com.dsp.main.Api.*;
 import static com.dsp.main.Functions.Misc.ClientSetting.slowBypass;
 
 public class AutoSwap extends Module {
-    public static Mode firstItem = new Mode("Item 1", "GApple", "Shield", "Totem", "Sphere");
-    public static Mode twoItem = new Mode("Item 2", "Sphere", "Totem", "Shield", "GApple");
+    public static Mode firstItem = new Mode("Item 1", "GApple", "Shield", "Totem", "Sphere", "Wind Charge");
+    public static Mode twoItem = new Mode("Item 2", "Sphere", "Totem", "Shield", "GApple", "Wind Charge");
     public static BindCheckBox swap = new BindCheckBox("Swap", 0, AutoSwap::performSwap);
     private static final InvUtil invUtil = new InvUtil();
     private static final Map<String, Item> ITEM_MAP = new HashMap<>();
@@ -28,6 +28,7 @@ public class AutoSwap extends Module {
         ITEM_MAP.put("Shield", Items.SHIELD);
         ITEM_MAP.put("Totem", Items.TOTEM_OF_UNDYING);
         ITEM_MAP.put("Sphere", Items.PLAYER_HEAD);
+        ITEM_MAP.put("Wind Charge", Items.WIND_CHARGE);
     }
 
     public AutoSwap() {

@@ -6,6 +6,7 @@ import com.dsp.main.Utils.Render.Mine;
 import com.dsp.main.Utils.TimerUtil;
 import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
 import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
+import net.minecraft.core.component.DataComponents;
 import net.minecraft.world.inventory.ClickType;
 import net.minecraft.world.inventory.Slot;
 
@@ -92,8 +93,8 @@ public class InvUtil implements Mine {
 
     public Slot getFoodMaxSaturationSlot() {
         return mc.player.containerMenu.slots.stream()
-                .filter(s -> s.getItem().getFoodProperties(mc.player) != null && !s.getItem().getFoodProperties(mc.player).canAlwaysEat())
-                .max(Comparator.comparingDouble(s -> s.getItem().getFoodProperties(mc.player).nutrition()))
+                .filter(s -> s.getItem().get(DataComponents.FOOD) != null && !s.getItem().get(DataComponents.FOOD).canAlwaysEat())
+                .max(Comparator.comparingDouble(s -> s.getItem().get(DataComponents.FOOD).nutrition()))
                 .orElse(null);
     }
 
@@ -138,14 +139,14 @@ public class InvUtil implements Mine {
     }
 
     public void findItemAndThrow(Item item, float yaw, float pitch) {
-        if (mc.player.getCooldowns().isOnCooldown(item)) {
-            ChatUtil.sendMessage(item.getDescription().getString() + " - в кд");
+        if (mc.player.getCooldowns().isOnCooldown(new ItemStack(item))) {
+            ChatUtil.sendMessage(item.getName().getString() + " - в кд");
             return;
         }
 
         Slot slot = getSlot(item);
         if (slot == null) {
-            ChatUtil.sendMessage(item.getDescription().getString() + " - нету");
+            ChatUtil.sendMessage(item.getName().getString() + " - нету");
             return;
         }
 

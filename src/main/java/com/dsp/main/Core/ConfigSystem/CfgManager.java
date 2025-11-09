@@ -1,6 +1,7 @@
 package com.dsp.main.Core.ConfigSystem;
 
 import com.dsp.main.Module;
+import com.dsp.main.UI.ClickGui.Dropdown.ClickGuiScreen;
 import com.dsp.main.UI.ClickGui.Dropdown.Settings.*;
 import com.dsp.main.UI.Draggable.DragManager;
 import com.dsp.main.UI.Themes.ThemesUtil;
@@ -14,6 +15,7 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import static com.dsp.main.Api.getCustomConfigDir;
 
@@ -37,6 +39,7 @@ public class CfgManager {
         try {
             CfgStorage storage = new CfgStorage();
             storage.currentTheme = ThemesUtil.getCurrentStyle() != null ? ThemesUtil.getCurrentStyle().getName() : "Light";
+            storage.guiScale = ClickGuiScreen.getUserScaleMultiplier();
 
             for (Module module : modules) {
                 if (module == null) continue;
@@ -83,6 +86,14 @@ public class CfgManager {
                             settingConfig.type = "CheckBox";
                             settingConfig.value = checkBox.isEnabled();
                         }
+                        case BlockListSetting blockListSetting -> {
+                            settingConfig.type = "BlockListSetting";
+                            settingConfig.value = new ArrayList<>(blockListSetting.getSelectedBlockNames());
+                        }
+                        case ItemListSetting itemListSetting -> {
+                            settingConfig.type = "ItemListSetting";
+                            settingConfig.value = new ArrayList<>(itemListSetting.getSelectedItemNames());
+                        }
                         case ButtonSetting buttonSetting -> {
                             continue;
                         }
@@ -128,6 +139,8 @@ public class CfgManager {
             if (storage.currentTheme != null) {
                 themesUtil.setCurrentThemeByName(storage.currentTheme);
             }
+
+            ClickGuiScreen.setUserScaleMultiplier(storage.guiScale);
 
             if (storage.modules == null) return;
 
@@ -188,6 +201,30 @@ public class CfgManager {
                                             case "CheckBox":
                                                 if (setting instanceof CheckBox && settingConfig.value instanceof Boolean) {
                                                     ((CheckBox) setting).setEnabled((Boolean) settingConfig.value);
+                                                }
+                                                break;
+                                            case "BlockListSetting":
+                                                if (setting instanceof BlockListSetting && settingConfig.value instanceof List) {
+                                                    List<?> rawList = (List<?>) settingConfig.value;
+                                                    Set<String> blockNames = new java.util.HashSet<>();
+                                                    for (Object obj : rawList) {
+                                                        if (obj instanceof String) {
+                                                            blockNames.add((String) obj);
+                                                        }
+                                                    }
+                                                    ((BlockListSetting) setting).setSelectedBlocks(blockNames);
+                                                }
+                                                break;
+                                            case "ItemListSetting":
+                                                if (setting instanceof ItemListSetting && settingConfig.value instanceof List) {
+                                                    List<?> rawList = (List<?>) settingConfig.value;
+                                                    Set<String> itemNames = new java.util.HashSet<>();
+                                                    for (Object obj : rawList) {
+                                                        if (obj instanceof String) {
+                                                            itemNames.add((String) obj);
+                                                        }
+                                                    }
+                                                    ((ItemListSetting) setting).setSelectedItems(itemNames);
                                                 }
                                                 break;
                                         }

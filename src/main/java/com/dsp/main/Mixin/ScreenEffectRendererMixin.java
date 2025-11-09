@@ -4,6 +4,7 @@ import com.dsp.main.Api;
 import com.dsp.main.Main;
 import com.mojang.blaze3d.vertex.PoseStack;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.ScreenEffectRenderer;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import net.neoforged.api.distmarker.Dist;
@@ -27,7 +28,7 @@ public class ScreenEffectRendererMixin {
             ),
             cancellable = true
     )
-    private static void cancelBlockOverlay(Minecraft minecraft, PoseStack poseStack, CallbackInfo ci) {
+    private static void cancelBlockOverlay(Minecraft minecraft, PoseStack poseStack, MultiBufferSource bufferSource, CallbackInfo ci) {
         if (Api.isEnabled("NoRender") && NoRenderElements.isOptionEnabled("Block") && !Main.isDetect) {
             ci.cancel();
         }
@@ -41,7 +42,7 @@ public class ScreenEffectRendererMixin {
             ),
             cancellable = true
     )
-    private static void cancelWaterOverlay(Minecraft minecraft, PoseStack poseStack, CallbackInfo ci) {
+    private static void cancelWaterOverlay(Minecraft minecraft, PoseStack poseStack, MultiBufferSource bufferSource, CallbackInfo ci) {
         if (Api.isEnabled("NoRender") && NoRenderElements.isOptionEnabled("Water") && !Main.isDetect) {
             ci.cancel();
         }
@@ -55,7 +56,7 @@ public class ScreenEffectRendererMixin {
             ),
             cancellable = true
     )
-    private static void cancelFireOverlay(Minecraft minecraft, PoseStack poseStack, CallbackInfo ci) {
+    private static void cancelFireOverlay(Minecraft minecraft, PoseStack poseStack, MultiBufferSource bufferSource, CallbackInfo ci) {
         if (Api.isEnabled("NoRender") && NoRenderElements.isOptionEnabled("Fire") && !Main.isDetect) {
             ci.cancel();
         }
@@ -66,7 +67,7 @@ public class ScreenEffectRendererMixin {
             at = @At("HEAD"),
             cancellable = true
     )
-    private static void cancelFireRender(Minecraft minecraft, PoseStack poseStack, CallbackInfo ci) {
+    private static void cancelFireRender(PoseStack poseStack, MultiBufferSource bufferSource, CallbackInfo ci) {
         if (Api.isEnabled("NoRender") && NoRenderElements.isOptionEnabled("Fire") && !Main.isDetect) {
             ci.cancel();
         }
@@ -77,7 +78,7 @@ public class ScreenEffectRendererMixin {
             at = @At("HEAD"),
             cancellable = true
     )
-    private static void cancelWaterRender(Minecraft minecraft, PoseStack poseStack, CallbackInfo ci) {
+    private static void cancelWaterRender(Minecraft minecraft, PoseStack poseStack, MultiBufferSource bufferSource, CallbackInfo ci) {
         if (Api.isEnabled("NoRender") && NoRenderElements.isOptionEnabled("Water") && !Main.isDetect) {
             ci.cancel();
         }
@@ -88,7 +89,7 @@ public class ScreenEffectRendererMixin {
             at = @At("HEAD"),
             cancellable = true
     )
-    private static void cancelBlockRender(TextureAtlasSprite texture, PoseStack poseStack, CallbackInfo ci) {
+    private static void cancelBlockRender(TextureAtlasSprite texture, PoseStack poseStack, MultiBufferSource bufferSource, CallbackInfo ci) {
         if (Api.isEnabled("NoRender") && NoRenderElements.isOptionEnabled("Block") && !Main.isDetect) {
             ci.cancel();
         }

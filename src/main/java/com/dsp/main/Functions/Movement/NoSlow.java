@@ -10,7 +10,7 @@ import net.minecraft.network.protocol.game.ServerboundPlayerActionPacket;
 import net.minecraft.network.protocol.game.ServerboundUseItemPacket;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.item.UseAnim;
+import net.minecraft.world.item.ItemUseAnimation;
 import net.minecraft.world.level.block.CarpetBlock;
 import net.minecraft.world.level.block.SnowLayerBlock;
 import net.neoforged.bus.api.EventPriority;
@@ -92,8 +92,8 @@ public class NoSlow extends Module {
 
     private boolean shouldCancelGrim() {
         ItemStack offhand = mc.player.getOffhandItem();
-        return (offhand.getUseAnimation() == UseAnim.BLOCK
-                || offhand.getUseAnimation() == UseAnim.EAT)
+        return (offhand.getUseAnimation() == ItemUseAnimation.BLOCK
+                || offhand.getUseAnimation() == ItemUseAnimation.EAT)
                 && mc.player.getUsedItemHand() == InteractionHand.MAIN_HAND;
     }
 

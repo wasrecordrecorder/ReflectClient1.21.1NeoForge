@@ -5,7 +5,7 @@ import com.dsp.main.Functions.Player.NoPush;
 import com.dsp.main.Core.Event.SlowWalkingEvent;
 import com.dsp.main.Core.Event.UpdateInputEvent;
 import com.dsp.main.Core.Other.LocalPlayerAccessor;
-import net.minecraft.client.player.Input;
+import net.minecraft.client.player.ClientInput;
 import net.minecraft.client.player.LocalPlayer;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.api.distmarker.OnlyIn;
@@ -27,8 +27,9 @@ import static com.dsp.main.Main.isDetect;
 public class LocalPlayerMixin {
     @Shadow
     protected int sprintTriggerTime = 0;
+
     @Shadow
-    public Input input;
+    public ClientInput input;
 
     @Inject(
             method = "moveTowardsClosestSpace",
@@ -40,6 +41,7 @@ public class LocalPlayerMixin {
             ci.cancel();
         }
     }
+
     @Inject(
             method = "aiStep",
             at = @At(
@@ -50,23 +52,32 @@ public class LocalPlayerMixin {
     )
     private void onInputUpdate(CallbackInfo ci) {
         LocalPlayer player = (LocalPlayer)(Object)this;
-        Input input = player.input;
+        ClientInput clientInput = player.input;
         LocalPlayerAccessor accessor = (LocalPlayerAccessor)player;
-        UpdateInputEvent event = new UpdateInputEvent(player, input, input.leftImpulse, input.forwardImpulse, accessor.getSprintTriggerTime());
+
+        UpdateInputEvent event = new UpdateInputEvent(
+                player,
+                clientInput,
+                clientInput.leftImpulse,
+                clientInput.forwardImpulse,
+                accessor.getSprintTriggerTime()
+        );
         NeoForge.EVENT_BUS.post(event);
-        input.leftImpulse = event.getLeftImpulse();
-        input.forwardImpulse = event.getForwardImpulse();
+
+        clientInput.leftImpulse = event.getLeftImpulse();
+        clientInput.forwardImpulse = event.getForwardImpulse();
         accessor.setSprintTriggerTime(event.getSprintTriggerTime());
     }
+
     @Redirect(
             method = "aiStep",
             at = @At(
                     value = "FIELD",
-                    target = "Lnet/minecraft/client/player/Input;forwardImpulse:F",
+                    target = "Lnet/minecraft/client/player/ClientInput;forwardImpulse:F",
                     opcode = org.objectweb.asm.Opcodes.PUTFIELD
             )
     )
-    private void redirectForwardImpulse(Input input, float value) {
+    private void redirectForwardImpulse(ClientInput input, float value) {
         if (((LocalPlayer)(Object)this).isUsingItem() && !((LocalPlayer)(Object)this).isPassenger()) {
             SlowWalkingEvent event = new SlowWalkingEvent(this.input.forwardImpulse, this.input.leftImpulse);
             NeoForge.EVENT_BUS.post(event);
@@ -85,11 +96,11 @@ public class LocalPlayerMixin {
             method = "aiStep",
             at = @At(
                     value = "FIELD",
-                    target = "Lnet/minecraft/client/player/Input;leftImpulse:F",
+                    target = "Lnet/minecraft/client/player/ClientInput;leftImpulse:F",
                     opcode = org.objectweb.asm.Opcodes.PUTFIELD
             )
     )
-    private void redirectLeftImpulse(Input input, float value) {
+    private void redirectLeftImpulse(ClientInput input, float value) {
         if (((LocalPlayer)(Object)this).isUsingItem() && !((LocalPlayer)(Object)this).isPassenger()) {
             SlowWalkingEvent event = new SlowWalkingEvent(this.input.forwardImpulse, this.input.leftImpulse);
             NeoForge.EVENT_BUS.post(event);
@@ -103,6 +114,7 @@ public class LocalPlayerMixin {
             this.input.leftImpulse = value;
         }
     }
+
     @Inject(
             method = "drop",
             at = @At("HEAD"),
@@ -113,4 +125,8 @@ public class LocalPlayerMixin {
             ci.cancel();
         }
     }
+
+
+
+
 }
